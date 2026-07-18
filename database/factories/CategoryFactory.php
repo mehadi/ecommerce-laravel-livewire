@@ -1,0 +1,36 @@
+<?php
+
+namespace Database\Factories;
+
+use App\Models\Category;
+use Illuminate\Database\Eloquent\Factories\Factory;
+use Illuminate\Support\Str;
+
+/**
+ * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Category>
+ */
+class CategoryFactory extends Factory
+{
+    protected $model = Category::class;
+
+    /**
+     * Define the model's default state.
+     *
+     * @return array<string, mixed>
+     */
+    public function definition(): array
+    {
+        $name = fake()->words(2, true);
+
+        return [
+            'name_en' => $name,
+            'name_bn' => fake('bn_BD')->words(2, true),
+            'slug' => Str::slug($name),
+            'description_en' => fake()->sentence(),
+            'description_bn' => fake('bn_BD')->sentence(),
+            'image' => null,
+            'is_active' => true,
+            'order' => fake()->numberBetween(0, 100),
+        ];
+    }
+}
