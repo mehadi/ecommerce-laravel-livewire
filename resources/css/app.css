@@ -7,6 +7,11 @@
 @source '../../vendor/livewire/flux-pro/stubs/**/*.blade.php';
 @source '../../vendor/livewire/flux/stubs/**/*.blade.php';
 
+/* Admin-configurable grid column counts (e.g. the /categories page) are computed at
+   runtime from Settings, so the literal class names never appear in template source.
+   Force-generate the full range across the breakpoints those grids use. */
+@source inline("{,sm:,md:,lg:,xl:,2xl:}grid-cols-{1..12}");
+
 @custom-variant dark (&:where(.dark, .dark *));
 
 @theme {
@@ -65,6 +70,27 @@
     color: #fff;
 }
 
+:root {
+    --livewire-progress-bar-color: var(--color-emerald-600) !important;
+
+    /* Without an explicit light color-scheme, browsers with OS-level dark mode
+       enabled (e.g. Chrome's auto-dark-theme) can force-darken the page during
+       the brief gap before Tailwind's CSS paints, showing a flash of near-black
+       cards/backgrounds on every page load until the real (light) styles apply.
+       Flux's own inline style already sets `color-scheme: dark` on `:root.dark`
+       (see @fluxAppearance); this declares the light counterpart so the browser
+       never has to guess. */
+    color-scheme: light;
+}
+
+:root.dark {
+    color-scheme: dark;
+}
+
+#nprogress .bar {
+    height: 3px !important;
+}
+
 @media (prefers-reduced-motion: reduce) {
     html {
         scroll-behavior: auto;
@@ -111,6 +137,24 @@ select:focus[data-flux-control] {
 
 .frontend-container {
     max-width: var(--content-max-width, 72rem) !important;
+}
+
+/* Dashboard drag-reorder (SortableJS) states, shared by every dashboard
+   sub-page's metrics/charts grids. */
+.sortable-ghost {
+    opacity: 0.4;
+    transform: scale(0.95);
+}
+.sortable-chosen {
+    transform: scale(1.05);
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    z-index: 50;
+}
+.sortable-drag {
+    cursor: grabbing !important;
+}
+.dragging {
+    cursor: grabbing !important;
 }
 
 @layer components {

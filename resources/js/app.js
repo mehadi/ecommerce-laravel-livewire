@@ -1,3 +1,5 @@
+import './dashboard.js';
+
 window.richTextEditor = ({ value }) => ({
     value,
 

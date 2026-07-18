@@ -4,7 +4,6 @@ use App\Livewire\Settings\Appearance;
 use App\Livewire\Settings\Password;
 use App\Livewire\Settings\Profile;
 use App\Livewire\Settings\TwoFactor;
-use App\Livewire\Settings\WebsiteSettings;
 use Illuminate\Support\Facades\Route;
 use Laravel\Fortify\Features;
 
@@ -24,9 +23,15 @@ Route::get('/categories', App\Livewire\CategoriesPage::class)->name('categories.
 Route::get('/category/{category:slug}', App\Livewire\CategoryPage::class)->name('category.show');
 Route::get('/lp/{slug}', App\Livewire\LandingPage::class)->name('landing-page');
 
-Route::get('dashboard', App\Livewire\Dashboard::class)
-    ->middleware(['auth', 'verified'])
-    ->name('dashboard');
+Route::middleware(['auth', 'verified'])->group(function () {
+    Route::get('dashboard', App\Livewire\Dashboard\Overview::class)->name('dashboard');
+    Route::prefix('dashboard')->name('dashboard.')->group(function () {
+        Route::get('sales', App\Livewire\Dashboard\Sales::class)->name('sales');
+        Route::get('orders', App\Livewire\Dashboard\Orders::class)->name('orders');
+        Route::get('customers', App\Livewire\Dashboard\Customers::class)->name('customers');
+        Route::get('products', App\Livewire\Dashboard\Products::class)->name('products');
+    });
+});
 
 Route::middleware(['auth'])->group(function () {
     Route::redirect('settings', 'settings/profile');
@@ -49,7 +54,15 @@ Route::middleware(['auth'])->group(function () {
     // Admin Routes
     Route::prefix('admin')->name('admin.')->middleware(['can:access admin'])->group(function () {
         // Website Settings
-        Route::get('website', WebsiteSettings::class)->name('website.index');
+        Route::prefix('website')->name('website.')->group(function () {
+            Route::get('/', \App\Livewire\Admin\WebsiteSettings\General::class)->name('index');
+            Route::get('appearance', \App\Livewire\Admin\WebsiteSettings\Appearance::class)->name('appearance');
+            Route::get('contact', \App\Livewire\Admin\WebsiteSettings\Contact::class)->name('contact');
+            Route::get('social', \App\Livewire\Admin\WebsiteSettings\Social::class)->name('social');
+            Route::get('analytics', \App\Livewire\Admin\WebsiteSettings\Analytics::class)->name('analytics');
+            Route::get('verification', \App\Livewire\Admin\WebsiteSettings\Verification::class)->name('verification');
+            Route::get('seo', \App\Livewire\Admin\WebsiteSettings\Seo::class)->name('seo');
+        });
 
         // Products
         Route::get('products', App\Livewire\Admin\Products\Index::class)->name('products.index');
@@ -61,6 +74,9 @@ Route::middleware(['auth'])->group(function () {
 
         // Categories
         Route::get('categories', App\Livewire\Admin\Categories\Index::class)->name('categories.index');
+
+        // Categories Page Display (grid columns + pagination options for the public /categories page)
+        Route::get('categories-display', App\Livewire\Admin\CategoriesDisplay\Index::class)->name('categories-display.index');
 
         // Orders
         Route::get('orders', App\Livewire\Admin\Orders\Index::class)->name('orders.index');

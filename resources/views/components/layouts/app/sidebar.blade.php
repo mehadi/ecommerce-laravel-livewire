@@ -20,7 +20,7 @@
             </div>
 
             <flux:sidebar.group expandable heading="{{ __('Platform') }}" icon="home-modern">
-                <flux:sidebar.item icon="home" :href="route('dashboard')" :current="request()->routeIs('dashboard')" wire:navigate>{{ __('Dashboard') }}</flux:sidebar.item>
+                <flux:sidebar.item icon="home" :href="route('dashboard')" :current="request()->routeIs('dashboard*')" wire:navigate>{{ __('Dashboard') }}</flux:sidebar.item>
                 <flux:sidebar.item icon="globe-alt" :href="route('admin.website.index')" :current="request()->routeIs('admin.website.*')" wire:navigate>{{ __('Website Settings') }}</flux:sidebar.item>
                 <flux:sidebar.item icon="bars-3" :href="route('admin.navigation.index')" :current="request()->routeIs('admin.navigation.*')" wire:navigate>{{ __('Navigation Settings') }}</flux:sidebar.item>
             </flux:sidebar.group>
@@ -28,6 +28,7 @@
             <flux:sidebar.group expandable heading="{{ __('Ecommerce') }}" icon="shopping-cart">
                 <flux:sidebar.item icon="cube" :href="route('admin.products.index')" :current="request()->routeIs('admin.products.*')" wire:navigate>{{ __('Products') }}</flux:sidebar.item>
                 <flux:sidebar.item icon="tag" :href="route('admin.categories.index')" :current="request()->routeIs('admin.categories.*')" wire:navigate>{{ __('Categories') }}</flux:sidebar.item>
+                <flux:sidebar.item icon="view-columns" :href="route('admin.categories-display.index')" :current="request()->routeIs('admin.categories-display.*')" wire:navigate>{{ __('Categories Display') }}</flux:sidebar.item>
                 <flux:sidebar.item icon="shopping-bag" :href="route('admin.orders.index')" :current="request()->routeIs('admin.orders.*')" wire:navigate>{{ __('Orders') }}</flux:sidebar.item>
                 <flux:sidebar.item icon="ticket" :href="route('admin.coupons.index')" :current="request()->routeIs('admin.coupons.*')" wire:navigate>{{ __('Coupons') }}</flux:sidebar.item>
                 <flux:sidebar.item icon="truck" :href="route('admin.shipping.index')" :current="request()->routeIs('admin.shipping.*')" wire:navigate>{{ __('Shipping') }}</flux:sidebar.item>

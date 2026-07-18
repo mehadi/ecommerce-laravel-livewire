@@ -16,6 +16,7 @@ class UserDashboardPreference extends Model
         'order',
         'is_visible',
         'card_type',
+        'page',
     ];
 
     protected function casts(): array

@@ -1,41 +1,23 @@
 <?php
 
-namespace App\Livewire;
+namespace App\Livewire\Dashboard\Concerns;
 
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Product;
-use App\Models\UserDashboardPreference;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 use Livewire\Attributes\Computed;
-use Livewire\Component;
 
-class Dashboard extends Component
+/**
+ * The single shared data engine for every dashboard sub-page: the filtered
+ * orders/order-items collections and every metric, chart-data, and insight
+ * #[Computed] property, extracted verbatim from the original monolith
+ * Dashboard component. Calculation logic is untouched.
+ */
+trait HasDashboardAnalytics
 {
-    public ?string $startDate = null;
-
-    public ?string $endDate = null;
-
-    public string $statusFilter = '';
-
-    public string $dateRange = '30'; // '7', '30', '90', '365', 'custom'
-
-    public bool $isCustomizing = false;
-
-    public bool $showResetConfirmation = false;
-
-    public bool $isRefreshing = false;
-
-    protected $queryString = [
-        'startDate' => ['except' => ''],
-        'endDate' => ['except' => ''],
-        'statusFilter' => ['except' => ''],
-        'dateRange' => ['except' => '30'],
-    ];
-
     protected array $statusDefinitions = [
         'pending' => ['label' => 'Pending', 'tone' => 'amber', 'hex' => '#f59e0b'],
         'confirmed' => ['label' => 'Confirmed', 'tone' => 'blue', 'hex' => '#3b82f6'],
@@ -44,598 +26,6 @@ class Dashboard extends Component
         'delivered' => ['label' => 'Delivered', 'tone' => 'emerald', 'hex' => '#10b981'],
         'cancelled' => ['label' => 'Cancelled', 'tone' => 'rose', 'hex' => '#ef4444'],
     ];
-
-    public function mount(): void
-    {
-        if (! $this->startDate && ! $this->endDate) {
-            $this->endDate = Carbon::now()->format('Y-m-d');
-            $this->startDate = Carbon::now()->subDays(30)->format('Y-m-d');
-        }
-        $this->initializeUserPreferences();
-    }
-
-    public function refreshDashboard(): void
-    {
-        $this->isRefreshing = true;
-
-        // Clear all computed properties to force refresh
-        unset(
-            $this->orderedMetricCards,
-            $this->orderedChartCards,
-            $this->userPreferences,
-            $this->dashboardInsights,
-            $this->filteredOrders,
-            $this->filteredOrderItems,
-            $this->totalRevenue,
-            $this->totalOrders,
-            $this->averageOrderValue,
-            $this->revenueChartData,
-            $this->ordersChartData,
-            $this->statusSummary,
-            $this->recentOrders,
-            $this->lowStockProducts
-        );
-
-        // Get chart keys after clearing cache
-        $chartKeys = $this->orderedChartCards->pluck('key')->toArray();
-
-        // Dispatch refresh event
-        $this->dispatch('dashboard:refresh-charts', [
-            'visibleKeys' => $chartKeys,
-            'data' => $this->chartDataBundle(),
-        ]);
-
-        $this->isRefreshing = false;
-        session()->flash('message', __('Dashboard refreshed successfully.'));
-    }
-
-    #[Computed]
-    public function availableMetricCards(): array
-    {
-        return [
-            'total_revenue' => [
-                'title' => __('Total Revenue'),
-                'type' => 'metric',
-                'icon' => 'currency',
-                'color' => 'green',
-                'style' => 'minimal',
-            ],
-            'total_orders' => [
-                'title' => __('Total Orders'),
-                'type' => 'metric',
-                'icon' => 'shopping',
-                'color' => 'blue',
-                'style' => 'minimal',
-            ],
-            'average_order_value' => [
-                'title' => __('Average Order Value'),
-                'type' => 'metric',
-                'icon' => 'chart',
-                'color' => 'purple',
-                'style' => 'minimal',
-            ],
-            'total_products' => [
-                'title' => __('Total Products'),
-                'type' => 'metric',
-                'icon' => 'package',
-                'color' => 'indigo',
-                'style' => 'minimal',
-            ],
-            'revenue_growth' => [
-                'title' => __('Revenue Growth'),
-                'type' => 'metric',
-                'icon' => 'trending',
-                'color' => 'emerald',
-                'style' => 'minimal',
-            ],
-            'outstanding_payments' => [
-                'title' => __('Outstanding Payments'),
-                'type' => 'metric',
-                'icon' => 'payment',
-                'color' => 'amber',
-                'style' => 'minimal',
-            ],
-            'repeat_customer_rate' => [
-                'title' => __('Repeat Customer Rate'),
-                'type' => 'metric',
-                'icon' => 'users',
-                'color' => 'cyan',
-                'style' => 'minimal',
-            ],
-            'average_customer_value' => [
-                'title' => __('Avg. Customer Value'),
-                'type' => 'metric',
-                'icon' => 'user',
-                'color' => 'emerald',
-                'style' => 'minimal',
-            ],
-            'cancellation_rate' => [
-                'title' => __('Cancellation Rate'),
-                'type' => 'metric',
-                'icon' => 'chart',
-                'color' => 'red',
-                'style' => 'minimal',
-            ],
-            'average_order_quantity' => [
-                'title' => __('Avg. Order Quantity'),
-                'type' => 'metric',
-                'icon' => 'package',
-                'color' => 'blue',
-                'style' => 'minimal',
-            ],
-            'total_discounts' => [
-                'title' => __('Total Discounts'),
-                'type' => 'metric',
-                'icon' => 'payment',
-                'color' => 'green',
-                'style' => 'minimal',
-            ],
-            'repeat_customers' => [
-                'title' => __('Repeat Customers'),
-                'type' => 'metric',
-                'icon' => 'users',
-                'color' => 'purple',
-                'style' => 'minimal',
-            ],
-            'low_stock_items' => [
-                'title' => __('Low Stock Items'),
-                'type' => 'metric',
-                'icon' => 'package',
-                'color' => 'amber',
-                'style' => 'minimal',
-            ],
-        ];
-    }
-
-    #[Computed]
-    public function availableChartCards(): array
-    {
-        return [
-            'revenue_chart' => [
-                'title' => __('Revenue Over Time'),
-                'type' => 'chart',
-            ],
-            'orders_chart' => [
-                'title' => __('Orders Over Time'),
-                'type' => 'chart',
-            ],
-            'status_chart' => [
-                'title' => __('Orders by Status'),
-                'type' => 'chart',
-            ],
-            'products_chart' => [
-                'title' => __('Top Products by Revenue'),
-                'type' => 'chart',
-            ],
-            'top_customers_chart' => [
-                'title' => __('Top Customers by Revenue'),
-                'type' => 'chart',
-            ],
-            'new_vs_returning_chart' => [
-                'title' => __('New vs Returning Customers'),
-                'type' => 'chart',
-            ],
-            'day_of_week_chart' => [
-                'title' => __('Sales by Day of Week'),
-                'type' => 'chart',
-            ],
-            'payment_method_chart' => [
-                'title' => __('Revenue by Payment Method'),
-                'type' => 'chart',
-            ],
-            'category_chart' => [
-                'title' => __('Sales by Category'),
-                'type' => 'chart',
-            ],
-            'city_chart' => [
-                'title' => __('Top Cities by Revenue'),
-                'type' => 'chart',
-            ],
-            'conversion_funnel_chart' => [
-                'title' => __('Order Conversion Funnel'),
-                'type' => 'chart',
-            ],
-            'discount_impact_chart' => [
-                'title' => __('Discount Impact Analysis'),
-                'type' => 'chart',
-            ],
-        ];
-    }
-
-    #[Computed]
-    public function availableInsightCards(): array
-    {
-        return [
-            'revenue_trend' => [
-                'title' => __('Revenue Trend'),
-                'type' => 'insight',
-                'icon' => 'trending-up',
-                'color' => 'green',
-            ],
-            'top_product' => [
-                'title' => __('Top Product'),
-                'type' => 'insight',
-                'icon' => 'sparkles',
-                'color' => 'blue',
-            ],
-            'customer_loyalty' => [
-                'title' => __('Customer Loyalty'),
-                'type' => 'insight',
-                'icon' => 'users',
-                'color' => 'purple',
-            ],
-            'outstanding_payments' => [
-                'title' => __('Outstanding Payments'),
-                'type' => 'insight',
-                'icon' => 'wallet',
-                'color' => 'amber',
-            ],
-            'regional_momentum' => [
-                'title' => __('Regional Momentum'),
-                'type' => 'insight',
-                'icon' => 'map-pin',
-                'color' => 'indigo',
-            ],
-            'fulfillment_focus' => [
-                'title' => __('Fulfillment Focus'),
-                'type' => 'insight',
-                'icon' => 'clock',
-                'color' => 'amber',
-            ],
-            'cancellations_watch' => [
-                'title' => __('Cancellations Watch'),
-                'type' => 'insight',
-                'icon' => 'x-circle',
-                'color' => 'red',
-            ],
-        ];
-    }
-
-    #[Computed]
-    public function chartDataBundle(): array
-    {
-        return [
-            'revenue_chart' => $this->revenueChartData,
-            'orders_chart' => $this->ordersChartData,
-            'status_chart' => $this->ordersByStatusData,
-            'products_chart' => $this->topProductsData,
-            'top_customers_chart' => $this->topCustomersData,
-            'new_vs_returning_chart' => $this->newVsReturningCustomersData,
-            'day_of_week_chart' => $this->salesByDayOfWeekData,
-            'payment_method_chart' => $this->paymentMethodData,
-            'category_chart' => $this->salesByCategoryData,
-            'city_chart' => $this->salesByCityData,
-            'conversion_funnel_chart' => $this->conversionFunnelData,
-            'discount_impact_chart' => $this->discountImpactData,
-        ];
-    }
-
-    #[Computed]
-    public function userPreferences(): Collection
-    {
-        $user = auth()->user();
-        if (! $user) {
-            return collect();
-        }
-
-        $preferences = UserDashboardPreference::where('user_id', $user->id)->get();
-
-        // If no preferences exist, create defaults
-        if ($preferences->isEmpty()) {
-            $this->createDefaultPreferences($user->id);
-
-            return UserDashboardPreference::where('user_id', $user->id)->get();
-        }
-
-        return $preferences;
-    }
-
-    #[Computed]
-    public function orderedMetricCards(): Collection
-    {
-        $preferences = $this->userPreferences;
-        $available = $this->availableMetricCards;
-
-        // Get cards with preferences
-        $cardsWithPrefs = $preferences
-            ->where('card_type', 'metric')
-            ->where('is_visible', true)
-            ->sortBy('order')
-            ->map(function ($pref) use ($available) {
-                $card = $available[$pref->card_key] ?? null;
-                if ($card) {
-                    $card['key'] = $pref->card_key;
-                    $card['preference'] = $pref;
-                    $card['order'] = $pref->order;
-                }
-
-                return $card;
-            })
-            ->filter();
-
-        // Get cards without preferences (new cards) - default to visible
-        $maxOrder = $preferences->where('card_type', 'metric')->max('order') ?? 0;
-        $cardsWithoutPrefs = collect($available)
-            ->filter(function ($card, $key) use ($preferences) {
-                return ! $preferences->contains('card_key', $key);
-            })
-            ->map(function ($card, $key) use (&$maxOrder) {
-                $card['key'] = $key;
-                $card['order'] = ++$maxOrder;
-
-                return $card;
-            });
-
-        // Merge and sort by order
-        return $cardsWithPrefs
-            ->merge($cardsWithoutPrefs)
-            ->sortBy('order')
-            ->values();
-    }
-
-    #[Computed]
-    public function orderedChartCards(): Collection
-    {
-        $preferences = $this->userPreferences;
-        $available = $this->availableChartCards;
-
-        return $preferences
-            ->where('card_type', 'chart')
-            ->where('is_visible', true)
-            ->sortBy('order')
-            ->map(function ($pref) use ($available) {
-                $card = $available[$pref->card_key] ?? null;
-                if ($card) {
-                    $card['key'] = $pref->card_key;
-                    $card['preference'] = $pref;
-                }
-
-                return $card;
-            })
-            ->filter();
-    }
-
-    protected function initializeUserPreferences(): void
-    {
-        $user = auth()->user();
-        if (! $user) {
-            return;
-        }
-
-        $existing = UserDashboardPreference::where('user_id', $user->id)->count();
-        if ($existing === 0) {
-            $this->createDefaultPreferences($user->id);
-        }
-    }
-
-    protected function createDefaultPreferences(int $userId): void
-    {
-        $metrics = [
-            'total_revenue' => 1,
-            'total_orders' => 2,
-            'average_order_value' => 3,
-            'total_products' => 4,
-            'revenue_growth' => 5,
-            'outstanding_payments' => 6,
-            'repeat_customer_rate' => 7,
-            'average_customer_value' => 8,
-            'cancellation_rate' => 9,
-            'average_order_quantity' => 10,
-            'total_discounts' => 11,
-            'repeat_customers' => 12,
-            'low_stock_items' => 13,
-        ];
-
-        $insights = [
-            'revenue_trend' => 1,
-            'top_product' => 2,
-            'customer_loyalty' => 3,
-            'outstanding_payments' => 4,
-            'regional_momentum' => 5,
-            'fulfillment_focus' => 6,
-            'cancellations_watch' => 7,
-        ];
-
-        $charts = [
-            'revenue_chart' => 1,
-            'orders_chart' => 2,
-            'status_chart' => 3,
-            'products_chart' => 4,
-            'top_customers_chart' => 5,
-            'new_vs_returning_chart' => 6,
-            'day_of_week_chart' => 7,
-            'payment_method_chart' => 8,
-            'category_chart' => 9,
-            'city_chart' => 10,
-            'conversion_funnel_chart' => 11,
-            'discount_impact_chart' => 12,
-        ];
-
-        foreach ($metrics as $key => $order) {
-            UserDashboardPreference::create([
-                'user_id' => $userId,
-                'card_key' => $key,
-                'order' => $order,
-                'is_visible' => true,
-                'card_type' => 'metric',
-            ]);
-        }
-
-        foreach ($insights as $key => $order) {
-            UserDashboardPreference::create([
-                'user_id' => $userId,
-                'card_key' => $key,
-                'order' => $order,
-                'is_visible' => true,
-                'card_type' => 'insight',
-            ]);
-        }
-
-        foreach ($charts as $key => $order) {
-            UserDashboardPreference::create([
-                'user_id' => $userId,
-                'card_key' => $key,
-                'order' => $order,
-                'is_visible' => true,
-                'card_type' => 'chart',
-            ]);
-        }
-    }
-
-    public function toggleCardVisibility(string $cardKey): void
-    {
-        $user = auth()->user();
-        if (! $user) {
-            return;
-        }
-
-        // Determine card type first
-        $cardType = $this->availableMetricCards[$cardKey]['type']
-            ?? $this->availableChartCards[$cardKey]['type']
-            ?? $this->availableInsightCards[$cardKey]['type']
-            ?? 'metric';
-
-        // Find preference matching both key and type
-        $pref = UserDashboardPreference::where('user_id', $user->id)
-            ->where('card_key', $cardKey)
-            ->where('card_type', $cardType)
-            ->first();
-
-        if ($pref) {
-            $newVisibility = ! $pref->is_visible;
-            $pref->update(['is_visible' => $newVisibility]);
-        } else {
-            // Create preference if it doesn't exist (for new cards)
-            $maxOrder = UserDashboardPreference::where('user_id', $user->id)
-                ->where('card_type', $cardType)
-                ->max('order') ?? 0;
-
-            UserDashboardPreference::create([
-                'user_id' => $user->id,
-                'card_key' => $cardKey,
-                'card_type' => $cardType,
-                'order' => $maxOrder + 1,
-                'is_visible' => true,
-            ]);
-        }
-
-        // Clear computed property cache
-        unset($this->orderedMetricCards, $this->orderedChartCards, $this->userPreferences, $this->dashboardInsights);
-    }
-
-    public function updateCardOrder(array $cardOrder): void
-    {
-        $user = auth()->user();
-        if (! $user) {
-            return;
-        }
-
-        foreach ($cardOrder as $index => $cardKey) {
-            UserDashboardPreference::where('user_id', $user->id)
-                ->where('card_key', $cardKey)
-                ->update(['order' => $index + 1]);
-        }
-
-        // Clear computed property cache to refresh order
-        unset($this->orderedMetricCards, $this->orderedChartCards, $this->userPreferences, $this->dashboardInsights);
-    }
-
-    public function toggleCustomization(): void
-    {
-        $this->isCustomizing = ! $this->isCustomizing;
-
-        if (! $this->isCustomizing) {
-            $this->showResetConfirmation = false;
-        }
-        // Clear cache to refresh cards
-        unset($this->orderedMetricCards, $this->orderedChartCards, $this->dashboardInsights);
-
-        // Dispatch event for JavaScript
-        $this->dispatch('customization-toggled');
-    }
-
-    public function resetDashboardPreferences(): void
-    {
-        $user = auth()->user();
-        if (! $user) {
-            session()->flash('error', __('You must be logged in to reset dashboard preferences.'));
-
-            return;
-        }
-
-        UserDashboardPreference::where('user_id', $user->id)->delete();
-        $this->createDefaultPreferences($user->id);
-
-        unset(
-            $this->orderedMetricCards,
-            $this->orderedChartCards,
-            $this->userPreferences,
-            $this->dashboardInsights,
-            $this->filteredOrders,
-            $this->filteredOrderItems
-        );
-
-        $this->showResetConfirmation = true;
-        session()->flash('message', __('Dashboard layout was reset to the default arrangement.'));
-
-        $this->dispatch('dashboard-preferences-reset');
-    }
-
-    public function getMetricValue(string $cardKey): mixed
-    {
-        return match ($cardKey) {
-            'total_revenue' => $this->totalRevenue,
-            'total_orders' => $this->totalOrders,
-            'average_order_value' => $this->averageOrderValue,
-            'total_products' => $this->totalProducts,
-            'revenue_growth' => $this->revenueGrowthRate,
-            'outstanding_payments' => $this->outstandingPayments,
-            'repeat_customer_rate' => $this->repeatCustomerRate,
-            'average_customer_value' => $this->averageCustomerLifetimeValue,
-            'cancellation_rate' => $this->cancellationRate,
-            'average_order_quantity' => $this->averageOrderQuantity,
-            'total_discounts' => $this->totalDiscounts,
-            'repeat_customers' => $this->repeatCustomersCount,
-            'low_stock_items' => $this->lowStockProducts->count(),
-            default => null,
-        };
-    }
-
-    public function getMetricSubtitle(string $cardKey): ?string
-    {
-        return match ($cardKey) {
-            'total_revenue' => $this->ordersQuery->count() > 0 ? $this->totalOrders.' '.__('orders') : null,
-            'repeat_customer_rate' => $this->repeatCustomersCount.' '.__('repeat customers'),
-            'average_customer_value' => __('Customer Lifetime Value'),
-            'revenue_growth' => __('vs previous period'),
-            default => null,
-        };
-    }
-
-    #[Computed]
-    public function ordersQuery(): Builder
-    {
-        $query = Order::query();
-
-        if ($this->startDate) {
-            $query->where('created_at', '>=', Carbon::parse($this->startDate)->startOfDay());
-        }
-
-        if ($this->endDate) {
-            $query->where('created_at', '<=', Carbon::parse($this->endDate)->endOfDay());
-        }
-
-        if ($this->statusFilter) {
-            $query->where('status', $this->statusFilter);
-        }
-
-        return $query;
-    }
-
-    protected function cloneOrdersQuery(): Builder
-    {
-        return clone $this->ordersQuery;
-    }
 
     #[Computed]
     public function filteredOrders(): Collection
@@ -1281,6 +671,25 @@ class Dashboard extends Component
     }
 
     #[Computed]
+    public function chartDataBundle(): array
+    {
+        return [
+            'revenue_chart' => $this->revenueChartData,
+            'orders_chart' => $this->ordersChartData,
+            'status_chart' => $this->ordersByStatusData,
+            'products_chart' => $this->topProductsData,
+            'top_customers_chart' => $this->topCustomersData,
+            'new_vs_returning_chart' => $this->newVsReturningCustomersData,
+            'day_of_week_chart' => $this->salesByDayOfWeekData,
+            'payment_method_chart' => $this->paymentMethodData,
+            'category_chart' => $this->salesByCategoryData,
+            'city_chart' => $this->salesByCityData,
+            'conversion_funnel_chart' => $this->conversionFunnelData,
+            'discount_impact_chart' => $this->discountImpactData,
+        ];
+    }
+
+    #[Computed]
     public function dashboardInsights(): array
     {
         if ($this->totalOrders === 0) {
@@ -1406,96 +815,35 @@ class Dashboard extends Component
         return $visibleInsights;
     }
 
-    public function updatedDateRange(string $value): void
+    public function getMetricValue(string $cardKey): mixed
     {
-        $ranges = [
-            '7' => 7,
-            '30' => 30,
-            '90' => 90,
-            '365' => 365,
-        ];
-
-        if (array_key_exists($value, $ranges)) {
-            $now = Carbon::now();
-            $this->endDate = $now->format('Y-m-d');
-            $this->startDate = $now->copy()->subDays($ranges[$value])->format('Y-m-d');
-        }
-
-        $this->clearFilterDependentCache();
+        return match ($cardKey) {
+            'total_revenue' => $this->totalRevenue,
+            'total_orders' => $this->totalOrders,
+            'average_order_value' => $this->averageOrderValue,
+            'total_products' => $this->totalProducts,
+            'revenue_growth' => $this->revenueGrowthRate,
+            'outstanding_payments' => $this->outstandingPayments,
+            'repeat_customer_rate' => $this->repeatCustomerRate,
+            'average_customer_value' => $this->averageCustomerLifetimeValue,
+            'cancellation_rate' => $this->cancellationRate,
+            'average_order_quantity' => $this->averageOrderQuantity,
+            'total_discounts' => $this->totalDiscounts,
+            'repeat_customers' => $this->repeatCustomersCount,
+            'low_stock_items' => $this->lowStockProducts->count(),
+            default => null,
+        };
     }
 
-    public function updatedStartDate(?string $value): void
+    public function getMetricSubtitle(string $cardKey): ?string
     {
-        if ($value) {
-            $this->dateRange = 'custom';
-        }
-
-        $this->validateDateRange();
-    }
-
-    public function updatedEndDate(?string $value): void
-    {
-        if ($value) {
-            $this->dateRange = 'custom';
-        }
-
-        $this->validateDateRange();
-    }
-
-    public function updatedStatusFilter(?string $value): void
-    {
-        $this->clearFilterDependentCache();
-    }
-
-    protected function validateDateRange(): void
-    {
-        if ($this->startDate && $this->endDate) {
-            $start = Carbon::parse($this->startDate);
-            $end = Carbon::parse($this->endDate);
-
-            if ($start->gt($end)) {
-                $this->startDate = $end->copy()->subDays(7)->format('Y-m-d');
-            }
-        }
-
-        $this->clearFilterDependentCache();
-    }
-
-    protected function clearFilterDependentCache(): void
-    {
-        // Clear all computed properties that depend on filtered orders
-        unset(
-            $this->ordersQuery,
-            $this->filteredOrders,
-            $this->filteredOrderItems,
-            $this->totalRevenue,
-            $this->totalOrders,
-            $this->averageOrderValue,
-            $this->revenueGrowthRate,
-            $this->outstandingPayments,
-            $this->totalDiscounts,
-            $this->repeatCustomersCount,
-            $this->repeatCustomerRate,
-            $this->averageCustomerLifetimeValue,
-            $this->cancellationRate,
-            $this->averageOrderQuantity,
-            $this->revenueChartData,
-            $this->ordersChartData,
-            $this->ordersByStatusData,
-            $this->topProductsData,
-            $this->topCustomersData,
-            $this->newVsReturningCustomersData,
-            $this->paymentMethodData,
-            $this->salesByDayOfWeekData,
-            $this->statusSummary,
-            $this->recentOrders,
-            $this->salesByCityData,
-            $this->salesByCategoryData,
-            $this->conversionFunnelData,
-            $this->discountImpactData,
-            $this->dashboardInsights,
-            $this->chartDataBundle
-        );
+        return match ($cardKey) {
+            'total_revenue' => $this->ordersQuery->count() > 0 ? $this->totalOrders.' '.__('orders') : null,
+            'repeat_customer_rate' => $this->repeatCustomersCount.' '.__('repeat customers'),
+            'average_customer_value' => __('Customer Lifetime Value'),
+            'revenue_growth' => __('vs previous period'),
+            default => null,
+        };
     }
 
     public function statusLabel(string $status): string
@@ -1552,13 +900,6 @@ class Dashboard extends Component
             ->replace('_', ' ')
             ->headline()
             ->toString();
-    }
-
-    public function render()
-    {
-        return view('livewire.dashboard')->layout('components.layouts.app', [
-            'title' => __('Dashboard'),
-        ]);
     }
 
     protected function statusMeta(string $status): array
