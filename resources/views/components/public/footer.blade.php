@@ -37,7 +37,7 @@
     <div class="relative container mx-auto px-4 sm:px-6 frontend-container">
         <div class="grid gap-12 md:gap-8 md:grid-cols-2 lg:grid-cols-[1.4fr_1fr_1fr_1.2fr] mb-14">
             <div class="space-y-5">
-                <a href="/" class="inline-flex items-center gap-3 rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-zinc-900">
+                <a href="/" wire:navigate class="inline-flex items-center gap-3 rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-zinc-900">
                     @if($siteLogo)
                         <img src="{{ asset('storage/'.$siteLogo) }}" alt="{{ $siteName }}" loading="lazy" class="h-11 w-auto">
                     @else

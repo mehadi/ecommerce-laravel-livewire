@@ -15,6 +15,7 @@
                     </div>
                     <a
                         href="{{ route('categories.index') }}"
+                        wire:navigate
                         class="hidden sm:inline-flex items-center gap-1.5 text-sm font-semibold text-emerald-700 dark:text-emerald-400 hover:text-emerald-800 dark:hover:text-emerald-300 transition-colors duration-200"
                     >
                         {{ __('View All') }}
@@ -28,6 +29,7 @@
                     @foreach($categories as $category)
                         <a
                             href="{{ route('shop', ['category' => $category->id]) }}"
+                            wire:navigate
                             class="group flex flex-col items-center text-center gap-3"
                         >
                             <div class="relative w-full aspect-square overflow-hidden rounded-3xl bg-zinc-50 dark:bg-zinc-800/60 ring-1 ring-zinc-900/[0.04] dark:ring-white/[0.06] group-hover:ring-emerald-600/20 dark:group-hover:ring-emerald-500/30 group-hover:shadow-[0_8px_24px_-8px_rgb(16_24_40_/_0.10)] group-hover:-translate-y-1 transition-all duration-300 motion-reduce:transition-none motion-reduce:transform-none">
@@ -60,6 +62,7 @@
 
                 <a
                     href="{{ route('categories.index') }}"
+                    wire:navigate
                     class="sm:hidden mt-8 inline-flex items-center justify-center gap-1.5 w-full px-5 py-3 rounded-2xl bg-zinc-50 dark:bg-zinc-800/60 ring-1 ring-zinc-900/[0.04] dark:ring-white/[0.06] text-sm font-semibold text-emerald-700 dark:text-emerald-400"
                 >
                     {{ __('View All Categories') }}

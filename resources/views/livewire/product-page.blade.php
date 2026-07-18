@@ -70,7 +70,7 @@
                 <nav aria-label="{{ __('Breadcrumb') }}">
                     <ol class="flex flex-wrap items-center gap-2 text-sm">
                         <li>
-                            <a href="{{ route('shop') }}" class="font-medium text-zinc-500 dark:text-zinc-400 hover:text-emerald-700 dark:hover:text-emerald-400 transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 rounded-lg">
+                            <a href="{{ route('shop') }}" wire:navigate class="font-medium text-zinc-500 dark:text-zinc-400 hover:text-emerald-700 dark:hover:text-emerald-400 transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 rounded-lg">
                                 {{ __('Shop') }}
                             </a>
                         </li>
@@ -79,7 +79,7 @@
                                 <svg class="w-3.5 h-3.5 text-zinc-300 dark:text-zinc-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"></path></svg>
                             </li>
                             <li>
-                                <a href="{{ route('shop', ['category' => $this->product->category_id]) }}" class="font-medium text-zinc-500 dark:text-zinc-400 hover:text-emerald-700 dark:hover:text-emerald-400 transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 rounded-lg">
+                                <a href="{{ route('shop', ['category' => $this->product->category_id]) }}" wire:navigate class="font-medium text-zinc-500 dark:text-zinc-400 hover:text-emerald-700 dark:hover:text-emerald-400 transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 rounded-lg">
                                     {{ $this->product->category->name }}
                                 </a>
                             </li>
@@ -113,7 +113,7 @@
                                 {{ __('You May Also Like') }}
                             </h2>
                         </div>
-                        <a href="{{ route('shop') }}" class="inline-flex items-center gap-2 self-start sm:self-auto min-h-10 px-5 py-2 rounded-full text-sm font-semibold bg-zinc-50 dark:bg-zinc-800/60 text-zinc-700 dark:text-zinc-300 ring-1 ring-zinc-900/[0.06] dark:ring-white/[0.08] hover:ring-zinc-900/[0.15] dark:hover:ring-white/[0.2] transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-zinc-900">
+                        <a href="{{ route('shop') }}" wire:navigate class="inline-flex items-center gap-2 self-start sm:self-auto min-h-10 px-5 py-2 rounded-full text-sm font-semibold bg-zinc-50 dark:bg-zinc-800/60 text-zinc-700 dark:text-zinc-300 ring-1 ring-zinc-900/[0.06] dark:ring-white/[0.08] hover:ring-zinc-900/[0.15] dark:hover:ring-white/[0.2] transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-zinc-900">
                             {{ __('View All Products') }}
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3"></path></svg>
                         </a>

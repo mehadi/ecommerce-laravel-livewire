@@ -1,4 +1,4 @@
-<a href="/" class="flex items-center gap-2 sm:gap-2.5 shrink-0 group rounded-full py-1 pr-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-900 dark:focus-visible:ring-white focus-visible:ring-offset-2 dark:focus-visible:ring-offset-zinc-900">
+<a href="/" wire:navigate class="flex items-center gap-2 sm:gap-2.5 shrink-0 group rounded-full py-1 pr-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-900 dark:focus-visible:ring-white focus-visible:ring-offset-2 dark:focus-visible:ring-offset-zinc-900">
     @if($siteLogo)
         <img src="{{ asset('storage/'.$siteLogo) }}" alt="{{ $siteName }}" class="h-8 sm:h-9 w-auto rounded-xl transition-transform duration-300 group-hover:scale-[1.04] motion-reduce:transform-none">
     @else

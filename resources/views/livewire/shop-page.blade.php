@@ -16,7 +16,7 @@
                 {{-- Breadcrumb --}}
                 <nav aria-label="{{ __('Breadcrumb') }}" class="mb-6">
                     <ol class="flex flex-wrap items-center gap-1.5 text-xs font-semibold text-zinc-400 dark:text-zinc-500">
-                        <li><a href="{{ route('home') }}" class="hover:text-zinc-900 dark:hover:text-white transition-colors duration-200">{{ __('Home') }}</a></li>
+                        <li><a href="{{ route('home') }}" wire:navigate class="hover:text-zinc-900 dark:hover:text-white transition-colors duration-200">{{ __('Home') }}</a></li>
                         <li aria-hidden="true">/</li>
                         <li aria-current="page" class="text-zinc-600 dark:text-zinc-300">{{ __('Shop') }}</li>
                     </ol>

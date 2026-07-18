@@ -64,6 +64,7 @@
             @forelse($this->results as $product)
                 <a
                     href="{{ route('product.show', $product) }}"
+                    wire:navigate
                     data-result
                     wire:key="nav-search-{{ $variant }}-result-{{ $product->id }}"
                     class="flex items-center gap-3 px-2.5 py-2 rounded-xl text-left transition-colors duration-150 hover:bg-zinc-100 dark:hover:bg-zinc-800 focus:bg-zinc-100 dark:focus:bg-zinc-800 focus:outline-none"
@@ -100,6 +101,7 @@
         @if(trim($query) !== '' && $this->results->isNotEmpty())
             <a
                 href="{{ route('shop', ['search' => $query]) }}"
+                wire:navigate
                 data-result
                 class="flex items-center justify-center gap-1.5 px-4 py-3 text-sm font-semibold text-zinc-700 dark:text-zinc-200 bg-zinc-50 dark:bg-zinc-800/60 hover:bg-zinc-100 dark:hover:bg-zinc-800 focus:bg-zinc-100 dark:focus:bg-zinc-800 focus:outline-none border-t border-zinc-100 dark:border-zinc-800 transition-colors duration-150"
             >

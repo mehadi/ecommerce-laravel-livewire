@@ -15,6 +15,7 @@
                     </div>
                     <a
                         href="{{ route('shop') }}"
+                        wire:navigate
                         class="hidden sm:inline-flex items-center gap-1.5 text-sm font-semibold text-emerald-700 dark:text-emerald-400 hover:text-emerald-800 dark:hover:text-emerald-300 transition-colors duration-200"
                     >
                         {{ __('View All') }}
@@ -32,6 +33,7 @@
 
                 <a
                     href="{{ route('shop') }}"
+                    wire:navigate
                     class="sm:hidden mt-8 inline-flex items-center justify-center gap-1.5 w-full px-5 py-3 rounded-2xl bg-zinc-50 dark:bg-zinc-800/60 ring-1 ring-zinc-900/[0.06] text-sm font-semibold text-emerald-700 dark:text-emerald-400"
                 >
                     {{ __('View All Products') }}

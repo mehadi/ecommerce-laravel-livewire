@@ -5,16 +5,103 @@ namespace App\Livewire;
 use App\Models\Category;
 use App\Models\Product;
 use App\Models\Setting;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Str;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Url;
 use Livewire\Component;
+use Livewire\WithPagination;
 
 class CategoriesPage extends Component
 {
+    use WithPagination;
+
+    /** Fallback "grid columns" choices, used only when no admin setting is configured. */
+    public const COLUMN_OPTIONS = [4, 6, 8, 10];
+
+    /** Fallback "categories per page" choices, used only when no admin setting is configured. */
+    public const PER_PAGE_OPTIONS = [12, 24, 48];
+
     #[Url(except: '')]
     public string $search = '';
+
+    #[Url(except: 4)]
+    public int $columns = 4;
+
+    #[Url(except: 24)]
+    public int $perPage = 24;
+
+    public function mount(): void
+    {
+        $this->columns = self::defaultColumns();
+        $this->perPage = self::defaultPerPage();
+    }
+
+    public function updatedSearch(): void
+    {
+        $this->resetPage();
+    }
+
+    public function updatedColumns(int $value): void
+    {
+        if (! in_array($value, self::columnOptions(), true)) {
+            $this->columns = self::defaultColumns();
+        }
+    }
+
+    public function updatedPerPage(int $value): void
+    {
+        if (! in_array($value, self::perPageOptions(), true)) {
+            $this->perPage = self::defaultPerPage();
+        }
+
+        $this->resetPage();
+    }
+
+    /** Admin-configurable "grid columns" choices (Setting::categories_columns_options), falling back to COLUMN_OPTIONS. */
+    public static function columnOptions(): array
+    {
+        return self::parseOptionsSetting('categories_columns_options') ?: self::COLUMN_OPTIONS;
+    }
+
+    public static function defaultColumns(): int
+    {
+        $options = self::columnOptions();
+        $default = (int) Setting::get('categories_columns_default', (string) $options[0]);
+
+        return in_array($default, $options, true) ? $default : $options[0];
+    }
+
+    /** Admin-configurable "categories per page" choices (Setting::categories_per_page_options), falling back to PER_PAGE_OPTIONS. */
+    public static function perPageOptions(): array
+    {
+        return self::parseOptionsSetting('categories_per_page_options') ?: self::PER_PAGE_OPTIONS;
+    }
+
+    public static function defaultPerPage(): int
+    {
+        $options = self::perPageOptions();
+        $default = (int) Setting::get('categories_per_page_default', (string) $options[0]);
+
+        return in_array($default, $options, true) ? $default : $options[0];
+    }
+
+    /** Decode a JSON-encoded list of positive integers stored in Settings, e.g. "[4,6,8,10]". */
+    private static function parseOptionsSetting(string $key): array
+    {
+        $decoded = json_decode((string) Setting::get($key, ''), true);
+
+        if (! is_array($decoded) || empty($decoded)) {
+            return [];
+        }
+
+        $values = array_values(array_unique(array_map('intval', $decoded)));
+        $values = array_values(array_filter($values, fn ($v) => $v > 0));
+        sort($values);
+
+        return $values;
+    }
 
     /**
      * Top-level active categories with an active-product count aggregated
@@ -60,7 +147,29 @@ class CategoriesPage extends Component
             $cards = $cards->filter(fn ($card) => str_contains(mb_strtolower($card['category']->name), $needle));
         }
 
-        return $cards->values();
+        $cards = $cards->values();
+
+        $perPage = in_array($this->perPage, self::perPageOptions(), true) ? $this->perPage : self::defaultPerPage();
+        $page = $this->getPage();
+
+        return new LengthAwarePaginator(
+            $cards->forPage($page, $perPage)->values(),
+            $cards->count(),
+            $perPage,
+            $page,
+            ['path' => request()->url(), 'pageName' => 'page']
+        );
+    }
+
+    /** Responsive grid-column ceiling derived from the admin/user-selected column count. */
+    #[Computed]
+    public function gridColsClass(): string
+    {
+        $max = max(2, min(12, $this->columns));
+        $lg = max(2, (int) round($max * 0.7));
+        $sm = max(1, (int) round($max * 0.4));
+
+        return "grid-cols-1 sm:grid-cols-{$sm} lg:grid-cols-{$lg} xl:grid-cols-{$max}";
     }
 
     public function render()

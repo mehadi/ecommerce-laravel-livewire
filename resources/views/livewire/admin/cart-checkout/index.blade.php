@@ -9,7 +9,7 @@
     </div>
 
     @if (session()->has('message'))
-        <flux:callout variant="success" wire:key="success-message-{{ time() }}">{{ session('message') }}</flux:callout>
+        <flux:callout variant="success" icon="check-circle">{{ session('message') }}</flux:callout>
     @endif
 
     <form wire:submit="save" class="space-y-6">
@@ -26,11 +26,28 @@
 
             <flux:field>
                 <flux:label>{{ __('Cart Display Mode') }}</flux:label>
-                <flux:radio.group wire:model="cart_display_mode" variant="segmented">
-                    <flux:radio value="modal" label="{{ __('Modal') }}" />
-                    <flux:radio value="panel" label="{{ __('Right Slide Panel') }}" />
+                <flux:radio.group wire:model="cart_display_mode" variant="cards">
+                    <flux:radio value="modal" class="items-start">
+                        <div class="flex-1 space-y-3">
+                            <x-admin.display-mode-preview mode="modal" />
+                            <div>
+                                <flux:heading size="sm">{{ __('Modal') }}</flux:heading>
+                                <flux:text size="sm" variant="subtle">{{ __('Opens centered over the page') }}</flux:text>
+                            </div>
+                        </div>
+                        <flux:radio.indicator />
+                    </flux:radio>
+                    <flux:radio value="panel" class="items-start">
+                        <div class="flex-1 space-y-3">
+                            <x-admin.display-mode-preview mode="panel" />
+                            <div>
+                                <flux:heading size="sm">{{ __('Right Slide Panel') }}</flux:heading>
+                                <flux:text size="sm" variant="subtle">{{ __('Slides in from the right edge, like a drawer') }}</flux:text>
+                            </div>
+                        </div>
+                        <flux:radio.indicator />
+                    </flux:radio>
                 </flux:radio.group>
-                <flux:description>{{ __('Modal opens centered over the page. Right Slide Panel slides in from the right edge, like a drawer.') }}</flux:description>
                 <flux:error name="cart_display_mode" />
             </flux:field>
         </div>
@@ -48,11 +65,28 @@
 
             <flux:field>
                 <flux:label>{{ __('Checkout Display Mode') }}</flux:label>
-                <flux:radio.group wire:model="checkout_display_mode" variant="segmented">
-                    <flux:radio value="modal" label="{{ __('Modal') }}" />
-                    <flux:radio value="panel" label="{{ __('Right Slide Panel') }}" />
+                <flux:radio.group wire:model="checkout_display_mode" variant="cards">
+                    <flux:radio value="modal" class="items-start">
+                        <div class="flex-1 space-y-3">
+                            <x-admin.display-mode-preview mode="modal" />
+                            <div>
+                                <flux:heading size="sm">{{ __('Modal') }}</flux:heading>
+                                <flux:text size="sm" variant="subtle">{{ __('Opens centered over the page') }}</flux:text>
+                            </div>
+                        </div>
+                        <flux:radio.indicator />
+                    </flux:radio>
+                    <flux:radio value="panel" class="items-start">
+                        <div class="flex-1 space-y-3">
+                            <x-admin.display-mode-preview mode="panel" />
+                            <div>
+                                <flux:heading size="sm">{{ __('Right Slide Panel') }}</flux:heading>
+                                <flux:text size="sm" variant="subtle">{{ __('Slides in from the right edge, like a drawer') }}</flux:text>
+                            </div>
+                        </div>
+                        <flux:radio.indicator />
+                    </flux:radio>
                 </flux:radio.group>
-                <flux:description>{{ __('Modal opens centered over the page. Right Slide Panel slides in from the right edge, like a drawer.') }}</flux:description>
                 <flux:error name="checkout_display_mode" />
             </flux:field>
         </div>

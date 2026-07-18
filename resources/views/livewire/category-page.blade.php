@@ -74,12 +74,12 @@
                 {{-- Breadcrumb --}}
                 <nav aria-label="{{ __('Breadcrumb') }}" class="mb-6">
                     <ol class="flex flex-wrap items-center gap-1.5 text-xs font-semibold text-zinc-400 dark:text-zinc-500">
-                        <li><a href="{{ route('home') }}" class="hover:text-zinc-900 dark:hover:text-white transition-colors duration-200">{{ __('Home') }}</a></li>
+                        <li><a href="{{ route('home') }}" wire:navigate class="hover:text-zinc-900 dark:hover:text-white transition-colors duration-200">{{ __('Home') }}</a></li>
                         <li aria-hidden="true">/</li>
-                        <li><a href="{{ route('shop') }}" class="hover:text-zinc-900 dark:hover:text-white transition-colors duration-200">{{ __('Shop') }}</a></li>
+                        <li><a href="{{ route('shop') }}" wire:navigate class="hover:text-zinc-900 dark:hover:text-white transition-colors duration-200">{{ __('Shop') }}</a></li>
                         @if($category->parent)
                             <li aria-hidden="true">/</li>
-                            <li><a href="{{ route('category.show', $category->parent->slug) }}" class="hover:text-zinc-900 dark:hover:text-white transition-colors duration-200">{{ $category->parent->name }}</a></li>
+                            <li><a href="{{ route('category.show', $category->parent->slug) }}" wire:navigate class="hover:text-zinc-900 dark:hover:text-white transition-colors duration-200">{{ $category->parent->name }}</a></li>
                         @endif
                         <li aria-hidden="true">/</li>
                         <li aria-current="page" class="text-zinc-600 dark:text-zinc-300">{{ $category->name }}</li>
@@ -123,6 +123,7 @@
                         @foreach($this->subcategories as $subcategory)
                             <a
                                 href="{{ route('category.show', $subcategory->slug) }}"
+                                wire:navigate
                                 class="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-zinc-50 dark:bg-zinc-800/60 text-zinc-700 dark:text-zinc-300 text-sm font-semibold ring-1 ring-zinc-900/[0.06] dark:ring-white/[0.08] hover:ring-emerald-600/20 dark:hover:ring-emerald-500/30 hover:text-emerald-700 dark:hover:text-emerald-400 transition-all duration-200"
                             >
                                 {{ $subcategory->name }}
@@ -138,6 +139,7 @@
                             @foreach($this->siblingCategories as $sibling)
                                 <a
                                     href="{{ route('category.show', $sibling->slug) }}"
+                                    wire:navigate
                                     class="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-zinc-50 dark:bg-zinc-800/60 text-zinc-700 dark:text-zinc-300 text-sm font-semibold ring-1 ring-zinc-900/[0.06] dark:ring-white/[0.08] hover:ring-emerald-600/20 dark:hover:ring-emerald-500/30 hover:text-emerald-700 dark:hover:text-emerald-400 transition-all duration-200"
                                 >
                                     {{ $sibling->name }}

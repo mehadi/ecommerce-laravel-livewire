@@ -37,6 +37,7 @@
                 @mouseleave="openDropdown = null"
             >
                 <a href="{{ $navItem->resolved_url }}"
+                    wire:navigate
                     @if($navItem->open_in_new_tab) target="_blank" rel="noopener noreferrer" @endif
                     @focus="openDropdown = {{ $navItem->id }}"
                     aria-haspopup="true"
@@ -77,6 +78,7 @@
                             }
                         @endphp
                         <a href="{{ $child->resolved_url }}"
+                            wire:navigate
                             @if($child->open_in_new_tab) target="_blank" rel="noopener noreferrer" @endif
                             class="block px-3.5 py-2.5 rounded-xl text-sm font-medium transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-900 dark:focus-visible:ring-white {{ $childIsActive ? 'bg-zinc-100 dark:bg-white/[0.08] text-zinc-900 dark:text-white' : 'text-zinc-600 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 hover:text-zinc-900 dark:hover:text-white' }}">
                             <span class="flex items-center gap-2">
@@ -91,6 +93,7 @@
             </div>
         @else
             <a href="{{ $navItem->resolved_url }}"
+                wire:navigate
                 @if($navItem->open_in_new_tab) target="_blank" rel="noopener noreferrer" @endif
                 class="block px-3.5 py-2 rounded-full text-sm font-semibold transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-900 dark:focus-visible:ring-white {{ $linkClasses }}">
                 <span class="flex items-center gap-1.5">

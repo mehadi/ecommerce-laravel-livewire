@@ -7,6 +7,7 @@
                 $isActive = request()->is('category/'.$category->slug) || request()->is('category/'.$category->slug.'/*');
             @endphp
             <a href="{{ $categoryUrl }}"
+                wire:navigate
                 @click="mobileMenuOpen = false"
                 class="block px-4 py-3 rounded-full text-sm font-semibold transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-900 dark:focus-visible:ring-white {{ $isActive ? 'bg-zinc-100 dark:bg-white/[0.08] text-zinc-900 dark:text-white' : 'text-zinc-600 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 hover:text-zinc-900 dark:hover:text-white' }}">
                 {{ $category->name }}

@@ -291,7 +291,7 @@
 
                     {{-- Tall category image card --}}
                     @if($heroExtras['spotlightCategory'])
-                        <a href="{{ '/category/'.$heroExtras['spotlightCategory']->slug }}" class="group relative flex-1 min-h-[240px] sm:min-h-[280px] rounded-3xl overflow-hidden ring-1 ring-zinc-900/[0.04] dark:ring-white/[0.06] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-900 dark:focus-visible:ring-white">
+                        <a href="{{ '/category/'.$heroExtras['spotlightCategory']->slug }}" wire:navigate class="group relative flex-1 min-h-[240px] sm:min-h-[280px] rounded-3xl overflow-hidden ring-1 ring-zinc-900/[0.04] dark:ring-white/[0.06] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-900 dark:focus-visible:ring-white">
                             <img src="{{ asset('storage/'.$heroExtras['spotlightCategory']->image) }}" alt="{{ $heroExtras['spotlightCategory']->name }}" loading="lazy" class="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105 motion-reduce:transform-none">
                             <span class="absolute top-3.5 right-3.5 flex items-center justify-center w-9 h-9 rounded-full bg-white/90 dark:bg-zinc-900/80 backdrop-blur ring-1 ring-zinc-900/[0.06] dark:ring-white/[0.1] shadow-sm text-zinc-700 dark:text-zinc-200 group-hover:rotate-45 motion-reduce:transform-none transition-transform duration-300" aria-hidden="true">
                                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.2">

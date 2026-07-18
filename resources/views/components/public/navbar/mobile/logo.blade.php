@@ -1,4 +1,4 @@
-<a href="/" class="flex items-center justify-center gap-2 bg-white dark:bg-zinc-900 rounded-[1.75rem] p-3 ring-1 ring-zinc-900/[0.06] dark:ring-white/[0.08] shadow-[0_24px_64px_-16px_rgb(16_24_40_/_0.25)]">
+<a href="/" wire:navigate class="flex items-center justify-center gap-2 bg-white dark:bg-zinc-900 rounded-[1.75rem] p-3 ring-1 ring-zinc-900/[0.06] dark:ring-white/[0.08] shadow-[0_24px_64px_-16px_rgb(16_24_40_/_0.25)]">
     @if($siteLogo)
         <img src="{{ asset('storage/'.$siteLogo) }}" alt="{{ $siteName }}" class="h-8 w-auto rounded-xl">
     @else

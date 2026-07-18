@@ -48,7 +48,7 @@
             </p>
         @endif
         <h2 class="font-display text-base sm:text-lg font-semibold text-zinc-900 dark:text-white leading-snug group-hover:text-emerald-700 dark:group-hover:text-emerald-400 transition-colors duration-200 text-balance">
-            <a href="{{ route('product.show', $product) }}" class="focus-visible:outline-none after:absolute after:inset-0 after:rounded-3xl">
+            <a href="{{ route('product.show', $product) }}" wire:navigate class="focus-visible:outline-none after:absolute after:inset-0 after:rounded-3xl">
                 {{ $product->name }}
             </a>
         </h2>
