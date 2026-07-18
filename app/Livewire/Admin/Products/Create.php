@@ -547,11 +547,11 @@ class Create extends Component
     public function render()
     {
         $isEdit = $this->product !== null;
-        $attributes = Attribute::where('is_active', true)->orderBy('order')->orderBy('name')->get();
+        $availableAttributes = Attribute::where('is_active', true)->orderBy('order')->orderBy('name')->get();
 
         return view('livewire.admin.products.create', [
             'categories' => Category::with('parent')->orderBy('order')->orderBy('name_en')->get(),
-            'attributes' => $attributes,
+            'availableAttributes' => $availableAttributes,
             'isEdit' => $isEdit,
         ])->layout('components.layouts.app', [
             'title' => $isEdit ? __('Edit Product') : __('Create Product'),
