@@ -4,6 +4,7 @@ namespace App\Livewire\Admin\Products;
 
 use App\Models\Category;
 use App\Models\Product;
+use App\Support\Tenancy;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Storage;
 use Livewire\Component;
@@ -214,7 +215,7 @@ class Index extends Component
 
     protected function clearCache(): void
     {
-        Cache::forget('products.featured');
+        Cache::forget(Tenancy::cacheKey('products.featured'));
     }
 
     protected function getProductsQuery()

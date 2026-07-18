@@ -6,6 +6,7 @@ use App\Livewire\Concerns\HasShoppingCart;
 use App\Models\Category;
 use App\Models\Product;
 use App\Models\Setting;
+use App\Support\Tenancy;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Str;
 use Livewire\Attributes\Computed;
@@ -114,7 +115,7 @@ class CategoryPage extends Component
     #[Computed]
     public function categoryIds(): array
     {
-        return Cache::remember('category.'.$this->category->id.'.subtree_ids', 1800, function () {
+        return Cache::remember(Tenancy::cacheKey('category.'.$this->category->id.'.subtree_ids'), 1800, function () {
             $all = Category::where('is_active', true)->get(['id', 'parent_id']);
 
             $ids = [$this->category->id];
@@ -135,7 +136,7 @@ class CategoryPage extends Component
     #[Computed]
     public function subcategories()
     {
-        return Cache::remember('category.'.$this->category->id.'.subcategories', 1800, function () {
+        return Cache::remember(Tenancy::cacheKey('category.'.$this->category->id.'.subcategories'), 1800, function () {
             return Category::where('parent_id', $this->category->id)
                 ->where('is_active', true)
                 ->withCount(['products' => fn ($q) => $q->where('is_active', true)])
@@ -147,7 +148,7 @@ class CategoryPage extends Component
     #[Computed]
     public function siblingCategories()
     {
-        return Cache::remember('category.'.$this->category->id.'.siblings', 1800, function () {
+        return Cache::remember(Tenancy::cacheKey('category.'.$this->category->id.'.siblings'), 1800, function () {
             if ($this->category->parent_id === null) {
                 return collect();
             }

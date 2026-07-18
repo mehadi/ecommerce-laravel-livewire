@@ -3,6 +3,7 @@
 namespace App\Livewire\Admin\Testimonials;
 
 use App\Models\Testimonial;
+use App\Support\Tenancy;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Storage;
 use Livewire\Component;
@@ -176,7 +177,7 @@ class Index extends Component
 
     protected function clearCache(): void
     {
-        Cache::forget('testimonials.active');
+        Cache::forget(Tenancy::cacheKey('testimonials.active'));
     }
 
     public function createTestimonial(): void
@@ -211,7 +212,7 @@ class Index extends Component
 
         $imagePath = null;
         if ($this->image) {
-            $imagePath = $this->image->store('testimonials', 'public');
+            $imagePath = $this->image->store(Tenancy::storagePath('testimonials'), 'public');
         }
 
         Testimonial::create([
@@ -241,7 +242,7 @@ class Index extends Component
             if ($imagePath) {
                 Storage::disk('public')->delete($imagePath);
             }
-            $imagePath = $this->image->store('testimonials', 'public');
+            $imagePath = $this->image->store(Tenancy::storagePath('testimonials'), 'public');
         }
 
         $testimonial->update([

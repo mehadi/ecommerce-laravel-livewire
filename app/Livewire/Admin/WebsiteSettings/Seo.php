@@ -2,7 +2,9 @@
 
 namespace App\Livewire\Admin\WebsiteSettings;
 
+use App\Models\PlatformSetting;
 use App\Models\Setting;
+use App\Support\Tenancy;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Storage;
 use Livewire\Component;
@@ -21,16 +23,18 @@ class Seo extends Component
 
     public ?string $existing_og_image = null;
 
+    /** Platform-wide defaults, shown as placeholders for fields the store hasn't set. */
+    public array $platformDefaults = [];
+
     /**
      * Mount the component.
      */
     public function mount(): void
     {
-        $settings = Setting::getMany([
-            'meta_description',
-            'meta_keywords',
-            'site_og_image',
-        ]);
+        $keys = ['meta_description', 'meta_keywords', 'site_og_image'];
+
+        $settings = Setting::getManyOwn($keys);
+        $this->platformDefaults = PlatformSetting::getMany($keys);
 
         $this->meta_description = $settings['meta_description'] ?? '';
         $this->meta_keywords = $settings['meta_keywords'] ?? '';
@@ -71,7 +75,7 @@ class Seo extends Component
             }
 
             // Store new OG image
-            $ogImagePath = $this->og_image->store('og-images', 'public');
+            $ogImagePath = $this->og_image->store(Tenancy::storagePath('og-images'), 'public');
             $validated['site_og_image'] = $ogImagePath;
             $this->existing_og_image = $ogImagePath;
             $this->og_image = null;
@@ -83,9 +87,9 @@ class Seo extends Component
         Setting::setMany($validated);
 
         // Clear relevant caches
-        Cache::forget('landing.sections.hero');
-        Cache::forget('landing.sections.features');
-        Cache::forget('landing.sections.faq');
+        Cache::forget(Tenancy::cacheKey('landing.sections.hero'));
+        Cache::forget(Tenancy::cacheKey('landing.sections.features'));
+        Cache::forget(Tenancy::cacheKey('landing.sections.faq'));
 
         session()->flash('message', __('Website settings updated successfully.'));
     }

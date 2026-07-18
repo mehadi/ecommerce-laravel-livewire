@@ -32,14 +32,14 @@
                         @if ($setting->type === 'flat')
                             <p class="text-sm text-zinc-600 dark:text-zinc-400">
                                 <span class="font-medium">{{ __('Rate:') }}</span>
-                                <span class="ml-2 font-semibold text-zinc-900 dark:text-white">৳{{ number_format($setting->flat_rate ?? 0, 2) }}</span>
+                                <span class="ml-2 font-semibold text-zinc-900 dark:text-white">{{ \App\Models\Setting::get('currency_symbol', '৳') }}{{ number_format($setting->flat_rate ?? 0, 2) }}</span>
                             </p>
                         @else
                             <p class="text-sm text-zinc-600 dark:text-zinc-400">
                                 <span class="font-medium">{{ __('Base Rate:') }}</span>
-                                <span class="ml-2 font-semibold text-zinc-900 dark:text-white">৳{{ number_format($setting->base_rate ?? 0, 2) }}</span>
+                                <span class="ml-2 font-semibold text-zinc-900 dark:text-white">{{ \App\Models\Setting::get('currency_symbol', '৳') }}{{ number_format($setting->base_rate ?? 0, 2) }}</span>
                                 <span class="ml-4 font-medium">{{ __('Per KG:') }}</span>
-                                <span class="ml-2 font-semibold text-zinc-900 dark:text-white">৳{{ number_format($setting->per_kg_rate ?? 0, 2) }}</span>
+                                <span class="ml-2 font-semibold text-zinc-900 dark:text-white">{{ \App\Models\Setting::get('currency_symbol', '৳') }}{{ number_format($setting->per_kg_rate ?? 0, 2) }}</span>
                             </p>
                         @endif
                     </div>
@@ -55,7 +55,15 @@
 
     {{-- Shipping Mode Selection --}}
     <div class="rounded-lg border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-700 dark:bg-zinc-900">
-        <flux:heading size="lg" class="mb-4">{{ __('Shipping Mode') }}</flux:heading>
+        <div class="flex items-center gap-3 mb-4">
+            <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-100 dark:bg-blue-900/20">
+                <flux:icon.truck class="size-5 text-blue-600 dark:text-blue-400" />
+            </div>
+            <div>
+                <flux:heading size="md" level="3">{{ __('Shipping Mode') }}</flux:heading>
+                <flux:text class="text-sm text-neutral-600 dark:text-neutral-400">{{ __('Choose how shipping costs are calculated for orders') }}</flux:text>
+            </div>
+        </div>
 
         <div class="space-y-4">
             <flux:field>
@@ -107,9 +115,9 @@
                         <div class="mt-4 p-3 rounded-lg bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800">
                             <p class="text-sm font-medium text-blue-900 dark:text-blue-100 mb-2">{{ __('Example Calculations:') }}</p>
                             <ul class="text-xs text-blue-800 dark:text-blue-200 space-y-1">
-                                <li>• {{ number_format($baseWeightKg, 2) }} KG: ৳{{ number_format($baseRate, 2) }}</li>
-                                <li>• {{ number_format($baseWeightKg + 1, 2) }} KG: ৳{{ number_format($baseRate + $perKgRate, 2) }}</li>
-                                <li>• {{ number_format($baseWeightKg + 2, 2) }} KG: ৳{{ number_format($baseRate + ($perKgRate * 2), 2) }}</li>
+                                <li>• {{ number_format($baseWeightKg, 2) }} KG: {{ \App\Models\Setting::get('currency_symbol', '৳') }}{{ number_format($baseRate, 2) }}</li>
+                                <li>• {{ number_format($baseWeightKg + 1, 2) }} KG: {{ \App\Models\Setting::get('currency_symbol', '৳') }}{{ number_format($baseRate + $perKgRate, 2) }}</li>
+                                <li>• {{ number_format($baseWeightKg + 2, 2) }} KG: {{ \App\Models\Setting::get('currency_symbol', '৳') }}{{ number_format($baseRate + ($perKgRate * 2), 2) }}</li>
                             </ul>
                         </div>
                     @endif
@@ -146,9 +154,9 @@
                         <div class="mt-4 p-3 rounded-lg bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800">
                             <p class="text-sm font-medium text-blue-900 dark:text-blue-100 mb-2">{{ __('Default Rate Examples:') }}</p>
                             <ul class="text-xs text-blue-800 dark:text-blue-200 space-y-1">
-                                <li>• {{ number_format($baseWeightKg, 2) }} KG: ৳{{ number_format($baseRate, 2) }}</li>
-                                <li>• {{ number_format($baseWeightKg + 1, 2) }} KG: ৳{{ number_format($baseRate + $perKgRate, 2) }}</li>
-                                <li>• {{ number_format($baseWeightKg + 2, 2) }} KG: ৳{{ number_format($baseRate + ($perKgRate * 2), 2) }}</li>
+                                <li>• {{ number_format($baseWeightKg, 2) }} KG: {{ \App\Models\Setting::get('currency_symbol', '৳') }}{{ number_format($baseRate, 2) }}</li>
+                                <li>• {{ number_format($baseWeightKg + 1, 2) }} KG: {{ \App\Models\Setting::get('currency_symbol', '৳') }}{{ number_format($baseRate + $perKgRate, 2) }}</li>
+                                <li>• {{ number_format($baseWeightKg + 2, 2) }} KG: {{ \App\Models\Setting::get('currency_symbol', '৳') }}{{ number_format($baseRate + ($perKgRate * 2), 2) }}</li>
                             </ul>
                         </div>
                     @endif
@@ -176,11 +184,16 @@
     @if ($type === 'city')
         <div class="rounded-lg border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-700 dark:bg-zinc-900">
             <div class="flex flex-wrap justify-between items-center gap-4 mb-4">
-                <div>
-                    <flux:heading size="lg">{{ __('City-Specific Rates') }}</flux:heading>
-                    <flux:text size="sm" variant="subtle" class="mt-1">
-                        {{ __('Configure shipping rates for specific cities or set a default rate for all other cities') }}
-                    </flux:text>
+                <div class="flex items-center gap-3">
+                    <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-100 dark:bg-blue-900/20">
+                        <flux:icon.map-pin class="size-5 text-blue-600 dark:text-blue-400" />
+                    </div>
+                    <div>
+                        <flux:heading size="md" level="3">{{ __('City-Specific Rates') }}</flux:heading>
+                        <flux:text class="text-sm text-neutral-600 dark:text-neutral-400">
+                            {{ __('Configure shipping rates for specific cities or set a default rate for all other cities') }}
+                        </flux:text>
+                    </div>
                 </div>
                 <div class="flex gap-2">
                     @if (!$restOfAllCitiesRate)
@@ -215,14 +228,14 @@
             @if ($cityRates->count() > 0)
                 <div class="overflow-x-auto">
                     <table class="w-full">
-                        <thead>
-                            <tr class="border-b border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800">
-                                <th class="px-6 py-3 text-left text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">{{ __('City') }}</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">{{ __('Base Weight') }} (KG)</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">{{ __('Base Rate') }}</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">{{ __('Per KG Rate') }}</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">{{ __('Status') }}</th>
-                                <th class="px-6 py-3 text-right text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">{{ __('Actions') }}</th>
+                        <thead class="bg-zinc-50 dark:bg-zinc-800">
+                            <tr class="border-b border-zinc-200 dark:border-zinc-700">
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">{{ __('City') }}</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">{{ __('Base Weight') }} (KG)</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">{{ __('Base Rate') }}</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">{{ __('Per KG Rate') }}</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">{{ __('Status') }}</th>
+                                <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">{{ __('Actions') }}</th>
                             </tr>
                         </thead>
                         <tbody class="bg-white dark:bg-zinc-900 divide-y divide-zinc-200 dark:divide-zinc-700">
@@ -248,10 +261,10 @@
                                         {{ number_format($cityRate->base_weight_kg, 2) }} KG
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-zinc-900 dark:text-white font-semibold">
-                                        ৳{{ number_format($cityRate->base_rate, 2) }}
+                                        {{ \App\Models\Setting::get('currency_symbol', '৳') }}{{ number_format($cityRate->base_rate, 2) }}
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-zinc-900 dark:text-white font-semibold">
-                                        ৳{{ number_format($cityRate->per_kg_rate, 2) }}
+                                        {{ \App\Models\Setting::get('currency_symbol', '৳') }}{{ number_format($cityRate->per_kg_rate, 2) }}
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap">
                                         @if ($cityRate->is_active)

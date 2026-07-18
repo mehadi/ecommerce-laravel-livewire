@@ -9,6 +9,7 @@ use App\Models\LandingPageSection;
 use App\Models\Product;
 use App\Models\Setting;
 use App\Models\Testimonial;
+use App\Support\Tenancy;
 use Illuminate\Support\Facades\Cache;
 use Livewire\Attributes\Computed;
 use Livewire\Component;
@@ -30,7 +31,7 @@ class LandingPage extends Component
     public function mount(?string $slug = null): void
     {
         if ($slug) {
-            $this->landingPageConfig = Cache::remember('landing.page.'.$slug, 3600, function () use ($slug) {
+            $this->landingPageConfig = Cache::remember(Tenancy::cacheKey('landing.page.'.$slug), 3600, function () use ($slug) {
                 return LandingPageConfig::where('slug', $slug)
                     ->where('is_active', true)
                     ->with('product')
@@ -180,7 +181,7 @@ class LandingPage extends Component
     public function getHeroSectionProperty(): ?LandingPageSection
     {
         // Always use the default hero section - the product will be displayed within it
-        return Cache::remember('landing.sections.hero', 3600, function () {
+        return Cache::remember(Tenancy::cacheKey('landing.sections.hero'), 3600, function () {
             return LandingPageSection::where('type', 'hero')
                 ->where('is_active', true)
                 ->orderBy('order')
@@ -191,7 +192,7 @@ class LandingPage extends Component
     public function getFeaturesProperty()
     {
         if ($this->landingPageConfig && isset($this->landingPageConfig->config['features_section_ids']) && ! empty($this->landingPageConfig->config['features_section_ids'])) {
-            return Cache::remember('landing.sections.features.'.md5(implode(',', $this->landingPageConfig->config['features_section_ids'])), 3600, function () {
+            return Cache::remember(Tenancy::cacheKey('landing.sections.features.'.md5(implode(',', $this->landingPageConfig->config['features_section_ids']))), 3600, function () {
                 return LandingPageSection::whereIn('id', $this->landingPageConfig->config['features_section_ids'])
                     ->where('is_active', true)
                     ->orderBy('order')
@@ -199,7 +200,7 @@ class LandingPage extends Component
             });
         }
 
-        return Cache::remember('landing.sections.features', 3600, function () {
+        return Cache::remember(Tenancy::cacheKey('landing.sections.features'), 3600, function () {
             return LandingPageSection::where('type', 'features')
                 ->where('is_active', true)
                 ->orderBy('order')
@@ -210,7 +211,7 @@ class LandingPage extends Component
     public function getTestimonialsProperty()
     {
         if ($this->landingPageConfig && isset($this->landingPageConfig->config['testimonial_ids']) && ! empty($this->landingPageConfig->config['testimonial_ids'])) {
-            return Cache::remember('testimonials.custom.'.md5(implode(',', $this->landingPageConfig->config['testimonial_ids'])), 3600, function () {
+            return Cache::remember(Tenancy::cacheKey('testimonials.custom.'.md5(implode(',', $this->landingPageConfig->config['testimonial_ids']))), 3600, function () {
                 return Testimonial::whereIn('id', $this->landingPageConfig->config['testimonial_ids'])
                     ->where('is_active', true)
                     ->orderBy('order')
@@ -218,7 +219,7 @@ class LandingPage extends Component
             });
         }
 
-        return Cache::remember('testimonials.active', 3600, function () {
+        return Cache::remember(Tenancy::cacheKey('testimonials.active'), 3600, function () {
             return Testimonial::where('is_active', true)
                 ->orderBy('order')
                 ->limit(6)
@@ -228,7 +229,7 @@ class LandingPage extends Component
 
     public function getFeaturedProductsProperty()
     {
-        return Cache::remember('landing.featured_products', 3600, function () {
+        return Cache::remember(Tenancy::cacheKey('landing.featured_products'), 3600, function () {
             return Product::where('is_active', true)
                 ->where('is_featured', true)
                 ->with(['category', 'productAttributes'])
@@ -240,7 +241,7 @@ class LandingPage extends Component
 
     public function getFeaturedCategoriesProperty()
     {
-        return Cache::remember('landing.featured_categories', 3600, function () {
+        return Cache::remember(Tenancy::cacheKey('landing.featured_categories'), 3600, function () {
             return Category::where('is_active', true)
                 ->whereHas('products', fn ($q) => $q->where('is_active', true))
                 ->withCount(['products' => fn ($q) => $q->where('is_active', true)])
@@ -253,7 +254,7 @@ class LandingPage extends Component
     public function getFaqsProperty()
     {
         if ($this->landingPageConfig && isset($this->landingPageConfig->config['faq_section_ids']) && ! empty($this->landingPageConfig->config['faq_section_ids'])) {
-            return Cache::remember('landing.sections.faq.'.md5(implode(',', $this->landingPageConfig->config['faq_section_ids'])), 3600, function () {
+            return Cache::remember(Tenancy::cacheKey('landing.sections.faq.'.md5(implode(',', $this->landingPageConfig->config['faq_section_ids']))), 3600, function () {
                 return LandingPageSection::whereIn('id', $this->landingPageConfig->config['faq_section_ids'])
                     ->where('is_active', true)
                     ->orderBy('order')
@@ -261,7 +262,7 @@ class LandingPage extends Component
             });
         }
 
-        return Cache::remember('landing.sections.faq', 3600, function () {
+        return Cache::remember(Tenancy::cacheKey('landing.sections.faq'), 3600, function () {
             return LandingPageSection::where('type', 'faq')
                 ->where('is_active', true)
                 ->orderBy('order')
@@ -453,7 +454,7 @@ class LandingPage extends Component
             'content_type' => 'product',
             'content_ids' => [$product->id],
             'value' => $price * $this->quantity,
-            'currency' => 'BDT',
+            'currency' => \App\Models\Setting::get('currency_code', 'BDT'),
         ]);
     }
 
@@ -488,7 +489,7 @@ class LandingPage extends Component
             'content_type' => 'product',
             'content_ids' => [$product->id],
             'value' => $price * $this->quantity,
-            'currency' => 'BDT',
+            'currency' => \App\Models\Setting::get('currency_code', 'BDT'),
         ]);
     }
 

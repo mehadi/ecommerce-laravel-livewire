@@ -9,6 +9,8 @@
                 <flux:navlist.item icon="chart-bar" :href="route('admin.website.analytics')" :current="request()->routeIs('admin.website.analytics')" wire:navigate>{{ __('Analytics & Tracking') }}</flux:navlist.item>
                 <flux:navlist.item icon="shield-check" :href="route('admin.website.verification')" :current="request()->routeIs('admin.website.verification')" wire:navigate>{{ __('Site Verification') }}</flux:navlist.item>
                 <flux:navlist.item icon="magnifying-glass" :href="route('admin.website.seo')" :current="request()->routeIs('admin.website.seo')" wire:navigate>{{ __('SEO Settings') }}</flux:navlist.item>
+                <flux:navlist.item icon="globe-alt" :href="route('admin.website.domains')" :current="request()->routeIs('admin.website.domains')" wire:navigate>{{ __('Custom Domains') }}</flux:navlist.item>
+                <flux:navlist.item icon="banknotes" :href="route('admin.website.localization')" :current="request()->routeIs('admin.website.localization')" wire:navigate>{{ __('Localization') }}</flux:navlist.item>
             </flux:navlist>
         </div>
 
@@ -20,6 +22,8 @@
             <flux:button size="sm" :href="route('admin.website.analytics')" :variant="request()->routeIs('admin.website.analytics') ? 'primary' : 'ghost'" wire:navigate>{{ __('Analytics & Tracking') }}</flux:button>
             <flux:button size="sm" :href="route('admin.website.verification')" :variant="request()->routeIs('admin.website.verification') ? 'primary' : 'ghost'" wire:navigate>{{ __('Site Verification') }}</flux:button>
             <flux:button size="sm" :href="route('admin.website.seo')" :variant="request()->routeIs('admin.website.seo') ? 'primary' : 'ghost'" wire:navigate>{{ __('SEO Settings') }}</flux:button>
+            <flux:button size="sm" :href="route('admin.website.domains')" :variant="request()->routeIs('admin.website.domains') ? 'primary' : 'ghost'" wire:navigate>{{ __('Custom Domains') }}</flux:button>
+            <flux:button size="sm" :href="route('admin.website.localization')" :variant="request()->routeIs('admin.website.localization') ? 'primary' : 'ghost'" wire:navigate>{{ __('Localization') }}</flux:button>
         </div>
     </div>
 

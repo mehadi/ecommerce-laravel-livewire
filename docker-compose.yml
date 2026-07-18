@@ -56,8 +56,37 @@ services:
     depends_on:
       - app
 
+  # Terminates TLS for tenant custom domains + free subdomains and proxies plaintext
+  # to nginx, which is left unchanged. Only caddy's 80/443 are published to the host;
+  # nginx's own port stays reachable only within the docker network, which is what
+  # keeps /internal/domains/ask (the on-demand TLS "ask" gate) from being reachable
+  # from the public internet.
+  caddy:
+    image: caddy:2-alpine
+    container_name: ${APP_NAME:-laravel}_caddy
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      # Platform's own primary domain, e.g. shops.yourplatform.com — must match one
+      # entry in CENTRAL_DOMAINS and TENANT_DOMAIN_TARGET in the app's .env.
+      - PLATFORM_DOMAIN=${PLATFORM_DOMAIN:-localhost}
+    volumes:
+      - ./docker/caddy/Caddyfile:/etc/caddy/Caddyfile
+      - caddy_data:/data
+      - caddy_config:/config
+    networks:
+      - laravel
+    depends_on:
+      - nginx
+
 volumes:
   postgres_data:
+    driver: local
+  caddy_data:
+    driver: local
+  caddy_config:
     driver: local
 
 networks:

@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Admin\Permissions;
 
+use App\Support\Tenancy;
 use Illuminate\Support\Facades\Gate;
 use Livewire\Component;
 use Livewire\WithPagination;
@@ -123,7 +124,7 @@ class Index extends Component
 
         $stats = [
             'total' => Permission::count(),
-            'total_roles' => \Spatie\Permission\Models\Role::count(),
+            'total_roles' => Tenancy::roleQuery()->count(),
             'assigned_permissions' => Permission::has('roles')->count(),
             'unassigned_permissions' => Permission::doesntHave('roles')->count(),
         ];

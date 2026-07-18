@@ -5,6 +5,7 @@ namespace App\Livewire\Dashboard\Concerns;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Product;
+use App\Models\Setting;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
@@ -720,8 +721,9 @@ trait HasDashboardAnalytics
             $allInsights['top_product'] = [
                 'key' => 'top_product',
                 'title' => __('Top Product'),
-                'body' => __(':product generated ৳:amount this period.', [
+                'body' => __(':product generated :currency:amount this period.', [
                     'product' => $topProductName,
+                    'currency' => Setting::get('currency_symbol', '৳'),
                     'amount' => number_format((float) $topProductRevenue, 2),
                 ]),
                 'variant' => 'info',
@@ -773,7 +775,8 @@ trait HasDashboardAnalytics
             $allInsights['outstanding_payments'] = [
                 'key' => 'outstanding_payments',
                 'title' => __('Outstanding Payments'),
-                'body' => __('৳:amount is pending collection across open orders.', [
+                'body' => __(':currency:amount is pending collection across open orders.', [
+                    'currency' => Setting::get('currency_symbol', '৳'),
                     'amount' => number_format($outstanding, 2),
                 ]),
                 'variant' => 'warning',
@@ -789,8 +792,9 @@ trait HasDashboardAnalytics
             $allInsights['regional_momentum'] = [
                 'key' => 'regional_momentum',
                 'title' => __('Regional Momentum'),
-                'body' => __(':city leads revenue with ৳:amount in sales.', [
+                'body' => __(':city leads revenue with :currency:amount in sales.', [
                     'city' => $topCity,
+                    'currency' => Setting::get('currency_symbol', '৳'),
                     'amount' => number_format((float) $topCityRevenue, 2),
                 ]),
                 'variant' => 'info',

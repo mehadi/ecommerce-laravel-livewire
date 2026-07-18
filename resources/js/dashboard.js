@@ -344,6 +344,123 @@ const chartConfigs = {
             },
         },
     },
+    platform_growth_chart: {
+        type: 'line',
+        dataset: (data) => [{
+            label: 'New Tenants',
+            data: data.data,
+            borderColor: 'rgb(59, 130, 246)',
+            backgroundColor: 'rgba(59, 130, 246, 0.1)',
+            tension: 0.4,
+            fill: true,
+        }],
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: {
+                y: { beginAtZero: true, ticks: { stepSize: 1 } },
+            },
+        },
+    },
+    plan_breakdown_chart: {
+        type: 'bar',
+        dataset: (data) => [
+            {
+                label: 'Tenants',
+                data: data.tenant_counts,
+                backgroundColor: 'rgba(59, 130, 246, 0.5)',
+                borderColor: 'rgb(59, 130, 246)',
+                borderWidth: 1,
+                yAxisID: 'y',
+            },
+            {
+                label: 'MRR',
+                data: data.mrr,
+                backgroundColor: 'rgba(34, 197, 94, 0.5)',
+                borderColor: 'rgb(34, 197, 94)',
+                borderWidth: 1,
+                yAxisID: 'y1',
+            },
+        ],
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: true } },
+            scales: {
+                y: {
+                    type: 'linear',
+                    position: 'left',
+                    beginAtZero: true,
+                    ticks: { stepSize: 1 },
+                },
+                y1: {
+                    type: 'linear',
+                    position: 'right',
+                    beginAtZero: true,
+                    ticks: {
+                        callback(value) {
+                            return '$' + value.toLocaleString();
+                        },
+                    },
+                    grid: { drawOnChartArea: false },
+                },
+            },
+        },
+    },
+    platform_payments_chart: {
+        type: 'line',
+        dataset: (data) => [{
+            label: 'Recorded Payments',
+            data: data.data,
+            borderColor: 'rgb(34, 197, 94)',
+            backgroundColor: 'rgba(34, 197, 94, 0.1)',
+            tension: 0.4,
+            fill: true,
+        }],
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    callbacks: {
+                        label(context) {
+                            return '$' + context.parsed.y.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                        },
+                    },
+                },
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        callback(value) {
+                            return '$' + value.toLocaleString();
+                        },
+                    },
+                },
+            },
+        },
+    },
+    platform_churn_chart: {
+        type: 'bar',
+        dataset: (data) => [{
+            label: 'Churn Signals',
+            data: data.data,
+            backgroundColor: 'rgba(239, 68, 68, 0.5)',
+            borderColor: 'rgb(239, 68, 68)',
+            borderWidth: 1,
+        }],
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: {
+                y: { beginAtZero: true, ticks: { stepSize: 1 } },
+            },
+        },
+    },
     discount_impact_chart: {
         type: 'bar',
         dataset: (data) => [

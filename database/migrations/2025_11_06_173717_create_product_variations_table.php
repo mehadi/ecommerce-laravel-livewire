@@ -13,6 +13,7 @@ return new class extends Migration
     {
         Schema::create('product_variations', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('tenant_id')->nullable()->constrained()->cascadeOnDelete()->index();
             $table->foreignId('product_id')->constrained()->onDelete('cascade');
             $table->string('name'); // e.g., "Size", "Color"
             $table->integer('order')->default(0);

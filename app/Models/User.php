@@ -25,6 +25,8 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'tenant_id',
+        'can_impersonate_tenants',
     ];
 
     /**
@@ -49,6 +51,7 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'can_impersonate_tenants' => 'boolean',
         ];
     }
 

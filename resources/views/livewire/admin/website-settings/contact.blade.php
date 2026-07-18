@@ -18,7 +18,7 @@
                     <flux:input
                         wire:model="contact_email"
                         type="email"
-                        placeholder="info@example.com"
+                        placeholder="{{ $platformDefaults['contact_email'] ?? 'info@example.com' }}"
                     />
                     <flux:description>{{ __('Email address shown in the contact section') }}</flux:description>
                     <flux:error name="contact_email" />
@@ -29,7 +29,7 @@
                     <flux:input
                         wire:model="contact_phone"
                         type="text"
-                        placeholder="+880 XXXX-XXXXXX"
+                        placeholder="{{ $platformDefaults['contact_phone'] ?? '+880 XXXX-XXXXXX' }}"
                     />
                     <flux:description>{{ __('Phone number displayed for customer inquiries') }}</flux:description>
                     <flux:error name="contact_phone" />
@@ -39,7 +39,7 @@
                     <flux:label>{{ __('Contact Address') }}</flux:label>
                     <flux:textarea
                         wire:model="contact_address"
-                        placeholder="{{ __('Enter your business address') }}"
+                        placeholder="{{ $platformDefaults['contact_address'] ?? __('Enter your business address') }}"
                         rows="2"
                     />
                     <flux:description>{{ __('Physical address or location information') }}</flux:description>

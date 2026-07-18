@@ -13,14 +13,14 @@ return new class extends Migration
     {
         Schema::create('shipping_city_rates', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('city_id')->constrained('cities')->onDelete('cascade');
+            $table->foreignId('tenant_id')->nullable()->constrained()->cascadeOnDelete()->index();
+            // Nullable: represents "Rest of All Cities" when null.
+            $table->foreignId('city_id')->nullable()->constrained('cities')->onDelete('cascade');
             $table->decimal('base_rate', 10, 2);
             $table->decimal('per_kg_rate', 10, 2)->default(0);
             $table->decimal('base_weight_kg', 8, 2)->default(1.00);
             $table->boolean('is_active')->default(true);
             $table->timestamps();
-
-            $table->unique('city_id');
         });
     }
 

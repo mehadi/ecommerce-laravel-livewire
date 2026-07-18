@@ -5,6 +5,7 @@ namespace App\Livewire;
 use App\Models\Category;
 use App\Models\Product;
 use App\Models\Setting;
+use App\Support\Tenancy;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Str;
@@ -111,7 +112,7 @@ class CategoriesPage extends Component
     #[Computed]
     public function categories()
     {
-        $cards = Cache::remember('categories.index.cards', 1800, function () {
+        $cards = Cache::remember(Tenancy::cacheKey('categories.index.cards'), 1800, function () {
             $all = Category::where('is_active', true)
                 ->orderBy('order')
                 ->get(['id', 'parent_id', 'name_en', 'name_bn', 'slug', 'image', 'order']);

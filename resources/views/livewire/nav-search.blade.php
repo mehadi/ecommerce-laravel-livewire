@@ -87,7 +87,7 @@
                         @endif
                     </span>
                     <span class="shrink-0 text-sm font-bold text-emerald-600 dark:text-emerald-400 tabular-nums">
-                        ৳{{ number_format($product->price, 2) }}
+                        {{ \App\Models\Setting::get('currency_symbol', '৳') }}{{ number_format($product->price, 2) }}
                     </span>
                 </a>
             @empty

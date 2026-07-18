@@ -83,6 +83,28 @@
                     <flux:error name="frontend_content_width_custom" />
                 </flux:field>
             @endif
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                <flux:field>
+                    <flux:label>{{ __('Primary Brand Color') }}</flux:label>
+                    <div class="flex items-center gap-3">
+                        <input type="color" wire:model.live="theme_primary_color" class="h-10 w-14 rounded-lg border border-neutral-200 dark:border-neutral-700 cursor-pointer" />
+                        <flux:input wire:model.live="theme_primary_color" type="text" class="flex-1" />
+                    </div>
+                    <flux:description>{{ __('Used for primary buttons (Add to Cart, Buy Now) and nav accents across the storefront.') }}</flux:description>
+                    <flux:error name="theme_primary_color" />
+                </flux:field>
+
+                <flux:field>
+                    <flux:label>{{ __('Secondary Brand Color') }}</flux:label>
+                    <div class="flex items-center gap-3">
+                        <input type="color" wire:model.live="theme_secondary_color" class="h-10 w-14 rounded-lg border border-neutral-200 dark:border-neutral-700 cursor-pointer" />
+                        <flux:input wire:model.live="theme_secondary_color" type="text" class="flex-1" />
+                    </div>
+                    <flux:description>{{ __('Used for secondary accents across the storefront.') }}</flux:description>
+                    <flux:error name="theme_secondary_color" />
+                </flux:field>
+            </div>
         </div>
 
         <!-- Save Button -->

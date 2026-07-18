@@ -5,6 +5,7 @@ namespace App\Livewire\Admin\Products;
 use App\Models\Attribute;
 use App\Models\Category;
 use App\Models\Product;
+use App\Support\Tenancy;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Storage;
 use Livewire\Component;
@@ -257,6 +258,12 @@ class Create extends Component
 
         $isEdit = $this->product !== null;
 
+        if (! $isEdit && ! Tenancy::current()?->canAddProduct()) {
+            session()->flash('error', __('Your plan\'s product limit has been reached. Upgrade your plan to add more products.'));
+
+            return;
+        }
+
         // Auto-set order if not provided (only for create)
         if (! $isEdit && ($this->order === null || $this->order === 0)) {
             $maxOrder = Product::max('order');
@@ -290,14 +297,14 @@ class Create extends Component
             if ($isEdit && $this->product->primary_image) {
                 Storage::disk('public')->delete($this->product->primary_image);
             }
-            $data['primary_image'] = $this->primary_image->store('products', 'public');
+            $data['primary_image'] = $this->primary_image->store(Tenancy::storagePath('products'), 'public');
         }
 
         $galleryPaths = $isEdit ? $this->existing_gallery : [];
         if (! empty($this->gallery_images)) {
             foreach ($this->gallery_images as $image) {
                 if ($image) {
-                    $galleryPaths[] = $image->store('products/gallery', 'public');
+                    $galleryPaths[] = $image->store(Tenancy::storagePath('products/gallery'), 'public');
                 }
             }
         }
@@ -318,7 +325,7 @@ class Create extends Component
             $this->saveProductAttributes($product);
         }
 
-        Cache::forget('products.featured');
+        Cache::forget(Tenancy::cacheKey('products.featured'));
 
         session()->flash('message', $isEdit ? __('Product updated successfully.') : __('Product created successfully.'));
 
@@ -563,7 +570,7 @@ class Create extends Component
             return [];
         }
 
-        $path = $file->store('products/rich-text', 'public');
+        $path = $file->store(Tenancy::storagePath('products/rich-text'), 'public');
 
         $this->pendingAttachments = array_values($this->pendingAttachments);
 

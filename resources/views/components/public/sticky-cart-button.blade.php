@@ -14,7 +14,7 @@
                     </div>
                     <div>
                         <span class="text-[11px] uppercase tracking-wider font-medium text-zinc-500 dark:text-zinc-400 block">{{ __('Total') }}</span>
-                        <span class="font-display text-xl font-bold text-zinc-900 dark:text-white tabular-nums">৳{{ number_format($cartFinalTotal, 2) }}</span>
+                        <span class="font-display text-xl font-bold text-zinc-900 dark:text-white tabular-nums">{{ \App\Models\Setting::get('currency_symbol', '৳') }}{{ number_format($cartFinalTotal, 2) }}</span>
                     </div>
                 </div>
                 <div class="flex gap-2.5 w-full sm:w-auto">

@@ -3,6 +3,7 @@
 namespace App\Livewire\Admin\Categories;
 
 use App\Models\Category;
+use App\Support\Tenancy;
 use Illuminate\Support\Facades\Cache;
 use Livewire\Component;
 use Livewire\WithFileUploads;
@@ -166,7 +167,7 @@ class Index extends Component
     {
         $category = Category::findOrFail($categoryId);
         $category->update(['is_active' => ! $category->is_active]);
-        Cache::forget('categories.all');
+        Cache::forget(Tenancy::cacheKey('categories.all'));
         session()->flash('message', __('Category status updated successfully.'));
         $this->selectedItems = array_diff($this->selectedItems, [$categoryId]);
     }
@@ -186,7 +187,7 @@ class Index extends Component
             $category->update(['is_active' => $newStatus]);
         }
 
-        Cache::forget('categories.all');
+        Cache::forget(Tenancy::cacheKey('categories.all'));
         session()->flash('message', __(':count category(s) status updated successfully.', ['count' => count($this->selectedItems)]));
         $this->selectedItems = [];
         $this->selectAll = false;
@@ -214,7 +215,7 @@ class Index extends Component
             $deletedCount++;
         }
 
-        Cache::forget('categories.all');
+        Cache::forget(Tenancy::cacheKey('categories.all'));
 
         if ($deletedCount > 0) {
             session()->flash('message', __(':count category(s) deleted successfully.', ['count' => $deletedCount]));
@@ -239,7 +240,7 @@ class Index extends Component
         $newCategory->is_active = false;
         $newCategory->save();
 
-        Cache::forget('categories.all');
+        Cache::forget(Tenancy::cacheKey('categories.all'));
         session()->flash('message', __('Category duplicated successfully.'));
     }
 
@@ -350,7 +351,7 @@ class Index extends Component
             if ($this->current_image) {
                 \Illuminate\Support\Facades\Storage::disk('public')->delete($this->current_image);
             }
-            $data['image'] = $this->image->store('categories', 'public');
+            $data['image'] = $this->image->store(Tenancy::storagePath('categories'), 'public');
         } elseif ($this->editingId) {
             $data['image'] = $this->current_image;
         }
@@ -363,7 +364,7 @@ class Index extends Component
             session()->flash('message', 'Category created successfully.');
         }
 
-        Cache::forget('categories.all');
+        Cache::forget(Tenancy::cacheKey('categories.all'));
         $this->closeModal();
     }
 
@@ -376,7 +377,7 @@ class Index extends Component
             return;
         }
         $category->delete();
-        Cache::forget('categories.all');
+        Cache::forget(Tenancy::cacheKey('categories.all'));
         session()->flash('message', 'Category deleted successfully.');
     }
 
@@ -461,7 +462,7 @@ class Index extends Component
 
         $category->update(['parent_id' => $newParentId]);
 
-        Cache::forget('categories.all');
+        Cache::forget(Tenancy::cacheKey('categories.all'));
 
         session()->flash('message', 'Category moved successfully.');
     }

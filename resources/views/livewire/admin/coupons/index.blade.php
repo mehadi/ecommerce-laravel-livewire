@@ -277,12 +277,12 @@
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap">
                             <span class="text-gray-900 dark:text-white font-semibold">
-                                {{ $coupon->type === 'percentage' ? number_format($coupon->value, 0).'%' : '৳'.number_format($coupon->value, 2) }}
+                                {{ $coupon->type === 'percentage' ? number_format($coupon->value, 0).'%' : \App\Models\Setting::get('currency_symbol', '৳').number_format($coupon->value, 2) }}
                             </span>
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-gray-900 dark:text-white">
                             @if($coupon->minimum_amount)
-                                ৳{{ number_format($coupon->minimum_amount, 2) }}
+                                {{ \App\Models\Setting::get('currency_symbol', '৳') }}{{ number_format($coupon->minimum_amount, 2) }}
                             @else
                                 <span class="text-gray-400 dark:text-gray-500">{{ __('None') }}</span>
                             @endif
@@ -442,7 +442,7 @@
                         <flux:label>{{ __('Value') }} *</flux:label>
                         <flux:input type="number" step="0.01" min="0" wire:model="value" />
                         <p class="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
-                            {{ $type === 'percentage' ? __('Discount percentage (e.g., 20 for 20%)') : __('Fixed discount amount in ৳') }}
+                            {{ $type === 'percentage' ? __('Discount percentage (e.g., 20 for 20%)') : __('Fixed discount amount in :currency', ['currency' => \App\Models\Setting::get('currency_symbol', '৳')]) }}
                         </p>
                         <flux:error name="value" />
                     </flux:field>

@@ -65,7 +65,7 @@
                                     <span class="text-sm text-zinc-900 dark:text-white font-medium">{{ $item->product_name }}</span>
                                     <span class="text-zinc-400 dark:text-zinc-500 text-xs ml-2 tabular-nums">&times;{{ $item->quantity }}</span>
                                 </div>
-                                <span class="text-sm font-semibold text-zinc-900 dark:text-white tabular-nums">৳{{ number_format($item->subtotal, 2) }}</span>
+                                <span class="text-sm font-semibold text-zinc-900 dark:text-white tabular-nums">{{ \App\Models\Setting::get('currency_symbol', '৳') }}{{ number_format($item->subtotal, 2) }}</span>
                             </div>
                         @endforeach
                     </div>
@@ -74,17 +74,17 @@
                     <div class="border-t border-zinc-900/[0.06] dark:border-white/[0.08] pt-4 space-y-2">
                         <div class="flex justify-between text-sm text-zinc-600 dark:text-zinc-300">
                             <span>{{ __('Subtotal') }}</span>
-                            <span class="font-medium tabular-nums">৳{{ number_format($order->subtotal, 2) }}</span>
+                            <span class="font-medium tabular-nums">{{ \App\Models\Setting::get('currency_symbol', '৳') }}{{ number_format($order->subtotal, 2) }}</span>
                         </div>
                         @if($order->discount > 0)
                             <div class="flex justify-between text-sm text-emerald-600 dark:text-emerald-400">
                                 <span>{{ __('Discount') }}</span>
-                                <span class="font-medium tabular-nums">-৳{{ number_format($order->discount, 2) }}</span>
+                                <span class="font-medium tabular-nums">-{{ \App\Models\Setting::get('currency_symbol', '৳') }}{{ number_format($order->discount, 2) }}</span>
                             </div>
                         @endif
                         <div class="flex justify-between items-center pt-2 border-t border-zinc-900/[0.06] dark:border-white/[0.08]">
                             <span class="text-base font-semibold text-zinc-900 dark:text-white">{{ __('Total') }}</span>
-                            <span class="font-display text-xl font-bold text-emerald-600 dark:text-emerald-400 tabular-nums">৳{{ number_format($order->total, 2) }}</span>
+                            <span class="font-display text-xl font-bold text-emerald-600 dark:text-emerald-400 tabular-nums">{{ \App\Models\Setting::get('currency_symbol', '৳') }}{{ number_format($order->total, 2) }}</span>
                         </div>
                     </div>
                 </div>

@@ -13,8 +13,9 @@ return new class extends Migration
     {
         Schema::create('landing_pages', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('tenant_id')->nullable()->constrained()->cascadeOnDelete()->index();
             $table->string('name');
-            $table->string('slug')->unique();
+            $table->string('slug');
             $table->foreignId('product_id')->nullable()->constrained()->nullOnDelete();
             $table->text('meta_title')->nullable();
             $table->text('meta_description')->nullable();
@@ -22,6 +23,8 @@ return new class extends Migration
             $table->boolean('is_active')->default(true);
             $table->integer('order')->default(0);
             $table->timestamps();
+
+            $table->unique(['tenant_id', 'slug']);
         });
     }
 

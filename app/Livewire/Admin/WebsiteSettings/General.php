@@ -2,7 +2,9 @@
 
 namespace App\Livewire\Admin\WebsiteSettings;
 
+use App\Models\PlatformSetting;
 use App\Models\Setting;
+use App\Support\Tenancy;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Storage;
 use Livewire\Component;
@@ -29,24 +31,30 @@ class General extends Component
 
     public ?string $existing_favicon = null;
 
+    /** Platform-wide defaults, shown as placeholders for fields the store hasn't set. */
+    public array $platformDefaults = [];
+
     /**
      * Mount the component.
      */
     public function mount(): void
     {
-        $settings = Setting::getMany([
+        $keys = [
             'site_name',
             'site_tagline',
             'site_description',
             'site_url',
             'site_logo',
             'site_favicon',
-        ]);
+        ];
 
-        $this->site_name = $settings['site_name'] ?? config('app.name');
+        $settings = Setting::getManyOwn($keys);
+        $this->platformDefaults = PlatformSetting::getMany($keys);
+
+        $this->site_name = $settings['site_name'] ?? '';
         $this->site_tagline = $settings['site_tagline'] ?? '';
         $this->site_description = $settings['site_description'] ?? '';
-        $this->site_url = $settings['site_url'] ?? config('app.url');
+        $this->site_url = $settings['site_url'] ?? '';
         $this->existing_logo = $settings['site_logo'] ?? null;
         $this->existing_favicon = $settings['site_favicon'] ?? null;
     }
@@ -103,7 +111,7 @@ class General extends Component
             }
 
             // Store new logo
-            $logoPath = $this->logo->store('logos', 'public');
+            $logoPath = $this->logo->store(Tenancy::storagePath('logos'), 'public');
             $validated['site_logo'] = $logoPath;
             $this->existing_logo = $logoPath;
             $this->logo = null;
@@ -117,7 +125,7 @@ class General extends Component
             }
 
             // Store new favicon
-            $faviconPath = $this->favicon->store('favicons', 'public');
+            $faviconPath = $this->favicon->store(Tenancy::storagePath('favicons'), 'public');
             $validated['site_favicon'] = $faviconPath;
             $this->existing_favicon = $faviconPath;
             $this->favicon = null;
@@ -129,9 +137,9 @@ class General extends Component
         Setting::setMany($validated);
 
         // Clear relevant caches
-        Cache::forget('landing.sections.hero');
-        Cache::forget('landing.sections.features');
-        Cache::forget('landing.sections.faq');
+        Cache::forget(Tenancy::cacheKey('landing.sections.hero'));
+        Cache::forget(Tenancy::cacheKey('landing.sections.features'));
+        Cache::forget(Tenancy::cacheKey('landing.sections.faq'));
 
         session()->flash('message', __('Website settings updated successfully.'));
     }

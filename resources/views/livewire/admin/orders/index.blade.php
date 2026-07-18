@@ -44,7 +44,7 @@
                 <div class="flex items-center justify-between">
                     <div>
                         <p class="text-sm font-medium text-zinc-600 dark:text-zinc-400">{{ __('Total Revenue') }}</p>
-                        <p class="mt-1 text-2xl font-bold text-emerald-600 dark:text-emerald-400">৳{{ number_format($stats['total_revenue'], 2) }}</p>
+                        <p class="mt-1 text-2xl font-bold text-emerald-600 dark:text-emerald-400">{{ \App\Models\Setting::get('currency_symbol', '৳') }}{{ number_format($stats['total_revenue'], 2) }}</p>
                     </div>
                     <div class="flex h-12 w-12 items-center justify-center rounded-lg bg-emerald-100 dark:bg-emerald-900/20">
                         <svg class="h-6 w-6 text-emerald-600 dark:text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -73,7 +73,7 @@
                     <div>
                         <p class="text-sm font-medium text-zinc-600 dark:text-zinc-400">{{ __('Today\'s Orders') }}</p>
                         <p class="mt-1 text-2xl font-bold text-purple-600 dark:text-purple-400">{{ $stats['today'] }}</p>
-                        <p class="mt-1 text-xs text-zinc-500 dark:text-zinc-400">৳{{ number_format($stats['today_revenue'], 2) }}</p>
+                        <p class="mt-1 text-xs text-zinc-500 dark:text-zinc-400">{{ \App\Models\Setting::get('currency_symbol', '৳') }}{{ number_format($stats['today_revenue'], 2) }}</p>
                     </div>
                     <div class="flex h-12 w-12 items-center justify-center rounded-lg bg-purple-100 dark:bg-purple-900/20">
                         <svg class="h-6 w-6 text-purple-600 dark:text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -238,14 +238,14 @@
                                 </div>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
-                                <div class="font-semibold text-gray-900 dark:text-white">৳{{ number_format($order->total, 2) }}</div>
+                                <div class="font-semibold text-gray-900 dark:text-white">{{ \App\Models\Setting::get('currency_symbol', '৳') }}{{ number_format($order->total, 2) }}</div>
                                 @if($order->discount > 0)
-                                    <div class="text-xs text-red-600 dark:text-red-400">-৳{{ number_format($order->discount, 2) }}</div>
+                                    <div class="text-xs text-red-600 dark:text-red-400">-{{ \App\Models\Setting::get('currency_symbol', '৳') }}{{ number_format($order->discount, 2) }}</div>
                                 @endif
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
                                 @if($order->shipping_cost > 0)
-                                    <div class="font-medium text-blue-600 dark:text-blue-400">৳{{ number_format($order->shipping_cost, 2) }}</div>
+                                    <div class="font-medium text-blue-600 dark:text-blue-400">{{ \App\Models\Setting::get('currency_symbol', '৳') }}{{ number_format($order->shipping_cost, 2) }}</div>
                                     @if($order->shipping_city)
                                         <div class="text-xs text-gray-500 dark:text-gray-400">{{ $order->shipping_city }}</div>
                                     @endif
@@ -256,12 +256,12 @@
                             <td class="px-6 py-4 whitespace-nowrap">
                                 <div class="space-y-1">
                                     @if($order->advance_payment > 0)
-                                        <div class="text-sm font-medium text-green-600 dark:text-green-400">৳{{ number_format($order->advance_payment, 2) }}</div>
+                                        <div class="text-sm font-medium text-green-600 dark:text-green-400">{{ \App\Models\Setting::get('currency_symbol', '৳') }}{{ number_format($order->advance_payment, 2) }}</div>
                                         @if($order->isFullyPaid())
                                             <flux:badge size="sm" variant="success">{{ __('Paid') }}</flux:badge>
                                         @else
                                             <div class="text-xs text-orange-600 dark:text-orange-400">
-                                                {{ __('Remaining: ৳:amount', ['amount' => number_format($order->remaining_amount, 2)]) }}
+                                                {{ __('Remaining: :currency:amount', ['currency' => \App\Models\Setting::get('currency_symbol', '৳'), 'amount' => number_format($order->remaining_amount, 2)]) }}
                                             </div>
                                         @endif
                                     @else
@@ -392,7 +392,7 @@
                             <div class="space-y-2 text-sm">
                                 <div class="flex justify-between">
                                     <span class="text-gray-600 dark:text-gray-400">{{ __('Shipping Cost') }}:</span>
-                                    <span class="font-semibold text-blue-600 dark:text-blue-400">৳{{ number_format($selectedOrder->shipping_cost, 2) }}</span>
+                                    <span class="font-semibold text-blue-600 dark:text-blue-400">{{ \App\Models\Setting::get('currency_symbol', '৳') }}{{ number_format($selectedOrder->shipping_cost, 2) }}</span>
                                 </div>
                                 @if($selectedOrder->shipping_city)
                                     <div class="flex justify-between">
@@ -440,8 +440,8 @@
                                                 @endif
                                             </td>
                                             <td class="px-4 py-2 text-gray-900 dark:text-white">{{ $item->quantity }}</td>
-                                            <td class="px-4 py-2 text-gray-900 dark:text-white">৳{{ number_format($item->price, 2) }}</td>
-                                            <td class="px-4 py-2 text-gray-900 dark:text-white">৳{{ number_format($item->subtotal, 2) }}</td>
+                                            <td class="px-4 py-2 text-gray-900 dark:text-white">{{ \App\Models\Setting::get('currency_symbol', '৳') }}{{ number_format($item->price, 2) }}</td>
+                                            <td class="px-4 py-2 text-gray-900 dark:text-white">{{ \App\Models\Setting::get('currency_symbol', '৳') }}{{ number_format($item->subtotal, 2) }}</td>
                                         </tr>
                                     @endforeach
                                 </tbody>
@@ -452,32 +452,32 @@
                     <div class="border-t pt-4">
                         <div class="flex justify-between mb-2">
                             <span class="text-gray-600 dark:text-gray-400">{{ __('Subtotal') }}:</span>
-                            <span class="text-gray-900 dark:text-white">৳{{ number_format($selectedOrder->subtotal, 2) }}</span>
+                            <span class="text-gray-900 dark:text-white">{{ \App\Models\Setting::get('currency_symbol', '৳') }}{{ number_format($selectedOrder->subtotal, 2) }}</span>
                         </div>
                         @if($selectedOrder->discount > 0)
                             <div class="flex justify-between mb-2">
                                 <span class="text-gray-600 dark:text-gray-400">{{ __('Discount') }}:</span>
-                                <span class="text-red-600 dark:text-red-400">-৳{{ number_format($selectedOrder->discount, 2) }}</span>
+                                <span class="text-red-600 dark:text-red-400">-{{ \App\Models\Setting::get('currency_symbol', '৳') }}{{ number_format($selectedOrder->discount, 2) }}</span>
                             </div>
                         @endif
                         @if($selectedOrder->shipping_cost > 0)
                             <div class="flex justify-between mb-2">
                                 <span class="text-gray-600 dark:text-gray-400">{{ __('Shipping') }}:</span>
-                                <span class="text-blue-600 dark:text-blue-400 font-medium">৳{{ number_format($selectedOrder->shipping_cost, 2) }}</span>
+                                <span class="text-blue-600 dark:text-blue-400 font-medium">{{ \App\Models\Setting::get('currency_symbol', '৳') }}{{ number_format($selectedOrder->shipping_cost, 2) }}</span>
                             </div>
                         @endif
                         <div class="flex justify-between font-bold text-lg">
                             <span>{{ __('Total') }}:</span>
-                            <span class="text-gray-900 dark:text-white">৳{{ number_format($selectedOrder->total, 2) }}</span>
+                            <span class="text-gray-900 dark:text-white">{{ \App\Models\Setting::get('currency_symbol', '৳') }}{{ number_format($selectedOrder->total, 2) }}</span>
                         </div>
                         @if($selectedOrder->advance_payment > 0)
                             <div class="flex justify-between mt-2 pt-2 border-t">
                                 <span class="text-gray-600 dark:text-gray-400">{{ __('Advance Payment') }}:</span>
-                                <span class="text-green-600 dark:text-green-400 font-semibold">৳{{ number_format($selectedOrder->advance_payment, 2) }}</span>
+                                <span class="text-green-600 dark:text-green-400 font-semibold">{{ \App\Models\Setting::get('currency_symbol', '৳') }}{{ number_format($selectedOrder->advance_payment, 2) }}</span>
                             </div>
                             <div class="flex justify-between mt-2">
                                 <span class="text-gray-600 dark:text-gray-400 font-semibold">{{ __('Remaining Amount') }}:</span>
-                                <span class="text-orange-600 dark:text-orange-400 font-bold">৳{{ number_format($selectedOrder->remaining_amount, 2) }}</span>
+                                <span class="text-orange-600 dark:text-orange-400 font-bold">{{ \App\Models\Setting::get('currency_symbol', '৳') }}{{ number_format($selectedOrder->remaining_amount, 2) }}</span>
                             </div>
                         @endif
                     </div>
@@ -594,7 +594,7 @@
                                 <flux:label>{{ __('Advance Payment Amount') }}</flux:label>
                                 <flux:input type="number" wire:model="advance_payment" step="0.01" min="0" :max="$this->total" placeholder="0.00" />
                                 <flux:error name="advance_payment" />
-                                <flux:description>{{ __('Remaining: ৳') }}{{ number_format(max(0, $this->total - ($advance_payment ?? 0)), 2) }}</flux:description>
+                                <flux:description>{{ __('Remaining:') }} {{ \App\Models\Setting::get('currency_symbol', '৳') }}{{ number_format(max(0, $this->total - ($advance_payment ?? 0)), 2) }}</flux:description>
                             </flux:field>
 
                             <flux:field>
@@ -631,7 +631,7 @@
                                         @php
                                             $syncedPrice = $product->getSyncedPrice();
                                         @endphp
-                                        <option value="{{ $product->id }}">{{ $product->name_en }} - ৳{{ number_format($syncedPrice, 2) }}</option>
+                                        <option value="{{ $product->id }}">{{ $product->name_en }} - {{ \App\Models\Setting::get('currency_symbol', '৳') }}{{ number_format($syncedPrice, 2) }}</option>
                                     @endforeach
                                 </flux:select>
                             </flux:field>
@@ -659,11 +659,11 @@
                                         @foreach($orderItems as $index => $item)
                                             <tr>
                                                 <td class="px-4 py-2 text-gray-900 dark:text-white">{{ $item['product_name'] }}</td>
-                                                <td class="px-4 py-2 text-gray-900 dark:text-white">৳{{ number_format($item['price'], 2) }}</td>
+                                                <td class="px-4 py-2 text-gray-900 dark:text-white">{{ \App\Models\Setting::get('currency_symbol', '৳') }}{{ number_format($item['price'], 2) }}</td>
                                                 <td class="px-4 py-2">
                                                     <flux:input type="number" wire:model.live.debounce.300ms="orderItems.{{ $index }}.quantity" min="1" class="w-20" />
                                                 </td>
-                                                <td class="px-4 py-2 text-gray-900 dark:text-white">৳{{ number_format($item['subtotal'], 2) }}</td>
+                                                <td class="px-4 py-2 text-gray-900 dark:text-white">{{ \App\Models\Setting::get('currency_symbol', '৳') }}{{ number_format($item['subtotal'], 2) }}</td>
                                                 <td class="px-4 py-2">
                                                     <flux:button type="button" wire:click="removeOrderItem({{ $index }})" size="sm" variant="danger">
                                                         {{ __('Remove') }}
@@ -675,7 +675,7 @@
                                     <tfoot class="bg-gray-50 dark:bg-zinc-800">
                                         <tr>
                                             <td colspan="3" class="px-4 py-2 text-right font-semibold">{{ __('Total') }}:</td>
-                                            <td class="px-4 py-2 font-semibold text-gray-900 dark:text-white">৳{{ number_format($this->total, 2) }}</td>
+                                            <td class="px-4 py-2 font-semibold text-gray-900 dark:text-white">{{ \App\Models\Setting::get('currency_symbol', '৳') }}{{ number_format($this->total, 2) }}</td>
                                             <td></td>
                                         </tr>
                                     </tfoot>
@@ -706,11 +706,11 @@
                             <div class="p-4 bg-gray-50 dark:bg-zinc-800 rounded-lg">
                                 <div class="flex justify-between mb-2">
                                     <span class="text-gray-600 dark:text-gray-400">{{ __('Order Total') }}:</span>
-                                    <span class="font-semibold text-gray-900 dark:text-white">৳{{ number_format($order->total, 2) }}</span>
+                                    <span class="font-semibold text-gray-900 dark:text-white">{{ \App\Models\Setting::get('currency_symbol', '৳') }}{{ number_format($order->total, 2) }}</span>
                                 </div>
                                 <div class="flex justify-between">
                                     <span class="text-gray-600 dark:text-gray-400">{{ __('Current Advance Payment') }}:</span>
-                                    <span class="font-semibold text-green-600 dark:text-green-400">৳{{ number_format($order->advance_payment, 2) }}</span>
+                                    <span class="font-semibold text-green-600 dark:text-green-400">{{ \App\Models\Setting::get('currency_symbol', '৳') }}{{ number_format($order->advance_payment, 2) }}</span>
                                 </div>
                             </div>
 
@@ -719,7 +719,7 @@
                                     <flux:label>{{ __('Advance Payment Amount') }} *</flux:label>
                                     <flux:input type="number" wire:model="editAdvancePaymentAmount" step="0.01" min="0" max="{{ $order->total }}" />
                                     <flux:error name="editAdvancePaymentAmount" />
-                                    <flux:description>{{ __('Remaining: ৳') }}{{ number_format(max(0, $order->total - ($editAdvancePaymentAmount ?? 0)), 2) }}</flux:description>
+                                    <flux:description>{{ __('Remaining:') }} {{ \App\Models\Setting::get('currency_symbol', '৳') }}{{ number_format(max(0, $order->total - ($editAdvancePaymentAmount ?? 0)), 2) }}</flux:description>
                                 </flux:field>
 
                                 <flux:field>

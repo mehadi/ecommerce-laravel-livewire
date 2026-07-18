@@ -13,6 +13,7 @@ return new class extends Migration
     {
         Schema::create('shipping_settings', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('tenant_id')->nullable()->constrained()->cascadeOnDelete()->index();
             $table->string('type')->default('flat'); // flat, weight, city
             $table->decimal('flat_rate', 10, 2)->nullable(); // For flat shipping
             $table->decimal('base_weight_kg', 8, 2)->default(1.00); // Base weight threshold

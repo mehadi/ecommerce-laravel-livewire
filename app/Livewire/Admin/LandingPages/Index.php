@@ -4,6 +4,7 @@ namespace App\Livewire\Admin\LandingPages;
 
 use App\Models\LandingPageConfig;
 use App\Models\Product;
+use App\Support\Tenancy;
 use Illuminate\Support\Facades\Cache;
 use Livewire\Component;
 use Livewire\WithPagination;
@@ -76,7 +77,7 @@ class Index extends Component
     {
         $landingPage = LandingPageConfig::findOrFail($landingPageId);
         $landingPage->update(['is_active' => ! $landingPage->is_active]);
-        Cache::forget('landing.page.'.$landingPage->slug);
+        Cache::forget(Tenancy::cacheKey('landing.page.'.$landingPage->slug));
         session()->flash('message', __('Landing page status updated successfully.'));
         $this->selectedItems = array_diff($this->selectedItems, [$landingPageId]);
     }
@@ -94,7 +95,7 @@ class Index extends Component
 
         foreach ($landingPages as $landingPage) {
             $landingPage->update(['is_active' => $newStatus]);
-            Cache::forget('landing.page.'.$landingPage->slug);
+            Cache::forget(Tenancy::cacheKey('landing.page.'.$landingPage->slug));
         }
 
         session()->flash('message', __(':count landing page(s) status updated successfully.', ['count' => count($this->selectedItems)]));
@@ -113,7 +114,7 @@ class Index extends Component
         $landingPages = LandingPageConfig::whereIn('id', $this->selectedItems)->get();
 
         foreach ($landingPages as $landingPage) {
-            Cache::forget('landing.page.'.$landingPage->slug);
+            Cache::forget(Tenancy::cacheKey('landing.page.'.$landingPage->slug));
             $landingPage->delete();
         }
 
@@ -153,7 +154,7 @@ class Index extends Component
     {
         $landingPage = LandingPageConfig::findOrFail($landingPageId);
         $landingPage->delete();
-        Cache::forget('landing.page.'.$landingPage->slug);
+        Cache::forget(Tenancy::cacheKey('landing.page.'.$landingPage->slug));
         session()->flash('message', __('Landing page deleted successfully.'));
     }
 

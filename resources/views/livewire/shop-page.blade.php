@@ -173,7 +173,7 @@
 
                         @if($minPrice !== '' || $maxPrice !== '')
                             <button type="button" wire:click="$set('minPrice', ''); $set('maxPrice', '')" class="inline-flex items-center gap-1.5 pl-3.5 pr-2 py-1.5 rounded-full bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 text-xs font-semibold ring-1 ring-emerald-600/10 dark:ring-emerald-500/20 hover:bg-emerald-100 dark:hover:bg-emerald-900/50 transition-colors duration-200 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500">
-                                ৳{{ $minPrice !== '' ? $minPrice : $this->priceBounds['min'] }} – ৳{{ $maxPrice !== '' ? $maxPrice : $this->priceBounds['max'] }}
+                                {{ \App\Models\Setting::get('currency_symbol', '৳') }}{{ $minPrice !== '' ? $minPrice : $this->priceBounds['min'] }} – {{ \App\Models\Setting::get('currency_symbol', '৳') }}{{ $maxPrice !== '' ? $maxPrice : $this->priceBounds['max'] }}
                                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"></path></svg>
                             </button>
                         @endif

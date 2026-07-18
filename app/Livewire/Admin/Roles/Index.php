@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Admin\Roles;
 
+use App\Support\Tenancy;
 use Illuminate\Support\Facades\Gate;
 use Livewire\Component;
 use Livewire\WithPagination;
@@ -55,6 +56,7 @@ class Index extends Component
     public function deleteRole($roleId): void
     {
         $role = Role::findOrFail($roleId);
+        abort_unless($role->tenant_id === null || $role->tenant_id === Tenancy::id(), 404);
 
         // Prevent deleting super admin role
         if ($role->name === 'super admin') {
@@ -80,6 +82,8 @@ class Index extends Component
 
     public function editRole(Role $role): void
     {
+        abort_unless($role->tenant_id === null || $role->tenant_id === Tenancy::id(), 404);
+
         $this->editingId = $role->id;
         $this->name = $role->name;
         $this->selectedPermissions = $role->permissions
@@ -139,6 +143,8 @@ class Index extends Component
 
         if ($this->editingId) {
             $role = Role::findOrFail($this->editingId);
+            abort_unless($role->tenant_id === null || $role->tenant_id === Tenancy::id(), 404);
+
             $role->update([
                 'name' => $this->name,
             ]);
@@ -168,7 +174,7 @@ class Index extends Component
 
     public function render()
     {
-        $roles = Role::query()
+        $roles = Tenancy::roleQuery()
             ->when($this->search, function ($query) {
                 $query->where('name', 'like', '%'.$this->search.'%');
             })
@@ -178,10 +184,10 @@ class Index extends Component
             ->paginate($this->perPage);
 
         $stats = [
-            'total' => Role::count(),
+            'total' => Tenancy::roleQuery()->count(),
             'total_permissions' => \Spatie\Permission\Models\Permission::count(),
-            'total_users' => \App\Models\User::count(),
-            'roles_with_users' => Role::has('users')->count(),
+            'total_users' => \App\Models\User::query()->where('tenant_id', Tenancy::id())->count(),
+            'roles_with_users' => Tenancy::roleQuery()->has('users')->count(),
         ];
 
         $allPermissions = \Spatie\Permission\Models\Permission::orderBy('name')->get();

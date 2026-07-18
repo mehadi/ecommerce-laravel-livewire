@@ -9,9 +9,11 @@ use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Product;
 use App\Models\ProductAttribute;
+use App\Models\Setting;
 use App\Models\ShippingCityRate;
 use App\Models\ShippingSetting;
 use App\Services\ShippingService;
+use App\Support\PhoneFormats;
 use Illuminate\Support\Facades\Cache;
 use Livewire\Attributes\Computed;
 
@@ -357,7 +359,7 @@ trait HasShoppingCart
             'content_type' => 'product',
             'content_ids' => [$product->id],
             'value' => (float) $product->price,
-            'currency' => 'BDT',
+            'currency' => Setting::get('currency_code', 'BDT'),
         ]);
     }
 
@@ -417,15 +419,17 @@ trait HasShoppingCart
 
     public function placeOrder(): void
     {
+        $phonePreset = Setting::get('phone_format_preset', PhoneFormats::DEFAULT_PRESET);
+
         $this->validate([
             'customerName' => 'required|string|max:255',
             'customerEmail' => 'nullable|email|max:255',
-            'customerPhone' => 'required|regex:/^01[0-9]{9}$/',
+            'customerPhone' => ['required', 'regex:/'.PhoneFormats::regexFor($phonePreset).'/'],
             'shippingAddress' => 'required|string',
             'shippingCityId' => 'required|exists:cities,id',
             'shippingPostalCode' => 'nullable|string|max:20',
         ], [
-            'customerPhone.regex' => __('Phone number must be exactly 11 digits starting with 01 (e.g., 01814444444)'),
+            'customerPhone.regex' => __('Please enter a valid phone number (e.g., :example)', ['example' => PhoneFormats::placeholderFor($phonePreset)]),
         ]);
 
         if (empty($this->cart)) {
@@ -502,7 +506,7 @@ trait HasShoppingCart
 
         $this->dispatch('fbq:track', 'Purchase', [
             'value' => $total,
-            'currency' => 'BDT',
+            'currency' => Setting::get('currency_code', 'BDT'),
             'contents' => array_map(fn ($item) => [
                 'id' => $item['id'],
                 'quantity' => $item['quantity'],

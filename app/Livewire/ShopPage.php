@@ -8,6 +8,7 @@ use App\Models\Category;
 use App\Models\Product;
 use App\Models\ProductAttribute;
 use App\Models\Setting;
+use App\Support\Tenancy;
 use Illuminate\Support\Facades\Cache;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Url;
@@ -133,7 +134,7 @@ class ShopPage extends Component
     #[Computed]
     public function categories()
     {
-        return Cache::remember('shop.categories', 1800, function () {
+        return Cache::remember(Tenancy::cacheKey('shop.categories'), 1800, function () {
             return Category::whereHas('products', fn ($q) => $q->where('is_active', true))
                 ->orderBy('order')
                 ->get();
@@ -143,7 +144,7 @@ class ShopPage extends Component
     #[Computed]
     public function filterableAttributes()
     {
-        return Cache::remember('shop.filterable_attributes', 1800, function () {
+        return Cache::remember(Tenancy::cacheKey('shop.filterable_attributes'), 1800, function () {
             $usedValuesByName = [];
             foreach (ProductAttribute::where('is_active', true)
                 ->whereHas('product', fn ($q) => $q->where('is_active', true))
@@ -178,7 +179,7 @@ class ShopPage extends Component
     #[Computed]
     public function priceBounds(): array
     {
-        return Cache::remember('shop.products.price_bounds', 1800, function () {
+        return Cache::remember(Tenancy::cacheKey('shop.products.price_bounds'), 1800, function () {
             $range = Product::where('is_active', true)->selectRaw('MIN(price) as min_price, MAX(price) as max_price')->first();
 
             return [

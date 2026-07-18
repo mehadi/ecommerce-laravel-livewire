@@ -18,7 +18,7 @@
                     <flux:input
                         wire:model="google_verification_code"
                         type="text"
-                        placeholder="Enter verification code"
+                        placeholder="{{ $platformDefaults['google_verification_code'] ?? __('Enter verification code') }}"
                     />
                     <flux:description>{{ __('Enter the meta tag content value from Google Search Console') }}</flux:description>
                     <flux:error name="google_verification_code" />
@@ -29,7 +29,7 @@
                     <flux:input
                         wire:model="bing_verification_code"
                         type="text"
-                        placeholder="Enter verification code"
+                        placeholder="{{ $platformDefaults['bing_verification_code'] ?? __('Enter verification code') }}"
                     />
                     <flux:description>{{ __('Enter the meta tag content value from Bing Webmaster Tools') }}</flux:description>
                     <flux:error name="bing_verification_code" />

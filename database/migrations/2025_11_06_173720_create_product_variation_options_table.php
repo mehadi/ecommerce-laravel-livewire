@@ -13,6 +13,7 @@ return new class extends Migration
     {
         Schema::create('product_variation_options', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('tenant_id')->nullable()->constrained()->cascadeOnDelete()->index();
             $table->foreignId('product_variation_id')->constrained()->onDelete('cascade');
             $table->string('value'); // e.g., "Small", "Medium", "Large"
             $table->integer('order')->default(0);

@@ -3,13 +3,14 @@
     use App\Models\NavigationItem;
     use App\Models\NavbarComponent;
     use App\Models\Category;
+    use App\Support\Tenancy;
     use Illuminate\Support\Facades\Cache;
 
     $siteName = Setting::get('site_name', config('app.name'));
     $siteLogo = Setting::get('site_logo');
 
     // Get navigation items from cache or database with children
-    $navigationItems = Cache::remember('navigation.items.active', 3600, function () {
+    $navigationItems = Cache::remember(Tenancy::cacheKey('navigation.items.active'), 3600, function () {
         return NavigationItem::with('children')
             ->where('is_active', true)
             ->whereNull('parent_id')
@@ -18,10 +19,10 @@
     });
 
     // Get navbar layout (order, grid span, visibility) per zone
-    $barComponents = Cache::remember('navbar.components.desktop', 3600, function () {
+    $barComponents = Cache::remember(Tenancy::cacheKey('navbar.components.desktop'), 3600, function () {
         return NavbarComponent::forZone('desktop')->get();
     });
-    $menuComponents = Cache::remember('navbar.components.mobile', 3600, function () {
+    $menuComponents = Cache::remember(Tenancy::cacheKey('navbar.components.mobile'), 3600, function () {
         return NavbarComponent::forZone('mobile')->get();
     });
 
@@ -29,8 +30,14 @@
     $categoriesEnabled = $barComponents->contains('key', 'categories') || $menuComponents->contains('key', 'categories');
     $categories = collect();
     if ($categoriesEnabled) {
-        $categories = Cache::remember('categories.navigation', 3600, function () {
-            $selectedCategoryIds = \Illuminate\Support\Facades\DB::table('navigation_categories')
+        $categories = Cache::remember(Tenancy::cacheKey('categories.navigation'), 3600, function () {
+            $selectedCategoryIdsQuery = \Illuminate\Support\Facades\DB::table('navigation_categories');
+
+            if (Tenancy::check()) {
+                $selectedCategoryIdsQuery->where('tenant_id', Tenancy::id());
+            }
+
+            $selectedCategoryIds = $selectedCategoryIdsQuery
                 ->orderBy('order')
                 ->pluck('category_id')
                 ->toArray();

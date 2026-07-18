@@ -67,7 +67,7 @@
                                 @endif
                                 <div class="flex-1 min-w-0">
                                     <h3 class="text-sm sm:text-base font-semibold text-zinc-900 dark:text-white mb-0.5 truncate">{{ $item['name'] }}</h3>
-                                    <p class="text-base font-semibold text-emerald-600 dark:text-emerald-400 tabular-nums">৳{{ number_format($item['price'], 2) }}</p>
+                                    <p class="text-base font-semibold text-emerald-600 dark:text-emerald-400 tabular-nums">{{ \App\Models\Setting::get('currency_symbol', '৳') }}{{ number_format($item['price'], 2) }}</p>
                                     <p class="text-xs text-zinc-500 dark:text-zinc-400 tabular-nums">{{ __('Quantity') }}: {{ $item['quantity'] }}</p>
                                 </div>
                                 <div class="flex flex-col sm:flex-row items-end sm:items-center gap-2 sm:gap-3">
@@ -94,7 +94,7 @@
                         <div class="bg-zinc-50 dark:bg-zinc-800/60 rounded-3xl ring-1 ring-zinc-900/[0.04] dark:ring-white/[0.06] p-6 sm:p-8 space-y-4">
                             <div class="flex justify-between text-sm sm:text-base">
                                 <span class="text-zinc-600 dark:text-zinc-300 font-medium">{{ __('Subtotal') }}</span>
-                                <span class="font-semibold text-zinc-900 dark:text-white tabular-nums">৳{{ number_format($this->cartSubtotal, 2) }}</span>
+                                <span class="font-semibold text-zinc-900 dark:text-white tabular-nums">{{ \App\Models\Setting::get('currency_symbol', '৳') }}{{ number_format($this->cartSubtotal, 2) }}</span>
                             </div>
 
                             <div class="flex flex-col sm:flex-row gap-2 pt-3 border-t border-zinc-900/[0.06] dark:border-white/[0.08]">
@@ -113,13 +113,13 @@
                                         </svg>
                                         <span class="text-sm text-emerald-700 dark:text-emerald-300 font-semibold truncate">{{ __('Discount') }} ({{ $this->appliedCoupon->code }})</span>
                                     </div>
-                                    <span class="text-base font-bold text-emerald-600 dark:text-emerald-400 flex-shrink-0 tabular-nums">-৳{{ number_format($this->cartDiscount, 2) }}</span>
+                                    <span class="text-base font-bold text-emerald-600 dark:text-emerald-400 flex-shrink-0 tabular-nums">-{{ \App\Models\Setting::get('currency_symbol', '৳') }}{{ number_format($this->cartDiscount, 2) }}</span>
                                 </div>
                             @endif
 
                             <div class="flex justify-between items-center pt-3 border-t border-zinc-900/[0.06] dark:border-white/[0.08]">
                                 <span class="text-lg font-semibold text-zinc-900 dark:text-white">{{ __('Total') }}</span>
-                                <span class="font-display text-2xl font-bold text-emerald-600 dark:text-emerald-400 tabular-nums">৳{{ number_format($this->cartFinalTotal, 2) }}</span>
+                                <span class="font-display text-2xl font-bold text-emerald-600 dark:text-emerald-400 tabular-nums">{{ \App\Models\Setting::get('currency_symbol', '৳') }}{{ number_format($this->cartFinalTotal, 2) }}</span>
                             </div>
                         </div>
 

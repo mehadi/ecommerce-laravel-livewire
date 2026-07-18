@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\BelongsToTenant;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -9,7 +10,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Category extends Model
 {
-    use HasFactory;
+    use BelongsToTenant, HasFactory;
 
     protected $fillable = [
         'parent_id',
@@ -98,6 +99,13 @@ class Category extends Model
      */
     public function isInNavigation(): bool
     {
-        return \Illuminate\Support\Facades\DB::table('navigation_categories')->where('category_id', $this->id)->exists();
+        $query = \Illuminate\Support\Facades\DB::table('navigation_categories')
+            ->where('category_id', $this->id);
+
+        if (\App\Support\Tenancy::check()) {
+            $query->where('tenant_id', \App\Support\Tenancy::id());
+        }
+
+        return $query->exists();
     }
 }

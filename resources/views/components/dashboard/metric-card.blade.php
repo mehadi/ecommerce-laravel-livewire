@@ -42,7 +42,7 @@
     $formattedValue = $isGrowthMetric
         ? ($value >= 0 ? '+' : '').number_format($value, 1).'%'
         : (in_array($cardKey, ['total_revenue', 'average_order_value', 'outstanding_payments', 'average_customer_value', 'total_discounts'], true)
-            ? '৳'.number_format((float) $value, 2)
+            ? \App\Models\Setting::get('currency_symbol', '৳').number_format((float) $value, 2)
             : ($cardKey === 'cancellation_rate'
                 ? number_format((float) $value, 1).'%'
                 : number_format((float) $value, $cardKey === 'repeat_customer_rate' ? 1 : 0)));

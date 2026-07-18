@@ -55,10 +55,10 @@
         <div class="flex items-center justify-between gap-2 mt-auto pt-3">
             <div class="flex items-baseline gap-2 min-w-0">
                 <span class="text-lg sm:text-xl font-bold text-emerald-600 dark:text-emerald-400 tabular-nums">
-                    ৳{{ number_format($minPrice, 2) }}@if($product->hasAttributes() && $maxPrice > $minPrice)<span class="text-sm font-semibold"> – ৳{{ number_format($maxPrice, 2) }}</span>@endif
+                    {{ \App\Models\Setting::get('currency_symbol', '৳') }}{{ number_format($minPrice, 2) }}@if($product->hasAttributes() && $maxPrice > $minPrice)<span class="text-sm font-semibold"> – {{ \App\Models\Setting::get('currency_symbol', '৳') }}{{ number_format($maxPrice, 2) }}</span>@endif
                 </span>
                 @if(!$product->hasAttributes() && $product->hasDiscount())
-                    <span class="text-sm text-zinc-400 dark:text-zinc-500 line-through tabular-nums">৳{{ number_format($product->compare_at_price, 2) }}</span>
+                    <span class="text-sm text-zinc-400 dark:text-zinc-500 line-through tabular-nums">{{ \App\Models\Setting::get('currency_symbol', '৳') }}{{ number_format($product->compare_at_price, 2) }}</span>
                 @endif
             </div>
             @if(!$product->hasAttributes() && $product->isInStock())

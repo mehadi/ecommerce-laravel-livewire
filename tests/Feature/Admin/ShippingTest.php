@@ -13,16 +13,6 @@ use Spatie\Permission\Models\Role;
 
 uses(RefreshDatabase::class);
 
-function actingAsAdmin(): User
-{
-    Role::firstOrCreate(['name' => 'admin', 'guard_name' => 'web']);
-
-    $admin = User::factory()->create();
-    $admin->assignRole('admin');
-
-    return $admin;
-}
-
 test('admin can access shipping management page', function () {
     $admin = actingAsAdmin();
 

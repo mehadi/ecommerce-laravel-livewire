@@ -1,0 +1,31 @@
+{
+	# Gate for on-demand TLS: before issuing/renewing a cert for a domain Caddy
+	# doesn't already have a static block for, it asks the Laravel app whether
+	# that domain (custom domain OR "{slug}.{$PLATFORM_DOMAIN}" subdomain)
+	# belongs to a verified, active tenant. See routes/web.php's
+	# /internal/domains/ask route and App\Console\Commands\VerifyTenantDomains.
+	# `interval`/`burst` rate-limiting options were removed from on_demand_tls
+	# in newer Caddy releases — the /internal/domains/ask check itself (a DB
+	# lookup against verified, active tenants) is what gates cert issuance now.
+	on_demand_tls {
+		ask http://nginx/internal/domains/ask
+	}
+}
+
+# Platform's own domain: normal automatic HTTPS (HTTP-01), no on-demand check needed.
+{$PLATFORM_DOMAIN} {
+	reverse_proxy nginx:80
+}
+
+# Everything else — tenant free subdomains ("{slug}.{$PLATFORM_DOMAIN}") and tenant
+# custom domains — goes through on-demand TLS, gated by the `ask` check above.
+# Note: a real wildcard cert for "*.{$PLATFORM_DOMAIN}" needs a DNS-01 challenge
+# (a Caddy build with a DNS provider plugin + API token), which isn't set up here;
+# on-demand TLS instead issues a normal per-subdomain HTTP-01 cert the first time
+# each subdomain is hit, same as it does for custom domains.
+:443 {
+	tls {
+		on_demand
+	}
+	reverse_proxy nginx:80
+}

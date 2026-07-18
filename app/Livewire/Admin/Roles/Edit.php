@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Admin\Roles;
 
+use App\Support\Tenancy;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\Rule;
 use Livewire\Component;
@@ -24,6 +25,7 @@ class Edit extends Component
     public function mount(Role $role): void
     {
         Gate::authorize('manage roles');
+        abort_unless($role->tenant_id === null || $role->tenant_id === Tenancy::id(), 404);
 
         $this->role = $role;
         $this->name = $role->name;

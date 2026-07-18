@@ -1,9 +1,9 @@
 <div class="space-y-6">
-    <div class="flex justify-between items-center">
+    <div class="flex flex-wrap justify-between items-center gap-4">
         <div>
             <flux:heading>{{ __('Navigation Settings') }}</flux:heading>
-            <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">{{ __('Build the navbar layout visually, and manage the links shown inside it') }}</p>
-            <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">{{ __('Changes are automatically reflected on the homepage navigation bar') }}</p>
+            <flux:text size="sm" variant="subtle" class="mt-1">{{ __('Build the navbar layout visually, and manage the links shown inside it') }}</flux:text>
+            <flux:text size="xs" variant="subtle" class="mt-1">{{ __('Changes are automatically reflected on the homepage navigation bar') }}</flux:text>
         </div>
         <div class="flex gap-2">
             <flux:button wire:click="clearCache" variant="ghost" size="sm">
@@ -23,7 +23,7 @@
     <div class="bg-white dark:bg-zinc-900 rounded-lg shadow p-6">
         <div class="flex flex-wrap items-start justify-between gap-4 mb-4">
             <div>
-                <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-1">{{ __('Navbar Layout') }}</h3>
+                <flux:heading size="md" level="3" class="mb-1">{{ __('Navbar Layout') }}</flux:heading>
                 <p class="text-sm text-gray-500 dark:text-gray-400">
                     @if($activeZone === 'desktop')
                         {{ __('Drag components into Start, Middle, or End, and toggle visibility.') }}

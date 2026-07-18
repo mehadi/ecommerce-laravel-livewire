@@ -18,7 +18,7 @@
                     <flux:input
                         wire:model="facebook_pixel_id"
                         type="text"
-                        placeholder="123456789012345"
+                        placeholder="{{ $platformDefaults['facebook_pixel_id'] ?? '123456789012345' }}"
                     />
                     <flux:description>{{ __('Enter your Facebook Pixel ID to track conversions and events. You can find this in your Facebook Events Manager.') }}</flux:description>
                     <flux:error name="facebook_pixel_id" />
@@ -29,7 +29,7 @@
                     <flux:input
                         wire:model="google_analytics_id"
                         type="text"
-                        placeholder="G-XXXXXXXXXX or UA-XXXXXX-X"
+                        placeholder="{{ $platformDefaults['google_analytics_id'] ?? 'G-XXXXXXXXXX or UA-XXXXXX-X' }}"
                     />
                     <flux:description>{{ __('Enter your Google Analytics 4 (G-XXXXXXXXXX) or Universal Analytics (UA-XXXXXX-X) ID') }}</flux:description>
                     <flux:error name="google_analytics_id" />
@@ -40,7 +40,7 @@
                     <flux:input
                         wire:model="google_tag_manager_id"
                         type="text"
-                        placeholder="GTM-XXXXXXX"
+                        placeholder="{{ $platformDefaults['google_tag_manager_id'] ?? 'GTM-XXXXXXX' }}"
                     />
                     <flux:description>{{ __('Enter your Google Tag Manager container ID (format: GTM-XXXXXXX)') }}</flux:description>
                     <flux:error name="google_tag_manager_id" />

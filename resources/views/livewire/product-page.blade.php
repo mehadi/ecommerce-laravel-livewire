@@ -30,7 +30,7 @@
 
             $productData['offers'] = [
                 '@type' => 'AggregateOffer',
-                'priceCurrency' => 'BDT',
+                'priceCurrency' => \App\Models\Setting::get('currency_code', 'BDT'),
                 'lowPrice' => (string) $minPrice,
                 'highPrice' => (string) $maxPrice,
                 'offerCount' => (string) $this->product->productAttributes->count(),
@@ -40,7 +40,7 @@
             $productData['offers'] = [
                 '@type' => 'Offer',
                 'price' => (string) $this->product->price,
-                'priceCurrency' => 'BDT',
+                'priceCurrency' => \App\Models\Setting::get('currency_code', 'BDT'),
                 'availability' => $this->product->isInStock() ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock',
                 'priceValidUntil' => now()->addYear()->format('Y-m-d'),
             ];

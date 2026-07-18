@@ -111,7 +111,7 @@
                                             <span class="text-sm text-zinc-900 dark:text-white font-medium">{{ $item['name'] }}</span>
                                             <span class="text-zinc-400 dark:text-zinc-500 text-xs ml-2 tabular-nums">&times;{{ $item['quantity'] }}</span>
                                         </div>
-                                        <span class="text-sm font-semibold text-zinc-900 dark:text-white tabular-nums">৳{{ number_format($item['price'] * $item['quantity'], 2) }}</span>
+                                        <span class="text-sm font-semibold text-zinc-900 dark:text-white tabular-nums">{{ \App\Models\Setting::get('currency_symbol', '৳') }}{{ number_format($item['price'] * $item['quantity'], 2) }}</span>
                                     </div>
                                 @endforeach
                             </div>
@@ -128,7 +128,7 @@
                                             <span class="text-xs text-zinc-400 dark:text-zinc-500 tabular-nums">({{ number_format($this->cartWeight, 2) }} kg)</span>
                                         </div>
                                         <span class="text-sm font-semibold text-zinc-900 dark:text-white tabular-nums" wire:loading.class="opacity-50">
-                                            <span wire:loading.remove wire:target="shippingCityId,cart">৳{{ number_format($this->shippingCost ?? 0, 2) }}</span>
+                                            <span wire:loading.remove wire:target="shippingCityId,cart">{{ \App\Models\Setting::get('currency_symbol', '৳') }}{{ number_format($this->shippingCost ?? 0, 2) }}</span>
                                             <span wire:loading wire:target="shippingCityId,cart" class="text-xs text-zinc-500">{{ __('Calculating...') }}</span>
                                         </span>
                                     </div>
@@ -145,24 +145,24 @@
                                             @if($shippingDetails['type'] === 'flat')
                                                 <div class="text-xs text-zinc-500 dark:text-zinc-400 flex items-center gap-1 tabular-nums">
                                                     <span>{{ __('Flat Rate') }}:</span>
-                                                    <span class="font-medium">৳{{ number_format($shippingDetails['rate'] ?? 0, 2) }}</span>
+                                                    <span class="font-medium">{{ \App\Models\Setting::get('currency_symbol', '৳') }}{{ number_format($shippingDetails['rate'] ?? 0, 2) }}</span>
                                                 </div>
                                             @elseif($shippingDetails['type'] === 'weight' || $shippingDetails['type'] === 'city')
                                                 @if(isset($shippingDetails['additional_weight']))
                                                     <div class="text-xs text-zinc-500 dark:text-zinc-400 space-y-0.5 tabular-nums">
                                                         <div class="flex items-center justify-between">
                                                             <span>{{ __('Base Rate') }} (&le;{{ number_format($shippingDetails['base_weight'] ?? 0, 2) }} kg):</span>
-                                                            <span class="font-medium">৳{{ number_format($shippingDetails['base_rate'] ?? 0, 2) }}</span>
+                                                            <span class="font-medium">{{ \App\Models\Setting::get('currency_symbol', '৳') }}{{ number_format($shippingDetails['base_rate'] ?? 0, 2) }}</span>
                                                         </div>
                                                         <div class="flex items-center justify-between">
-                                                            <span>{{ __('Additional Weight') }} ({{ number_format($shippingDetails['additional_weight'] ?? 0, 2) }} kg @ ৳{{ number_format($shippingDetails['per_kg_rate'] ?? 0, 2) }}/kg):</span>
-                                                            <span class="font-medium">৳{{ number_format($shippingDetails['additional_cost'] ?? 0, 2) }}</span>
+                                                            <span>{{ __('Additional Weight') }} ({{ number_format($shippingDetails['additional_weight'] ?? 0, 2) }} kg @ {{ \App\Models\Setting::get('currency_symbol', '৳') }}{{ number_format($shippingDetails['per_kg_rate'] ?? 0, 2) }}/kg):</span>
+                                                            <span class="font-medium">{{ \App\Models\Setting::get('currency_symbol', '৳') }}{{ number_format($shippingDetails['additional_cost'] ?? 0, 2) }}</span>
                                                         </div>
                                                     </div>
                                                 @else
                                                     <div class="text-xs text-zinc-500 dark:text-zinc-400 flex items-center justify-between tabular-nums">
                                                         <span>{{ __('Base Rate') }} (&le;{{ number_format($shippingDetails['base_weight'] ?? 0, 2) }} kg):</span>
-                                                        <span class="font-medium">৳{{ number_format($shippingDetails['base_rate'] ?? 0, 2) }}</span>
+                                                        <span class="font-medium">{{ \App\Models\Setting::get('currency_symbol', '৳') }}{{ number_format($shippingDetails['base_rate'] ?? 0, 2) }}</span>
                                                     </div>
                                                 @endif
                                             @endif
@@ -173,7 +173,7 @@
 
                             <div class="border-t border-zinc-900/[0.06] dark:border-white/[0.08] pt-4 flex justify-between items-center">
                                 <span class="text-base font-semibold text-zinc-900 dark:text-white">{{ __('Total') }}</span>
-                                <span class="font-display text-2xl font-bold text-emerald-600 dark:text-emerald-400 tabular-nums">৳{{ number_format($cartFinalTotal, 2) }}</span>
+                                <span class="font-display text-2xl font-bold text-emerald-600 dark:text-emerald-400 tabular-nums">{{ \App\Models\Setting::get('currency_symbol', '৳') }}{{ number_format($cartFinalTotal, 2) }}</span>
                             </div>
                         </div>
                     @endif

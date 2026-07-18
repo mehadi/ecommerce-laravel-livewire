@@ -13,6 +13,7 @@ return new class extends Migration
     {
         Schema::create('navigation_categories', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('tenant_id')->nullable()->constrained()->cascadeOnDelete()->index();
             $table->foreignId('category_id')->constrained('categories')->onDelete('cascade');
             $table->integer('order')->default(0);
             $table->timestamps();

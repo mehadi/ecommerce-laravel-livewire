@@ -119,14 +119,14 @@
                                     <div class="flex flex-wrap items-end gap-x-4 gap-y-2">
                                         <div>
                                             <span class="text-xs sm:text-sm text-zinc-500 dark:text-zinc-400 mb-1 block">{{ __('Price') }}</span>
-                                            <span class="font-display text-4xl sm:text-5xl font-bold text-emerald-600 dark:text-emerald-400 tabular-nums tracking-tight">৳{{ number_format($selectedProductAttribute->price, 2) }}</span>
+                                            <span class="font-display text-4xl sm:text-5xl font-bold text-emerald-600 dark:text-emerald-400 tabular-nums tracking-tight">{{ \App\Models\Setting::get('currency_symbol', '৳') }}{{ number_format($selectedProductAttribute->price, 2) }}</span>
                                         </div>
                                         @if($selectedProductAttribute->compare_at_price && $selectedProductAttribute->compare_at_price > $selectedProductAttribute->price)
                                             @php
                                                 $discountPercent = round((($selectedProductAttribute->compare_at_price - $selectedProductAttribute->price) / $selectedProductAttribute->compare_at_price) * 100, 2);
                                             @endphp
                                             <div class="flex items-center gap-2 pb-1">
-                                                <span class="text-lg sm:text-xl text-zinc-400 dark:text-zinc-500 line-through tabular-nums">৳{{ number_format($selectedProductAttribute->compare_at_price, 2) }}</span>
+                                                <span class="text-lg sm:text-xl text-zinc-400 dark:text-zinc-500 line-through tabular-nums">{{ \App\Models\Setting::get('currency_symbol', '৳') }}{{ number_format($selectedProductAttribute->compare_at_price, 2) }}</span>
                                                 <span class="inline-flex items-center bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 px-2.5 py-1 rounded-full text-xs font-bold ring-1 ring-red-600/10 dark:ring-red-500/20 tabular-nums">
                                                     -{{ $discountPercent }}%
                                                 </span>
@@ -164,11 +164,11 @@
                             <div class="flex flex-wrap items-end gap-x-4 gap-y-2">
                                 <div>
                                     <span class="text-xs sm:text-sm text-zinc-500 dark:text-zinc-400 mb-1 block">{{ __('Price') }}</span>
-                                    <span class="font-display text-4xl sm:text-5xl font-bold text-emerald-600 dark:text-emerald-400 tabular-nums tracking-tight">৳{{ number_format($product->price, 2) }}</span>
+                                    <span class="font-display text-4xl sm:text-5xl font-bold text-emerald-600 dark:text-emerald-400 tabular-nums tracking-tight">{{ \App\Models\Setting::get('currency_symbol', '৳') }}{{ number_format($product->price, 2) }}</span>
                                 </div>
                                 @if($product->hasDiscount())
                                     <div class="flex items-center gap-2 pb-1">
-                                        <span class="text-lg sm:text-xl text-zinc-400 dark:text-zinc-500 line-through tabular-nums">৳{{ number_format($product->compare_at_price, 2) }}</span>
+                                        <span class="text-lg sm:text-xl text-zinc-400 dark:text-zinc-500 line-through tabular-nums">{{ \App\Models\Setting::get('currency_symbol', '৳') }}{{ number_format($product->compare_at_price, 2) }}</span>
                                         <span class="inline-flex items-center bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 px-2.5 py-1 rounded-full text-xs font-bold ring-1 ring-red-600/10 dark:ring-red-500/20 tabular-nums">
                                             -{{ $product->discountPercentage() }}%
                                         </span>
@@ -263,7 +263,7 @@
                                 </svg>
                                 {{ __('Add to Cart') }}
                             </button>
-                            <button wire:click="buyNow" wire:loading.attr="disabled" wire:target="buyNow" class="group w-full sm:flex-1 bg-emerald-600 hover:bg-emerald-700 text-white px-8 py-4 sm:py-[18px] rounded-full text-base sm:text-lg font-bold transition-all duration-300 shadow-md shadow-emerald-600/20 hover:shadow-lg hover:shadow-emerald-600/25 hover:-translate-y-0.5 motion-reduce:transform-none flex items-center justify-center gap-2.5 disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none disabled:translate-y-0 cursor-pointer touch-manipulation focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-zinc-900" {{ $isDisabled ? 'disabled' : '' }}>
+                            <button wire:click="buyNow" wire:loading.attr="disabled" wire:target="buyNow" class="group w-full sm:flex-1 btn-tenant-primary text-white px-8 py-4 sm:py-[18px] rounded-full text-base sm:text-lg font-bold transition-all duration-300 shadow-md shadow-emerald-600/20 hover:shadow-lg hover:shadow-emerald-600/25 hover:-translate-y-0.5 motion-reduce:transform-none flex items-center justify-center gap-2.5 disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none disabled:translate-y-0 cursor-pointer touch-manipulation focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-zinc-900" {{ $isDisabled ? 'disabled' : '' }}>
                                 <svg wire:loading.remove wire:target="buyNow" class="w-5 h-5 sm:w-6 sm:h-6 transition-transform duration-300 group-hover:translate-x-0.5 motion-reduce:transform-none" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
                                 </svg>

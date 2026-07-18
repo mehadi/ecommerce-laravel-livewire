@@ -227,7 +227,7 @@
 
                                     <div class="mt-3 flex items-center justify-between text-xs text-zinc-500 dark:text-zinc-400">
                                         <span>{{ __('Revenue') }}</span>
-                                        <span class="font-medium text-zinc-700 dark:text-zinc-200">৳{{ number_format($summary['revenue'], 2) }}</span>
+                                        <span class="font-medium text-zinc-700 dark:text-zinc-200">{{ \App\Models\Setting::get('currency_symbol', '৳') }}{{ number_format($summary['revenue'], 2) }}</span>
                                     </div>
                                 </div>
                             @endforeach
@@ -273,7 +273,7 @@
                                         </div>
                                     </div>
                                     <div class="text-right">
-                                        <p class="text-sm font-semibold text-zinc-900 dark:text-white">৳{{ number_format((float) $order->total, 2) }}</p>
+                                        <p class="text-sm font-semibold text-zinc-900 dark:text-white">{{ \App\Models\Setting::get('currency_symbol', '৳') }}{{ number_format((float) $order->total, 2) }}</p>
                                         <p class="text-xs text-zinc-500 dark:text-zinc-400">
                                             {{ __('Items: :count', ['count' => $itemsCount]) }}
                                         </p>

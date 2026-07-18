@@ -18,7 +18,7 @@
                     <flux:input
                         wire:model="social_facebook"
                         type="url"
-                        placeholder="https://facebook.com/yourpage"
+                        placeholder="{{ $platformDefaults['social_facebook'] ?? 'https://facebook.com/yourpage' }}"
                     />
                     <flux:error name="social_facebook" />
                 </flux:field>
@@ -28,7 +28,7 @@
                     <flux:input
                         wire:model="social_instagram"
                         type="url"
-                        placeholder="https://instagram.com/yourpage"
+                        placeholder="{{ $platformDefaults['social_instagram'] ?? 'https://instagram.com/yourpage' }}"
                     />
                     <flux:error name="social_instagram" />
                 </flux:field>
@@ -38,7 +38,7 @@
                     <flux:input
                         wire:model="social_twitter"
                         type="url"
-                        placeholder="https://twitter.com/yourpage"
+                        placeholder="{{ $platformDefaults['social_twitter'] ?? 'https://twitter.com/yourpage' }}"
                     />
                     <flux:error name="social_twitter" />
                 </flux:field>
@@ -48,7 +48,7 @@
                     <flux:input
                         wire:model="social_linkedin"
                         type="url"
-                        placeholder="https://linkedin.com/company/yourpage"
+                        placeholder="{{ $platformDefaults['social_linkedin'] ?? 'https://linkedin.com/company/yourpage' }}"
                     />
                     <flux:error name="social_linkedin" />
                 </flux:field>
@@ -58,7 +58,7 @@
                     <flux:input
                         wire:model="social_youtube"
                         type="url"
-                        placeholder="https://youtube.com/@yourchannel"
+                        placeholder="{{ $platformDefaults['social_youtube'] ?? 'https://youtube.com/@yourchannel' }}"
                     />
                     <flux:error name="social_youtube" />
                 </flux:field>
@@ -68,7 +68,7 @@
                     <flux:input
                         wire:model="social_tiktok"
                         type="url"
-                        placeholder="https://tiktok.com/@yourusername"
+                        placeholder="{{ $platformDefaults['social_tiktok'] ?? 'https://tiktok.com/@yourusername' }}"
                     />
                     <flux:error name="social_tiktok" />
                 </flux:field>
@@ -78,7 +78,7 @@
                     <flux:input
                         wire:model="social_pinterest"
                         type="url"
-                        placeholder="https://pinterest.com/yourusername"
+                        placeholder="{{ $platformDefaults['social_pinterest'] ?? 'https://pinterest.com/yourusername' }}"
                     />
                     <flux:error name="social_pinterest" />
                 </flux:field>
@@ -88,7 +88,7 @@
                     <flux:input
                         wire:model="social_whatsapp"
                         type="text"
-                        placeholder="+1234567890"
+                        placeholder="{{ $platformDefaults['social_whatsapp'] ?? '+1234567890' }}"
                     />
                     <flux:description>{{ __('Enter your WhatsApp number with country code (e.g., +1234567890)') }}</flux:description>
                     <flux:error name="social_whatsapp" />

@@ -79,6 +79,7 @@
 
                     <flux:button
                         variant="primary"
+                        color="emerald"
                         type="submit"
                         class="w-full"
                     >

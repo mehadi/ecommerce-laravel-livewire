@@ -114,7 +114,7 @@
             <div class="flex items-center justify-between">
                 <div>
                     <p class="text-sm font-medium text-zinc-600 dark:text-zinc-400">{{ __('Total Value') }}</p>
-                    <p class="mt-1 text-2xl font-bold text-indigo-600 dark:text-indigo-400">৳{{ number_format($stats['total_value'], 2) }}</p>
+                    <p class="mt-1 text-2xl font-bold text-indigo-600 dark:text-indigo-400">{{ \App\Models\Setting::get('currency_symbol', '৳') }}{{ number_format($stats['total_value'], 2) }}</p>
                 </div>
                 <div class="flex h-12 w-12 items-center justify-center rounded-lg bg-indigo-100 dark:bg-indigo-900/20">
                     <svg class="h-6 w-6 text-indigo-600 dark:text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -201,7 +201,7 @@
 
     <div class="overflow-x-auto bg-white dark:bg-zinc-900 rounded-lg shadow">
         <table class="min-w-full divide-y divide-gray-200 dark:divide-zinc-700">
-            <thead class="bg-gray-50 dark:bg-zinc-800 sticky top-0 z-10">
+            <thead class="bg-gray-50 dark:bg-zinc-800">
                 <tr>
                     <th class="px-6 py-3 text-left">
                         <flux:checkbox wire:model.live="selectAll" wire:click="toggleSelectAll" />
@@ -322,13 +322,13 @@
                                     $maxPrice = $product->getMaxPrice();
                                 @endphp
                                 @if($product->hasAttributes() && $syncedPrice != $maxPrice)
-                                    <span class="text-gray-900 dark:text-white font-medium">৳{{ number_format($syncedPrice, 2) }} - ৳{{ number_format($maxPrice, 2) }}</span>
+                                    <span class="text-gray-900 dark:text-white font-medium">{{ \App\Models\Setting::get('currency_symbol', '৳') }}{{ number_format($syncedPrice, 2) }} - {{ \App\Models\Setting::get('currency_symbol', '৳') }}{{ number_format($maxPrice, 2) }}</span>
                                     <span class="text-xs text-gray-500 dark:text-gray-400">{{ __('Attributes') }}</span>
                                 @else
-                                    <span class="text-gray-900 dark:text-white font-medium">৳{{ number_format($syncedPrice, 2) }}</span>
+                                    <span class="text-gray-900 dark:text-white font-medium">{{ \App\Models\Setting::get('currency_symbol', '৳') }}{{ number_format($syncedPrice, 2) }}</span>
                                 @endif
                                 @if($syncedComparePrice && $syncedComparePrice > $syncedPrice)
-                                    <span class="text-xs text-gray-500 dark:text-gray-400 line-through">৳{{ number_format($syncedComparePrice, 2) }}</span>
+                                    <span class="text-xs text-gray-500 dark:text-gray-400 line-through">{{ \App\Models\Setting::get('currency_symbol', '৳') }}{{ number_format($syncedComparePrice, 2) }}</span>
                                     <span class="text-xs text-emerald-600 dark:text-emerald-400 font-medium">
                                         {{ round((($syncedComparePrice - $syncedPrice) / $syncedComparePrice) * 100) }}% {{ __('off') }}
                                     </span>

@@ -3,6 +3,7 @@
 namespace App\Livewire\Admin\WebsiteSettings;
 
 use App\Models\Setting;
+use App\Support\Tenancy;
 use Illuminate\Support\Facades\Cache;
 use Livewire\Component;
 
@@ -26,6 +27,10 @@ class Appearance extends Component
 
     public int $frontend_content_width_custom = 1152;
 
+    public string $theme_primary_color = '#059669';
+
+    public string $theme_secondary_color = '#0f172a';
+
     /** Named content-width presets mapped to a max-width in pixels. */
     public const CONTENT_WIDTH_PRESETS = [
         'narrow' => 960,
@@ -46,6 +51,8 @@ class Appearance extends Component
             'frontend_text_size_custom',
             'frontend_content_width',
             'frontend_content_width_custom',
+            'theme_primary_color',
+            'theme_secondary_color',
         ]);
 
         $this->frontend_text_size = $settings['frontend_text_size'] ?? 'medium';
@@ -56,6 +63,8 @@ class Appearance extends Component
         $this->frontend_content_width_custom = isset($settings['frontend_content_width_custom'])
             ? (int) $settings['frontend_content_width_custom']
             : 1152;
+        $this->theme_primary_color = $settings['theme_primary_color'] ?? '#059669';
+        $this->theme_secondary_color = $settings['theme_secondary_color'] ?? '#0f172a';
     }
 
     /**
@@ -68,14 +77,16 @@ class Appearance extends Component
             'frontend_text_size_custom' => ['required_if:frontend_text_size,custom', 'integer', 'min:50', 'max:200'],
             'frontend_content_width' => ['required', 'in:narrow,medium,wide,xl,xxl,full,custom'],
             'frontend_content_width_custom' => ['required_if:frontend_content_width,custom', 'integer', 'min:960', 'max:1920'],
+            'theme_primary_color' => ['required', 'regex:/^#[0-9a-fA-F]{6}$/'],
+            'theme_secondary_color' => ['required', 'regex:/^#[0-9a-fA-F]{6}$/'],
         ]);
 
         Setting::setMany($validated);
 
         // Clear relevant caches
-        Cache::forget('landing.sections.hero');
-        Cache::forget('landing.sections.features');
-        Cache::forget('landing.sections.faq');
+        Cache::forget(Tenancy::cacheKey('landing.sections.hero'));
+        Cache::forget(Tenancy::cacheKey('landing.sections.features'));
+        Cache::forget(Tenancy::cacheKey('landing.sections.faq'));
 
         session()->flash('message', __('Website settings updated successfully.'));
     }

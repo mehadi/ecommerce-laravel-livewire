@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use App\Models\User;
+use App\Support\Tenancy;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 use Spatie\Permission\Models\Role;
@@ -26,12 +27,14 @@ class AdminSeeder extends Seeder
             ['guard_name' => 'web']
         );
 
-        // Create super admin user
+        // Create super admin user (store staff for the current tenant — User isn't
+        // scoped by BelongsToTenant, so tenant_id is set explicitly here)
         $superAdmin = User::firstOrCreate(
             ['email' => 'superadmin@example.com'],
             [
                 'name' => 'Super Admin',
                 'password' => Hash::make('password'),
+                'tenant_id' => Tenancy::id(),
             ]
         );
 
@@ -45,6 +48,7 @@ class AdminSeeder extends Seeder
             [
                 'name' => 'Admin User',
                 'password' => Hash::make('password'),
+                'tenant_id' => Tenancy::id(),
             ]
         );
 

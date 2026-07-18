@@ -5,6 +5,7 @@ namespace App\Livewire\Admin\Navigation;
 use App\Models\Category;
 use App\Models\NavbarComponent;
 use App\Models\NavigationItem;
+use App\Support\Tenancy;
 use Illuminate\Support\Facades\Cache;
 use Livewire\Component;
 
@@ -136,7 +137,7 @@ class Index extends Component
             session()->flash('message', __('Navigation item created successfully.'));
         }
 
-        Cache::forget('navigation.items.active');
+        Cache::forget(Tenancy::cacheKey('navigation.items.active'));
         $this->closeModal();
         $this->selectedItems = [];
     }
@@ -144,7 +145,7 @@ class Index extends Component
     public function delete($id): void
     {
         NavigationItem::findOrFail($id)->delete();
-        Cache::forget('navigation.items.active');
+        Cache::forget(Tenancy::cacheKey('navigation.items.active'));
         session()->flash('message', __('Navigation item deleted successfully.'));
         $this->selectedItems = [];
     }
@@ -158,7 +159,7 @@ class Index extends Component
         }
 
         NavigationItem::whereIn('id', $this->selectedItems)->delete();
-        Cache::forget('navigation.items.active');
+        Cache::forget(Tenancy::cacheKey('navigation.items.active'));
         session()->flash('message', __('Selected navigation items deleted successfully.'));
         $this->selectedItems = [];
         $this->selectAll = false;
@@ -173,7 +174,7 @@ class Index extends Component
         }
 
         NavigationItem::whereIn('id', $this->selectedItems)->update(['is_active' => true]);
-        Cache::forget('navigation.items.active');
+        Cache::forget(Tenancy::cacheKey('navigation.items.active'));
         session()->flash('message', __('Selected navigation items activated successfully.'));
         $this->selectedItems = [];
         $this->selectAll = false;
@@ -188,7 +189,7 @@ class Index extends Component
         }
 
         NavigationItem::whereIn('id', $this->selectedItems)->update(['is_active' => false]);
-        Cache::forget('navigation.items.active');
+        Cache::forget(Tenancy::cacheKey('navigation.items.active'));
         session()->flash('message', __('Selected navigation items deactivated successfully.'));
         $this->selectedItems = [];
         $this->selectAll = false;
@@ -219,7 +220,7 @@ class Index extends Component
             NavigationItem::where('id', $itemId)->update(['order' => $order]);
         }
 
-        Cache::forget('navigation.items.active');
+        Cache::forget(Tenancy::cacheKey('navigation.items.active'));
         session()->flash('message', __('Navigation order updated successfully.'));
     }
 
@@ -264,7 +265,7 @@ class Index extends Component
 
         $item->update(['parent_id' => $parentId]);
         $this->reorderItemsAfterParentChange();
-        Cache::forget('navigation.items.active');
+        Cache::forget(Tenancy::cacheKey('navigation.items.active'));
         session()->flash('message', __('Navigation item relationship updated successfully.'));
     }
 
@@ -318,7 +319,7 @@ class Index extends Component
         // Reorder items
         $this->reorderItemsAfterParentChange();
 
-        Cache::forget('navigation.items.active');
+        Cache::forget(Tenancy::cacheKey('navigation.items.active'));
         session()->flash('message', __('Navigation item moved successfully.'));
     }
 
@@ -376,7 +377,7 @@ class Index extends Component
             NavigationItem::where('id', $id)->update(['order' => $order]);
         }
 
-        Cache::forget('navigation.items.active');
+        Cache::forget(Tenancy::cacheKey('navigation.items.active'));
         session()->flash('message', __('Navigation item moved successfully.'));
     }
 
@@ -415,13 +416,13 @@ class Index extends Component
     {
         $item = NavigationItem::findOrFail($id);
         $item->update(['is_active' => ! $item->is_active]);
-        Cache::forget('navigation.items.active');
+        Cache::forget(Tenancy::cacheKey('navigation.items.active'));
         session()->flash('message', __('Navigation item status updated successfully.'));
     }
 
     public function clearCache(): void
     {
-        Cache::forget('navigation.items.active');
+        Cache::forget(Tenancy::cacheKey('navigation.items.active'));
         session()->flash('message', __('Navigation cache cleared successfully. Changes will be visible on the homepage immediately.'));
     }
 
@@ -487,8 +488,8 @@ class Index extends Component
 
     private function forgetNavbarCache(): void
     {
-        Cache::forget('navbar.components.desktop');
-        Cache::forget('navbar.components.mobile');
+        Cache::forget(Tenancy::cacheKey('navbar.components.desktop'));
+        Cache::forget(Tenancy::cacheKey('navbar.components.mobile'));
     }
 
     public function addCategoryToNavigation($categoryId): void
@@ -514,7 +515,7 @@ class Index extends Component
             'open_in_new_tab' => false,
         ]);
 
-        Cache::forget('navigation.items.active');
+        Cache::forget(Tenancy::cacheKey('navigation.items.active'));
         session()->flash('message', __('Category added to navigation successfully.'));
     }
 

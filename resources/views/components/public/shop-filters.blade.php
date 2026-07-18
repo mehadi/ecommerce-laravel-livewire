@@ -5,7 +5,7 @@
         <h3 class="text-sm font-bold text-zinc-900 dark:text-white mb-4">{{ __('Price Range') }}</h3>
         <div class="flex items-center gap-3">
             <div class="relative flex-1 min-w-0">
-                <span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-sm text-zinc-400">৳</span>
+                <span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-sm text-zinc-400">{{ \App\Models\Setting::get('currency_symbol', '৳') }}</span>
                 <label for="shop-min-price" class="sr-only">{{ __('Minimum price') }}</label>
                 <input
                     id="shop-min-price"
@@ -20,7 +20,7 @@
             </div>
             <span class="text-zinc-300 dark:text-zinc-600 flex-shrink-0" aria-hidden="true">–</span>
             <div class="relative flex-1 min-w-0">
-                <span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-sm text-zinc-400">৳</span>
+                <span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-sm text-zinc-400">{{ \App\Models\Setting::get('currency_symbol', '৳') }}</span>
                 <label for="shop-max-price" class="sr-only">{{ __('Maximum price') }}</label>
                 <input
                     id="shop-max-price"

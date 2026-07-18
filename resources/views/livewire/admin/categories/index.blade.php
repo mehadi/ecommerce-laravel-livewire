@@ -151,7 +151,7 @@
             <!-- Table View -->
             <div class="flex flex-col h-full">
                 <div class="flex items-center justify-between mb-4">
-                    <h3 class="text-lg font-semibold text-gray-900 dark:text-white">{{ __('List View') }}</h3>
+                    <flux:heading size="md" level="3">{{ __('List View') }}</flux:heading>
                     <span class="text-xs text-gray-500 dark:text-gray-400">
                         {{ __('Total') }}: {{ $categories->total() }}
                     </span>
@@ -166,7 +166,7 @@
                 <div class="flex-1 flex flex-col min-h-0">
                     <div class="overflow-x-auto bg-white dark:bg-zinc-900 rounded-lg shadow flex-1">
                         <table class="min-w-full divide-y divide-gray-200 dark:divide-zinc-700">
-                            <thead class="bg-gray-50 dark:bg-zinc-800 sticky top-0 z-10">
+                            <thead class="bg-gray-50 dark:bg-zinc-800">
                                 <tr>
                                     <th class="px-6 py-3 text-left">
                                         <flux:checkbox wire:model.live="selectAll" wire:click="toggleSelectAll" />
@@ -412,7 +412,7 @@
                     }
                 }">
                 <div class="flex items-center justify-between mb-4">
-                    <h3 class="text-lg font-semibold text-gray-900 dark:text-white">{{ __('Hierarchical View') }}</h3>
+                    <flux:heading size="md" level="3">{{ __('Hierarchical View') }}</flux:heading>
                     <span class="text-xs text-gray-500 dark:text-gray-400">
                         @php
                             $mainCount = $this->categoryTree->count();

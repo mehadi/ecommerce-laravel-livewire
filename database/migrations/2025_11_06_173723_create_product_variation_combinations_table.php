@@ -13,6 +13,7 @@ return new class extends Migration
     {
         Schema::create('product_variation_combinations', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('tenant_id')->nullable()->constrained()->cascadeOnDelete()->index();
             $table->foreignId('product_id')->constrained()->onDelete('cascade');
             $table->json('variation_data'); // Stores the combination: {"Size": "Small", "Color": "Red"}
             $table->decimal('price', 10, 2);

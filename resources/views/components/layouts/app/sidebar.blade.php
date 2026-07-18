@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="dark">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
     <head>
         @include('partials.head')
     </head>
@@ -8,7 +8,7 @@
             <div class="flex items-center gap-1">
                 <flux:sidebar.toggle class="lg:hidden" icon="x-mark" />
 
-                <flux:sidebar.brand :name="config('app.name')" :href="route('dashboard')" wire:navigate class="flex-1 rounded-xl bg-white/70 shadow-soft dark:bg-white/5 in-data-flux-sidebar-collapsed-desktop:bg-transparent in-data-flux-sidebar-collapsed-desktop:shadow-none">
+                <flux:sidebar.brand :name="\App\Models\Setting::get('site_name', config('app.name'))" :href="route('dashboard')" wire:navigate class="flex-1 rounded-xl bg-white/70 shadow-soft dark:bg-white/5 in-data-flux-sidebar-collapsed-desktop:bg-transparent in-data-flux-sidebar-collapsed-desktop:shadow-none">
                     <x-slot name="logo">
                         <div class="flex aspect-square size-6 items-center justify-center rounded-md bg-gradient-to-br from-accent-content to-accent-content/70 text-accent-foreground">
                             <x-app-logo-icon class="size-3.5 fill-current text-white dark:text-black" />
@@ -19,40 +19,52 @@
                 <flux:sidebar.collapse class="max-lg:hidden" />
             </div>
 
-            <flux:sidebar.group expandable heading="{{ __('Platform') }}" icon="home-modern">
-                <flux:sidebar.item icon="home" :href="route('dashboard')" :current="request()->routeIs('dashboard*')" wire:navigate>{{ __('Dashboard') }}</flux:sidebar.item>
-                <flux:sidebar.item icon="globe-alt" :href="route('admin.website.index')" :current="request()->routeIs('admin.website.*')" wire:navigate>{{ __('Website Settings') }}</flux:sidebar.item>
-                <flux:sidebar.item icon="bars-3" :href="route('admin.navigation.index')" :current="request()->routeIs('admin.navigation.*')" wire:navigate>{{ __('Navigation Settings') }}</flux:sidebar.item>
-            </flux:sidebar.group>
-
-            <flux:sidebar.group expandable heading="{{ __('Ecommerce') }}" icon="shopping-cart">
-                <flux:sidebar.item icon="cube" :href="route('admin.products.index')" :current="request()->routeIs('admin.products.*')" wire:navigate>{{ __('Products') }}</flux:sidebar.item>
-                <flux:sidebar.item icon="tag" :href="route('admin.categories.index')" :current="request()->routeIs('admin.categories.*')" wire:navigate>{{ __('Categories') }}</flux:sidebar.item>
-                <flux:sidebar.item icon="view-columns" :href="route('admin.categories-display.index')" :current="request()->routeIs('admin.categories-display.*')" wire:navigate>{{ __('Categories Display') }}</flux:sidebar.item>
-                <flux:sidebar.item icon="shopping-bag" :href="route('admin.orders.index')" :current="request()->routeIs('admin.orders.*')" wire:navigate>{{ __('Orders') }}</flux:sidebar.item>
-                <flux:sidebar.item icon="ticket" :href="route('admin.coupons.index')" :current="request()->routeIs('admin.coupons.*')" wire:navigate>{{ __('Coupons') }}</flux:sidebar.item>
-                <flux:sidebar.item icon="truck" :href="route('admin.shipping.index')" :current="request()->routeIs('admin.shipping.*')" wire:navigate>{{ __('Shipping') }}</flux:sidebar.item>
-                <flux:sidebar.item icon="rectangle-group" :href="route('admin.cart-checkout.index')" :current="request()->routeIs('admin.cart-checkout.*')" wire:navigate>{{ __('Cart & Checkout') }}</flux:sidebar.item>
-                <flux:sidebar.item icon="squares-2x2" :href="route('admin.sections.index')" :current="request()->routeIs('admin.sections.*')" wire:navigate>{{ __('Sections') }}</flux:sidebar.item>
-                <flux:sidebar.item icon="chat-bubble-left-right" :href="route('admin.testimonials.index')" :current="request()->routeIs('admin.testimonials.*')" wire:navigate>{{ __('Testimonials') }}</flux:sidebar.item>
-                <flux:sidebar.item icon="document-duplicate" :href="route('admin.landing-pages.index')" :current="request()->routeIs('admin.landing-pages.*')" wire:navigate>{{ __('Landing Pages') }}</flux:sidebar.item>
-            </flux:sidebar.group>
-
-            <flux:sidebar.group expandable heading="{{ __('Settings') }}" icon="cog-6-tooth">
-                <flux:sidebar.item icon="tag" :href="route('admin.attributes.index')" :current="request()->routeIs('admin.attributes.*')" wire:navigate>{{ __('Attributes') }}</flux:sidebar.item>
-            </flux:sidebar.group>
-
-            @canany(['manage users', 'manage roles'])
-                <flux:sidebar.group expandable heading="{{ __('Administration') }}" icon="shield-check">
-                    @can('manage users')
-                        <flux:sidebar.item icon="user-group" :href="route('admin.users.index')" :current="request()->routeIs('admin.users.*')" wire:navigate>{{ __('Users') }}</flux:sidebar.item>
-                    @endcan
-                    @can('manage roles')
-                        <flux:sidebar.item icon="shield-check" :href="route('admin.roles.index')" :current="request()->routeIs('admin.roles.*')" wire:navigate>{{ __('Roles') }}</flux:sidebar.item>
-                        <flux:sidebar.item icon="key" :href="route('admin.permissions.index')" :current="request()->routeIs('admin.permissions.*')" wire:navigate>{{ __('Permissions') }}</flux:sidebar.item>
-                    @endcan
+            @if(\App\Support\Tenancy::check())
+                <flux:sidebar.group expandable heading="{{ __('Store') }}" icon="home-modern">
+                    <flux:sidebar.item icon="home" :href="route('dashboard')" :current="request()->routeIs('dashboard*')" wire:navigate>{{ __('Dashboard') }}</flux:sidebar.item>
+                    <flux:sidebar.item icon="globe-alt" :href="route('admin.website.index')" :current="request()->routeIs('admin.website.*')" wire:navigate>{{ __('Website Settings') }}</flux:sidebar.item>
+                    <flux:sidebar.item icon="bars-3" :href="route('admin.navigation.index')" :current="request()->routeIs('admin.navigation.*')" wire:navigate>{{ __('Navigation Settings') }}</flux:sidebar.item>
                 </flux:sidebar.group>
-            @endcanany
+
+                <flux:sidebar.group expandable heading="{{ __('Ecommerce') }}" icon="shopping-cart">
+                    <flux:sidebar.item icon="cube" :href="route('admin.products.index')" :current="request()->routeIs('admin.products.*')" wire:navigate>{{ __('Products') }}</flux:sidebar.item>
+                    <flux:sidebar.item icon="tag" :href="route('admin.categories.index')" :current="request()->routeIs('admin.categories.*')" wire:navigate>{{ __('Categories') }}</flux:sidebar.item>
+                    <flux:sidebar.item icon="view-columns" :href="route('admin.categories-display.index')" :current="request()->routeIs('admin.categories-display.*')" wire:navigate>{{ __('Categories Display') }}</flux:sidebar.item>
+                    <flux:sidebar.item icon="shopping-bag" :href="route('admin.orders.index')" :current="request()->routeIs('admin.orders.*')" wire:navigate>{{ __('Orders') }}</flux:sidebar.item>
+                    <flux:sidebar.item icon="ticket" :href="route('admin.coupons.index')" :current="request()->routeIs('admin.coupons.*')" wire:navigate>{{ __('Coupons') }}</flux:sidebar.item>
+                    <flux:sidebar.item icon="truck" :href="route('admin.shipping.index')" :current="request()->routeIs('admin.shipping.*')" wire:navigate>{{ __('Shipping') }}</flux:sidebar.item>
+                    <flux:sidebar.item icon="rectangle-group" :href="route('admin.cart-checkout.index')" :current="request()->routeIs('admin.cart-checkout.*')" wire:navigate>{{ __('Cart & Checkout') }}</flux:sidebar.item>
+                    <flux:sidebar.item icon="squares-2x2" :href="route('admin.sections.index')" :current="request()->routeIs('admin.sections.*')" wire:navigate>{{ __('Sections') }}</flux:sidebar.item>
+                    <flux:sidebar.item icon="chat-bubble-left-right" :href="route('admin.testimonials.index')" :current="request()->routeIs('admin.testimonials.*')" wire:navigate>{{ __('Testimonials') }}</flux:sidebar.item>
+                    <flux:sidebar.item icon="document-duplicate" :href="route('admin.landing-pages.index')" :current="request()->routeIs('admin.landing-pages.*')" wire:navigate>{{ __('Landing Pages') }}</flux:sidebar.item>
+                </flux:sidebar.group>
+
+                <flux:sidebar.group expandable heading="{{ __('Settings') }}" icon="cog-6-tooth">
+                    <flux:sidebar.item icon="tag" :href="route('admin.attributes.index')" :current="request()->routeIs('admin.attributes.*')" wire:navigate>{{ __('Attributes') }}</flux:sidebar.item>
+                </flux:sidebar.group>
+
+                @canany(['manage users', 'manage roles'])
+                    <flux:sidebar.group expandable heading="{{ __('Administration') }}" icon="shield-check">
+                        @can('manage users')
+                            <flux:sidebar.item icon="user-group" :href="route('admin.users.index')" :current="request()->routeIs('admin.users.*')" wire:navigate>{{ __('Users') }}</flux:sidebar.item>
+                        @endcan
+                        @can('manage roles')
+                            <flux:sidebar.item icon="shield-check" :href="route('admin.roles.index')" :current="request()->routeIs('admin.roles.*')" wire:navigate>{{ __('Roles') }}</flux:sidebar.item>
+                            <flux:sidebar.item icon="key" :href="route('admin.permissions.index')" :current="request()->routeIs('admin.permissions.*')" wire:navigate>{{ __('Permissions') }}</flux:sidebar.item>
+                        @endcan
+                        <flux:sidebar.item icon="credit-card" :href="route('admin.billing.index')" :current="request()->routeIs('admin.billing.*')" wire:navigate>{{ __('Billing') }}</flux:sidebar.item>
+                    </flux:sidebar.group>
+                @endcanany
+            @endif
+
+            @can('access platform')
+                <flux:sidebar.group expandable heading="{{ __('Platform') }}" icon="building-office-2">
+                    @foreach (config('platform_nav', []) as $item)
+                        @continue(isset($item['permission']) && ! auth()->user()->can($item['permission']))
+                        <flux:sidebar.item icon="{{ $item['icon'] }}" :href="route($item['route'])" :current="request()->routeIs($item['route_pattern'])" wire:navigate>{{ __($item['label']) }}</flux:sidebar.item>
+                    @endforeach
+                </flux:sidebar.group>
+            @endcan
 
             <flux:sidebar.spacer />
 
@@ -65,6 +77,16 @@
                 {{ __('Documentation') }}
                 </flux:navlist.item>
             </flux:navlist>--}}
+
+            <!-- Theme Toggle -->
+            <div class="flex items-center justify-center rounded-xl bg-white/70 p-1 shadow-soft dark:bg-white/5">
+                <flux:tooltip :content="__('Toggle theme')" position="right">
+                    <flux:button x-data x-on:click="$flux.appearance = ($flux.appearance === 'dark' ? 'light' : 'dark')" variant="ghost" size="sm" square>
+                        <flux:icon.sun class="dark:hidden" variant="mini" />
+                        <flux:icon.moon class="hidden dark:block" variant="mini" />
+                    </flux:button>
+                </flux:tooltip>
+            </div>
 
             <!-- Desktop User Menu -->
             @auth
@@ -123,6 +145,13 @@
 
                 <flux:spacer />
 
+                <flux:tooltip :content="__('Toggle theme')" position="bottom">
+                    <flux:button x-data x-on:click="$flux.appearance = ($flux.appearance === 'dark' ? 'light' : 'dark')" variant="ghost" size="sm" square>
+                        <flux:icon.sun class="dark:hidden" variant="mini" />
+                        <flux:icon.moon class="hidden dark:block" variant="mini" />
+                    </flux:button>
+                </flux:tooltip>
+
                 <flux:dropdown position="top" align="end">
                     <flux:profile
                         :initials="auth()->user()->initials()"
@@ -167,6 +196,16 @@
                 </flux:dropdown>
             </flux:header>
         @endauth
+
+        @if(session()->has('impersonator_id'))
+            <flux:callout variant="warning" class="rounded-none">
+                {{ __('You are impersonating :name.', ['name' => auth()->user()->name]) }}
+                <form method="POST" action="{{ route('impersonation.stop') }}" class="inline">
+                    @csrf
+                    <button type="submit" class="underline font-medium">{{ __('Return to Platform') }}</button>
+                </form>
+            </flux:callout>
+        @endif
 
         {{ $slot }}
 

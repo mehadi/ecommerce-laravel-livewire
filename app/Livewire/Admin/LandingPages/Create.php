@@ -6,6 +6,7 @@ use App\Models\LandingPageConfig;
 use App\Models\LandingPageSection;
 use App\Models\Product;
 use App\Models\Testimonial;
+use App\Support\Tenancy;
 use Illuminate\Support\Facades\Cache;
 use Livewire\Component;
 
@@ -167,7 +168,7 @@ class Create extends Component
             'order' => $this->order,
         ]);
 
-        Cache::forget('landing.page.'.$this->slug);
+        Cache::forget(Tenancy::cacheKey('landing.page.'.$this->slug));
 
         session()->flash('message', __('Landing page created successfully.'));
 

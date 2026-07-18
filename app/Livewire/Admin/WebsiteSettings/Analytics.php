@@ -2,7 +2,9 @@
 
 namespace App\Livewire\Admin\WebsiteSettings;
 
+use App\Models\PlatformSetting;
 use App\Models\Setting;
+use App\Support\Tenancy;
 use Illuminate\Support\Facades\Cache;
 use Livewire\Component;
 
@@ -14,16 +16,18 @@ class Analytics extends Component
 
     public string $google_tag_manager_id = '';
 
+    /** Platform-wide defaults, shown as placeholders for fields the store hasn't set. */
+    public array $platformDefaults = [];
+
     /**
      * Mount the component.
      */
     public function mount(): void
     {
-        $settings = Setting::getMany([
-            'facebook_pixel_id',
-            'google_analytics_id',
-            'google_tag_manager_id',
-        ]);
+        $keys = ['facebook_pixel_id', 'google_analytics_id', 'google_tag_manager_id'];
+
+        $settings = Setting::getManyOwn($keys);
+        $this->platformDefaults = PlatformSetting::getMany($keys);
 
         $this->facebook_pixel_id = $settings['facebook_pixel_id'] ?? '';
         $this->google_analytics_id = $settings['google_analytics_id'] ?? '';
@@ -48,9 +52,9 @@ class Analytics extends Component
         Setting::setMany($validated);
 
         // Clear relevant caches
-        Cache::forget('landing.sections.hero');
-        Cache::forget('landing.sections.features');
-        Cache::forget('landing.sections.faq');
+        Cache::forget(Tenancy::cacheKey('landing.sections.hero'));
+        Cache::forget(Tenancy::cacheKey('landing.sections.features'));
+        Cache::forget(Tenancy::cacheKey('landing.sections.faq'));
 
         session()->flash('message', __('Website settings updated successfully.'));
     }

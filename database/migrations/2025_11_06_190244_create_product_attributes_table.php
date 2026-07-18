@@ -13,6 +13,7 @@ return new class extends Migration
     {
         Schema::create('product_attributes', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('tenant_id')->nullable()->constrained()->cascadeOnDelete()->index();
             $table->foreignId('product_id')->constrained()->onDelete('cascade');
             $table->json('attribute_data'); // {"Color": "Red", "Size": "Large", "Weight": "2.5"}
             $table->decimal('price', 10, 2);

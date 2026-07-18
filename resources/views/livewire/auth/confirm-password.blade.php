@@ -20,7 +20,7 @@
                 viewable
             />
 
-            <flux:button variant="primary" type="submit" class="w-full" data-test="confirm-password-button">
+            <flux:button variant="primary" color="emerald" type="submit" class="w-full" data-test="confirm-password-button">
                 {{ __('Confirm') }}
             </flux:button>
         </form>

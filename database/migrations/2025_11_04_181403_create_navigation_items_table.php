@@ -13,8 +13,11 @@ return new class extends Migration
     {
         Schema::create('navigation_items', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('tenant_id')->nullable()->constrained()->cascadeOnDelete()->index();
+            $table->foreignId('parent_id')->nullable()->constrained('navigation_items')->onDelete('cascade');
             $table->string('label_en');
             $table->string('label_bn')->nullable();
+            $table->string('icon')->nullable();
             $table->string('url');
             $table->string('type')->default('link'); // 'link', 'section', 'route'
             $table->string('route_name')->nullable(); // For route type

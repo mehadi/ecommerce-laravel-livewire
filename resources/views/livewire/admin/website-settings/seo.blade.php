@@ -17,7 +17,7 @@
                     <flux:label>{{ __('Meta Description') }}</flux:label>
                     <flux:textarea
                         wire:model.live="meta_description"
-                        placeholder="{{ __('A brief description for search engines (recommended: 150-160 characters)') }}"
+                        placeholder="{{ $platformDefaults['meta_description'] ?? __('A brief description for search engines (recommended: 150-160 characters)') }}"
                         rows="3"
                     />
                     <div class="flex items-center justify-between mt-1">
@@ -48,7 +48,7 @@
                     <flux:label>{{ __('Meta Keywords') }}</flux:label>
                     <flux:textarea
                         wire:model="meta_keywords"
-                        placeholder="{{ __('Comma-separated keywords for SEO') }}"
+                        placeholder="{{ $platformDefaults['meta_keywords'] ?? __('Comma-separated keywords for SEO') }}"
                         rows="2"
                     />
                     <flux:description>{{ __('Enter relevant keywords separated by commas to help search engines understand your content') }}</flux:description>
@@ -90,21 +90,29 @@
                                     <img src="{{ asset('storage/'.$existing_og_image) }}" alt="Current OG Image" class="mx-auto max-h-32 object-contain rounded">
                                 @endif
                                 <div class="flex items-center justify-center gap-3">
-                                    <label class="cursor-pointer inline-flex items-center gap-2 px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm">
-                                        <flux:icon.arrow-up-tray class="size-4" />
-                                        {{ __('Change') }}
+                                    <flux:button as="label" variant="primary" size="sm">
+                                        <span class="inline-flex items-center gap-1.5">
+                                            <flux:icon.arrow-up-tray class="h-3 w-3 shrink-0" />
+                                            <span>{{ __('Change') }}</span>
+                                        </span>
                                         <input type="file" wire:model="og_image" accept="image/*" class="hidden">
-                                    </label>
+                                    </flux:button>
                                     @if($existing_og_image)
-                                        <button type="button" wire:click="removeOgImage" class="inline-flex items-center gap-2 px-3 py-1.5 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm">
-                                            <flux:icon.trash class="size-4" />
-                                            {{ __('Remove') }}
-                                        </button>
+                                        <flux:button type="button" wire:click="removeOgImage" variant="danger" size="sm">
+                                            <span class="inline-flex items-center gap-1.5">
+                                                <flux:icon.trash class="h-3 w-3 shrink-0" />
+                                                <span>{{ __('Remove') }}</span>
+                                            </span>
+                                        </flux:button>
                                     @endif
                                 </div>
                             </div>
                         @else
                             <div class="space-y-3">
+                                @if($platformDefaults['site_og_image'] ?? null)
+                                    <img src="{{ asset('storage/'.$platformDefaults['site_og_image']) }}" alt="Platform Default OG Image" class="mx-auto max-h-20 object-contain rounded opacity-75">
+                                    <p class="text-xs text-neutral-500 dark:text-neutral-500">{{ __('Currently using the platform default image shown above') }}</p>
+                                @endif
                                 <div class="flex flex-col items-center justify-center">
                                     <flux:icon.cloud-arrow-up class="size-10 text-neutral-400 mb-2" />
                                     <p class="text-sm text-neutral-600 dark:text-neutral-400 mb-1">
@@ -115,11 +123,13 @@
                                         {{ __('PNG, JPG, GIF up to 2MB. Recommended: 1200x630 pixels for social sharing') }}
                                     </p>
                                 </div>
-                                <label class="cursor-pointer inline-flex items-center gap-2 px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm">
-                                    <flux:icon.arrow-up-tray class="size-4" />
-                                    {{ __('Select Image') }}
+                                <flux:button as="label" variant="primary" size="sm">
+                                    <span class="inline-flex items-center gap-1.5">
+                                        <flux:icon.arrow-up-tray class="h-3 w-3 shrink-0" />
+                                        <span>{{ __('Select Image') }}</span>
+                                    </span>
                                     <input type="file" wire:model="og_image" accept="image/*" class="hidden">
-                                </label>
+                                </flux:button>
                             </div>
                         @endif
                     </div>

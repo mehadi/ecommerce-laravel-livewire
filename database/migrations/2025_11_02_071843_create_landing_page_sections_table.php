@@ -13,6 +13,7 @@ return new class extends Migration
     {
         Schema::create('landing_page_sections', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('tenant_id')->nullable()->constrained()->cascadeOnDelete()->index();
             $table->string('type'); // hero, features, testimonials, faq, etc.
             $table->string('title_en')->nullable();
             $table->string('title_bn')->nullable();

@@ -13,6 +13,7 @@ return new class extends Migration
     {
         Schema::create('testimonials', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('tenant_id')->nullable()->constrained()->cascadeOnDelete()->index();
             $table->string('name');
             $table->string('location')->nullable();
             $table->text('content_en');

@@ -3,6 +3,7 @@
 namespace App\Livewire\Admin\Sections;
 
 use App\Models\LandingPageSection;
+use App\Support\Tenancy;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Storage;
 use Livewire\Component;
@@ -197,10 +198,10 @@ class Index extends Component
 
     protected function clearCache(): void
     {
-        Cache::forget('landing.sections.hero');
-        Cache::forget('landing.sections.features');
-        Cache::forget('landing.sections.faq');
-        Cache::forget('landing.sections.testimonials');
+        Cache::forget(Tenancy::cacheKey('landing.sections.hero'));
+        Cache::forget(Tenancy::cacheKey('landing.sections.features'));
+        Cache::forget(Tenancy::cacheKey('landing.sections.faq'));
+        Cache::forget(Tenancy::cacheKey('landing.sections.testimonials'));
     }
 
     public function editSection($sectionId = null): void
@@ -239,7 +240,7 @@ class Index extends Component
             if ($imagePath && $this->editingSectionId) {
                 Storage::disk('public')->delete($imagePath);
             }
-            $imagePath = $this->image->store('sections', 'public');
+            $imagePath = $this->image->store(Tenancy::storagePath('sections'), 'public');
         } elseif (! $this->editingSectionId) {
             // New section with no image uploaded
             $imagePath = null;

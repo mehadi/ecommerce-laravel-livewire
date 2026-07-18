@@ -20,6 +20,10 @@
         <flux:callout variant="success">{{ session('message') }}</flux:callout>
     @endif
 
+    @if (session()->has('error'))
+        <flux:callout variant="danger">{{ session('error') }}</flux:callout>
+    @endif
+
     <div class="overflow-x-auto bg-white dark:bg-zinc-900 rounded-lg shadow">
         <table class="min-w-full divide-y divide-gray-200 dark:divide-zinc-700">
             <thead class="bg-gray-50 dark:bg-zinc-800">
@@ -58,10 +62,20 @@
                         <td class="px-6 py-4 whitespace-nowrap">
                             <div class="flex gap-2">
                                 <flux:button wire:click="openEditModal({{ $attribute->id }})" size="sm" variant="ghost">
-                                    {{ __('Edit') }}
+                                    <span class="inline-flex items-center gap-1.5">
+                                        <svg class="h-3 w-3 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                                        </svg>
+                                        <span>{{ __('Edit') }}</span>
+                                    </span>
                                 </flux:button>
                                 <flux:button wire:click="deleteAttribute({{ $attribute->id }})" wire:confirm="{{ __('Are you sure?') }}" size="sm" variant="danger">
-                                    {{ __('Delete') }}
+                                    <span class="inline-flex items-center gap-1.5">
+                                        <svg class="h-3 w-3 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                        </svg>
+                                        <span>{{ __('Delete') }}</span>
+                                    </span>
                                 </flux:button>
                             </div>
                         </td>
@@ -69,7 +83,16 @@
                 @empty
                     <tr>
                         <td colspan="6" class="px-6 py-12 text-center">
-                            <p class="text-gray-500 dark:text-gray-400">{{ __('No attributes found. Create your first attribute.') }}</p>
+                            <div class="flex flex-col items-center gap-3">
+                                <svg class="h-12 w-12 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 11V6a3 3 0 013-3z"></path>
+                                </svg>
+                                <div class="text-center">
+                                    <p class="text-sm font-medium text-gray-900 dark:text-white">{{ __('No attributes found') }}</p>
+                                    <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">{{ __('Get started by creating your first attribute.') }}</p>
+                                </div>
+                                <flux:button wire:click="openCreateModal" variant="primary" size="sm">{{ __('Create Attribute') }}</flux:button>
+                            </div>
                         </td>
                     </tr>
                 @endforelse
@@ -179,7 +202,7 @@
                 </form>
 
                 <div class="border-t pt-4">
-                    <h3 class="font-semibold mb-4">{{ __('Existing Values') }}</h3>
+                    <flux:heading size="md" level="3" class="mb-4">{{ __('Existing Values') }}</flux:heading>
                     <div class="space-y-2">
                         @foreach($attributeValues as $value)
                             <div class="flex items-center justify-between p-3 bg-gray-50 dark:bg-zinc-800 rounded-lg">

@@ -15,11 +15,12 @@
     use App\Models\Order;
     use App\Models\Product;
     use App\Models\Testimonial;
+    use App\Support\Tenancy;
     use Illuminate\Support\Facades\Cache;
 
     $heroImage = ($heroSection && $heroSection->image) ? $heroSection->image : $product?->primary_image;
 
-    $heroExtras = Cache::remember('landing.hero.extras.'.($product?->id ?? 'none'), 1800, function () use ($product) {
+    $heroExtras = Cache::remember(Tenancy::cacheKey('landing.hero.extras.'.($product?->id ?? 'none')), 1800, function () use ($product) {
         $weightValues = Attribute::where('slug', 'weight')->with('activeValues')->first()?->activeValues ?? collect();
 
         $spotlightProduct = Product::where('is_active', true)

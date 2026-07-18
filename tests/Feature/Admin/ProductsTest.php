@@ -15,16 +15,6 @@ use Spatie\Permission\Models\Role;
 
 uses(RefreshDatabase::class);
 
-function actingAsAdmin(): User
-{
-    Role::firstOrCreate(['name' => 'admin', 'guard_name' => 'web']);
-
-    $admin = User::factory()->create();
-    $admin->assignRole('admin');
-
-    return $admin;
-}
-
 test('admin can create a product with rich descriptions intact', function () {
     $admin = actingAsAdmin();
     $category = Category::factory()->create();

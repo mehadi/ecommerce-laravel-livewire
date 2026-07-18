@@ -21,9 +21,14 @@
                     <flux:input
                         wire:model="site_name"
                         type="text"
-                        placeholder="{{ config('app.name') }}"
+                        placeholder="{{ $platformDefaults['site_name'] ?? config('app.name') }}"
                     />
-                    <flux:description>{{ __('The name of your website displayed throughout the site') }}</flux:description>
+                    <flux:description>
+                        {{ __('The name of your website displayed throughout the site') }}
+                        @if($platformDefaults['site_name'] ?? null)
+                            &mdash; {{ __('leave blank to use the platform default shown above') }}
+                        @endif
+                    </flux:description>
                 </flux:field>
 
                 <flux:field>
@@ -31,7 +36,7 @@
                     <flux:input
                         wire:model="site_tagline"
                         type="text"
-                        placeholder="{{ __('Premium Date Molasses - Natural Sweetener') }}"
+                        placeholder="{{ $platformDefaults['site_tagline'] ?? __('Premium Date Molasses - Natural Sweetener') }}"
                     />
                     <flux:description>{{ __('A short tagline that describes your website') }}</flux:description>
                 </flux:field>
@@ -40,7 +45,7 @@
                     <flux:label>{{ __('Site Description') }}</flux:label>
                     <flux:textarea
                         wire:model="site_description"
-                        placeholder="{{ __('A brief description of your website') }}"
+                        placeholder="{{ $platformDefaults['site_description'] ?? __('A brief description of your website') }}"
                         rows="3"
                     />
                     <flux:description>{{ __('A detailed description of your website and what you offer') }}</flux:description>
@@ -51,7 +56,7 @@
                     <flux:input
                         wire:model="site_url"
                         type="url"
-                        placeholder="{{ config('app.url') }}"
+                        placeholder="{{ $platformDefaults['site_url'] ?? config('app.url') }}"
                     />
                     <flux:description>{{ __('The canonical URL of your website (used for SEO and social sharing)') }}</flux:description>
                 </flux:field>
@@ -91,21 +96,29 @@
                                     <img src="{{ asset('storage/'.$existing_logo) }}" alt="Current Logo" class="mx-auto max-h-32 object-contain rounded">
                                 @endif
                                 <div class="flex items-center justify-center gap-3">
-                                    <label class="cursor-pointer inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
-                                        <flux:icon.arrow-up-tray class="size-5" />
-                                        {{ __('Change Logo') }}
+                                    <flux:button as="label" variant="primary" size="sm">
+                                        <span class="inline-flex items-center gap-1.5">
+                                            <flux:icon.arrow-up-tray class="h-4 w-4 shrink-0" />
+                                            <span>{{ __('Change Logo') }}</span>
+                                        </span>
                                         <input type="file" wire:model="logo" accept="image/*" class="hidden">
-                                    </label>
+                                    </flux:button>
                                     @if($existing_logo)
-                                        <button type="button" wire:click="removeLogo" class="inline-flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors">
-                                            <flux:icon.trash class="size-5" />
-                                            {{ __('Remove') }}
-                                        </button>
+                                        <flux:button type="button" wire:click="removeLogo" variant="danger" size="sm">
+                                            <span class="inline-flex items-center gap-1.5">
+                                                <flux:icon.trash class="h-4 w-4 shrink-0" />
+                                                <span>{{ __('Remove') }}</span>
+                                            </span>
+                                        </flux:button>
                                     @endif
                                 </div>
                             </div>
                         @else
                             <div class="space-y-4">
+                                @if($platformDefaults['site_logo'] ?? null)
+                                    <img src="{{ asset('storage/'.$platformDefaults['site_logo']) }}" alt="Platform Default Logo" class="mx-auto max-h-20 object-contain rounded opacity-75">
+                                    <p class="text-xs text-neutral-500 dark:text-neutral-500">{{ __('Currently using the platform default logo shown above') }}</p>
+                                @endif
                                 <div class="flex flex-col items-center justify-center">
                                     <flux:icon.cloud-arrow-up class="size-12 text-neutral-400 mb-4" />
                                     <p class="text-sm text-neutral-600 dark:text-neutral-400 mb-2">
@@ -116,11 +129,13 @@
                                         {{ __('PNG, JPG, GIF up to 2MB') }}
                                     </p>
                                 </div>
-                                <label class="cursor-pointer inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
-                                    <flux:icon.arrow-up-tray class="size-5" />
-                                    {{ __('Select Logo') }}
+                                <flux:button as="label" variant="primary" size="sm">
+                                    <span class="inline-flex items-center gap-1.5">
+                                        <flux:icon.arrow-up-tray class="h-4 w-4 shrink-0" />
+                                        <span>{{ __('Select Logo') }}</span>
+                                    </span>
                                     <input type="file" wire:model="logo" accept="image/*" class="hidden">
-                                </label>
+                                </flux:button>
                             </div>
                         @endif
                     </div>
@@ -169,16 +184,20 @@
                                     <img src="{{ asset('storage/'.$existing_favicon) }}" alt="Current Favicon" class="mx-auto max-h-16 object-contain rounded">
                                 @endif
                                 <div class="flex items-center justify-center gap-3">
-                                    <label class="cursor-pointer inline-flex items-center gap-2 px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm">
-                                        <flux:icon.arrow-up-tray class="size-4" />
-                                        {{ __('Change') }}
+                                    <flux:button as="label" variant="primary" size="sm">
+                                        <span class="inline-flex items-center gap-1.5">
+                                            <flux:icon.arrow-up-tray class="h-3 w-3 shrink-0" />
+                                            <span>{{ __('Change') }}</span>
+                                        </span>
                                         <input type="file" wire:model="favicon" accept="image/x-icon,image/png" class="hidden">
-                                    </label>
+                                    </flux:button>
                                     @if($existing_favicon)
-                                        <button type="button" wire:click="removeFavicon" class="inline-flex items-center gap-2 px-3 py-1.5 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm">
-                                            <flux:icon.trash class="size-4" />
-                                            {{ __('Remove') }}
-                                        </button>
+                                        <flux:button type="button" wire:click="removeFavicon" variant="danger" size="sm">
+                                            <span class="inline-flex items-center gap-1.5">
+                                                <flux:icon.trash class="h-3 w-3 shrink-0" />
+                                                <span>{{ __('Remove') }}</span>
+                                            </span>
+                                        </flux:button>
                                     @endif
                                 </div>
                             </div>
@@ -194,11 +213,13 @@
                                         {{ __('ICO or PNG, up to 512KB. Recommended: 32x32 or 16x16 pixels') }}
                                     </p>
                                 </div>
-                                <label class="cursor-pointer inline-flex items-center gap-2 px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm">
-                                    <flux:icon.arrow-up-tray class="size-4" />
-                                    {{ __('Select Favicon') }}
+                                <flux:button as="label" variant="primary" size="sm">
+                                    <span class="inline-flex items-center gap-1.5">
+                                        <flux:icon.arrow-up-tray class="h-3 w-3 shrink-0" />
+                                        <span>{{ __('Select Favicon') }}</span>
+                                    </span>
                                     <input type="file" wire:model="favicon" accept="image/x-icon,image/png" class="hidden">
-                                </label>
+                                </flux:button>
                             </div>
                         @endif
                     </div>

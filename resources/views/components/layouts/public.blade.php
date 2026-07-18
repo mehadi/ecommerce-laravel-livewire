@@ -29,9 +29,12 @@
     } else {
         $contentWidthPx = $contentWidthPresets[$contentWidth] ?? 1152;
     }
+
+    $themePrimaryColor = Setting::get('theme_primary_color', '#059669');
+    $themeSecondaryColor = Setting::get('theme_secondary_color', '#0f172a');
 @endphp
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="scroll-smooth" style="font-size: {{ $textSizePercent }}%; --content-max-width: {{ $contentWidthPx }}px;">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="scroll-smooth" style="font-size: {{ $textSizePercent }}%; --content-max-width: {{ $contentWidthPx }}px; --tenant-primary: {{ $themePrimaryColor }}; --tenant-secondary: {{ $themeSecondaryColor }};">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -39,6 +42,12 @@
     <!-- Font preconnect -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+    <!-- Tenant brand color (set in Admin > Website Settings > Appearance) -->
+    <style>
+        .btn-tenant-primary { background-color: var(--tenant-primary); }
+        .btn-tenant-primary:hover { filter: brightness(0.92); }
+    </style>
 
 
     <!-- Primary Meta Tags -->

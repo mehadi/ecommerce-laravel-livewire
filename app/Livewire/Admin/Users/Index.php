@@ -3,11 +3,11 @@
 namespace App\Livewire\Admin\Users;
 
 use App\Models\User;
+use App\Support\Tenancy;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Hash;
 use Livewire\Component;
 use Livewire\WithPagination;
-use Spatie\Permission\Models\Role;
 
 class Index extends Component
 {
@@ -74,7 +74,7 @@ class Index extends Component
         if ($id) {
             Gate::authorize('edit users');
 
-            $user = User::findOrFail($id);
+            $user = User::where('tenant_id', Tenancy::id())->findOrFail($id);
 
             // Prevent editing super admin unless current user is super admin
             if ($user->hasRole('super admin') && ! auth()->user()->hasRole('super admin')) {
@@ -133,11 +133,18 @@ class Index extends Component
             Gate::authorize('create users');
         }
 
+        if (! $this->editingId && ! Tenancy::current()?->canAddAdminUser()) {
+            session()->flash('error', __('Your plan\'s admin user limit has been reached. Upgrade your plan to add more.'));
+
+            return;
+        }
+
         $this->validate();
 
         $data = [
             'name' => $this->name,
             'email' => $this->email,
+            'tenant_id' => Tenancy::id(),
         ];
 
         // Only update password if provided
@@ -146,7 +153,7 @@ class Index extends Component
         }
 
         if ($this->editingId) {
-            $user = User::findOrFail($this->editingId);
+            $user = User::where('tenant_id', Tenancy::id())->findOrFail($this->editingId);
 
             // Prevent editing super admin unless current user is super admin
             if ($user->hasRole('super admin') && ! auth()->user()->hasRole('super admin')) {
@@ -155,12 +162,14 @@ class Index extends Component
                 return;
             }
 
+            unset($data['tenant_id']); // never move an existing user to a different tenant here
+
             $user->update($data);
 
             // Sync roles
             if (! empty($this->selectedRoles)) {
                 $roleIds = array_map('intval', $this->selectedRoles);
-                $roles = Role::whereIn('id', $roleIds)->get();
+                $roles = Tenancy::roleQuery()->whereIn('id', $roleIds)->get();
 
                 // Prevent removing super admin role from super admin users
                 if ($user->hasRole('super admin') && ! in_array('super admin', $roles->pluck('name')->toArray())) {
@@ -188,7 +197,7 @@ class Index extends Component
             // Assign roles
             if (! empty($this->selectedRoles)) {
                 $roleIds = array_map('intval', $this->selectedRoles);
-                $roles = Role::whereIn('id', $roleIds)->get();
+                $roles = Tenancy::roleQuery()->whereIn('id', $roleIds)->get();
                 $user->assignRole($roles);
             }
 
@@ -202,7 +211,7 @@ class Index extends Component
     {
         Gate::authorize('delete users');
 
-        $user = User::findOrFail($userId);
+        $user = User::where('tenant_id', Tenancy::id())->findOrFail($userId);
 
         // Prevent deleting super admin
         if ($user->hasRole('super admin')) {
@@ -226,6 +235,7 @@ class Index extends Component
     public function render()
     {
         $users = User::query()
+            ->where('tenant_id', Tenancy::id())
             ->when($this->search, function ($query) {
                 $query->where(function ($q) {
                     $q->where('name', 'like', '%'.$this->search.'%')
@@ -241,14 +251,16 @@ class Index extends Component
             ->orderBy($this->sortField, $this->sortDirection)
             ->paginate($this->perPage);
 
+        $tenantUsers = User::query()->where('tenant_id', Tenancy::id());
+
         $stats = [
-            'total' => User::count(),
-            'verified' => User::whereNotNull('email_verified_at')->count(),
-            'unverified' => User::whereNull('email_verified_at')->count(),
-            'with_roles' => User::has('roles')->count(),
+            'total' => (clone $tenantUsers)->count(),
+            'verified' => (clone $tenantUsers)->whereNotNull('email_verified_at')->count(),
+            'unverified' => (clone $tenantUsers)->whereNull('email_verified_at')->count(),
+            'with_roles' => (clone $tenantUsers)->has('roles')->count(),
         ];
 
-        $roles = Role::orderBy('name')->get();
+        $roles = Tenancy::roleQuery()->orderBy('name')->get();
 
         return view('livewire.admin.users.index', [
             'users' => $users,

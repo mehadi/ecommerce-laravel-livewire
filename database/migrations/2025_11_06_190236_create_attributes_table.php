@@ -13,14 +13,17 @@ return new class extends Migration
     {
         Schema::create('attributes', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('tenant_id')->nullable()->constrained()->cascadeOnDelete()->index();
             $table->string('name'); // e.g., "Color", "Size", "Weight"
-            $table->string('slug')->unique(); // e.g., "color", "size", "weight"
+            $table->string('slug'); // e.g., "color", "size", "weight"
             $table->string('type')->default('text'); // text, number, decimal (for weight)
             $table->string('unit')->nullable(); // e.g., "kg", "g", "ml" for weight
             $table->boolean('is_required')->default(false);
             $table->integer('order')->default(0);
             $table->boolean('is_active')->default(true);
             $table->timestamps();
+
+            $table->unique(['tenant_id', 'slug']);
         });
     }
 

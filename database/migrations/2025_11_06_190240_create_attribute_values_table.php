@@ -13,6 +13,7 @@ return new class extends Migration
     {
         Schema::create('attribute_values', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('tenant_id')->nullable()->constrained()->cascadeOnDelete()->index();
             $table->foreignId('attribute_id')->constrained()->onDelete('cascade');
             $table->string('value'); // e.g., "Red", "Small", "1.5"
             $table->string('display_value')->nullable(); // e.g., "1.5 kg" for display

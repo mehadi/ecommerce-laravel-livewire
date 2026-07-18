@@ -13,7 +13,8 @@ return new class extends Migration
     {
         Schema::create('coupons', function (Blueprint $table) {
             $table->id();
-            $table->string('code')->unique();
+            $table->foreignId('tenant_id')->nullable()->constrained()->cascadeOnDelete()->index();
+            $table->string('code');
             $table->string('name');
             $table->text('description')->nullable();
             $table->enum('type', ['percentage', 'fixed'])->default('percentage');
@@ -25,6 +26,8 @@ return new class extends Migration
             $table->dateTime('expires_at')->nullable();
             $table->boolean('is_active')->default(true);
             $table->timestamps();
+
+            $table->unique(['tenant_id', 'code']);
         });
     }
 
