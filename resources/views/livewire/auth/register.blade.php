@@ -8,13 +8,31 @@
         <form method="POST" action="{{ route('register.store') }}" class="flex flex-col gap-6">
             @csrf
 
+            @error('store_name')
+                <flux:callout variant="danger" text="{{ $message }}" />
+            @enderror
+
+            @unless (\App\Support\Tenancy::check())
+                <!-- Store Name -->
+                <flux:input
+                    name="store_name"
+                    :label="__('Store name')"
+                    type="text"
+                    required
+                    autofocus
+                    value="{{ old('store_name') }}"
+                    :placeholder="__('e.g. Acme Goods')"
+                    :description="__('This becomes your-store.'.request()->getHost().' — you can add a custom domain later.')"
+                />
+            @endunless
+
             <!-- Name -->
             <flux:input
                 name="name"
                 :label="__('Name')"
                 type="text"
                 required
-                autofocus
+                :autofocus="\App\Support\Tenancy::check()"
                 autocomplete="name"
                 :placeholder="__('Full name')"
             />

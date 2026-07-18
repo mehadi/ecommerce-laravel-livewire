@@ -27,9 +27,14 @@ return new class extends Migration
             $table->unique(['tenant_id', 'key']);
         });
 
-        $showCategories = Setting::get('navigation_show_categories', '0') === '1';
-        $showCartButton = Setting::get('navigation_show_cart_button', '1') === '1';
-        $showLanguageSwitcher = Setting::get('navigation_show_language_switcher', '1') === '1';
+        // Setting::get() falls back to PlatformSetting, whose table doesn't exist yet at
+        // this point in migration order (platform_settings is created later, in
+        // 2026_07_18_100002). No tenant/platform setting rows exist yet on a fresh
+        // migrate either way, so getOwn() (tenant-table-only) yields the same $default
+        // here while not depending on a table that hasn't been created yet.
+        $showCategories = Setting::getOwn('navigation_show_categories', '0') === '1';
+        $showCartButton = Setting::getOwn('navigation_show_cart_button', '1') === '1';
+        $showLanguageSwitcher = Setting::getOwn('navigation_show_language_switcher', '1') === '1';
 
         $now = now();
 

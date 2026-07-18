@@ -16,7 +16,14 @@ return [
     |
     */
 
-    'default' => env('DB_CONNECTION', 'sqlite'),
+    // docker-compose.yml's `app` service hardcodes DB_CONNECTION=pgsql (and DB_HOST/
+    // DB_DATABASE/etc.) as real container environment variables for normal dev use.
+    // Those win over both .env and phpunit.xml's <env> overrides (env vars are never
+    // overridden once already set), so relying on env('DB_CONNECTION') here would make
+    // every test run — via `docker exec Laravel_app php artisan test` — hit the real
+    // dev Postgres database instead of an isolated one. APP_ENV isn't Docker-injected,
+    // so it does correctly become "testing" from phpunit.xml; key off that instead.
+    'default' => env('APP_ENV') === 'testing' ? 'sqlite' : env('DB_CONNECTION', 'sqlite'),
 
     /*
     |--------------------------------------------------------------------------
@@ -34,7 +41,11 @@ return [
         'sqlite' => [
             'driver' => 'sqlite',
             'url' => env('DB_URL'),
-            'database' => env('DB_DATABASE', database_path('database.sqlite')),
+            // Same Docker-injected-env-vars-win issue as 'default' above: DB_DATABASE is
+            // hardcoded to "laravel" (a Postgres db name) at the container level, which
+            // would make sqlite try to open a file literally named "laravel" instead of
+            // phpunit.xml's intended in-memory database during tests.
+            'database' => env('APP_ENV') === 'testing' ? ':memory:' : env('DB_DATABASE', database_path('database.sqlite')),
             'prefix' => '',
             'foreign_key_constraints' => env('DB_FOREIGN_KEYS', true),
             'busy_timeout' => null,
