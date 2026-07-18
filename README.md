@@ -1,121 +1,112 @@
-# Laravel + Livewire Starter Kit
+# Laravel + Livewire E-Commerce Platform
 
 ## Introduction
 
-Our Laravel + [Livewire](https://livewire.laravel.com) starter kit provides a robust, modern starting point for building Laravel applications with a Livewire frontend.
+A multi-tenant e-commerce platform built with Laravel and [Livewire](https://livewire.laravel.com). A single codebase and deployment serves:
 
-Livewire is a powerful way of building dynamic, reactive, frontend UIs using just PHP. It's a great fit for teams that primarily use Blade templates and are looking for a simpler alternative to JavaScript-driven SPA frameworks like React and Vue.
+- **The platform** — a central marketing site and platform-staff admin (tenant management, plans, billing, platform-wide analytics), reachable on the app's central domain(s).
+- **Tenant stores** — each tenant gets their own storefront, admin dashboard, and optionally a custom domain, reached via a subdomain (`{slug}.{central-domain}`) or a verified custom domain.
 
-This Livewire starter kit utilizes Livewire 3, Laravel Volt (optionally), TypeScript, Tailwind, and the [Flux UI](https://fluxui.dev) component library.
+Built with Livewire 3, TypeScript, Tailwind, and [Flux UI](https://fluxui.dev), on PostgreSQL.
 
-If you are looking for the alternate configurations of this starter kit, they can be found in the following branches:
-
-- [components](https://github.com/laravel/livewire-starter-kit/tree/components) - if Volt is not selected
-- [workos](https://github.com/laravel/livewire-starter-kit/tree/workos) - if WorkOS is selected for authentication
-
-## Docker Setup
-
-This project includes Docker support with PostgreSQL. The Docker setup includes:
-
-- **PostgreSQL 16** - Database service (port 5432)
-- **PHP 8.3 FPM** - Application service with all required extensions
-- **Nginx** - Web server (port 8000 by default)
+## How to Use This Project
 
 ### Prerequisites
 
-- Docker and Docker Compose installed
-- Copy `.env.example` to `.env` and configure your database settings
+- Docker and Docker Compose
 
-### Getting Started
+### 1. Set up the environment
 
-1. Build and start the containers:
 ```bash
-docker-compose up -d
+cp .env.example .env
 ```
 
-The Laravel application will be available at **http://localhost:8000** (or the port specified in `APP_PORT` environment variable).
+The defaults work out of the box for local development (`CENTRAL_DOMAINS=localhost,127.0.0.1`, `PLATFORM_DOMAIN=localhost`). Leave `TENANT_DOMAIN_TARGET` blank unless you're testing real custom-domain verification against a public domain you control — see [docker/caddy/Caddyfile](docker/caddy/Caddyfile) for how it's used.
 
-2. Install dependencies:
+### 2. Build and start the containers
+
 ```bash
-docker-compose exec app composer install
+docker compose up -d
 ```
 
-3. Generate application key:
+This starts four services:
+
+| Container            | Purpose                                                             |
+|----------------------|----------------------------------------------------------------------|
+| `Laravel_postgres`   | PostgreSQL 18 database (port `5432`)                                 |
+| `Laravel_app`        | PHP-FPM application container                                        |
+| `Laravel_nginx`      | Serves the app over plain HTTP inside the docker network (port `8000` on the host) |
+| `Laravel_caddy`      | Terminates TLS for tenant custom domains/subdomains (ports `80`/`443`) — only relevant once you have real domains pointed here |
+
+(Container name prefix follows `APP_NAME` in `.env`, `laravel` by default.)
+
+### 3. Install dependencies and prepare the app
+
 ```bash
-docker-compose exec app php artisan key:generate
+docker exec Laravel_app composer install
+docker exec Laravel_app php artisan key:generate
+docker exec Laravel_app php artisan migrate
+docker exec Laravel_app php artisan db:seed
 ```
 
-4. Run migrations:
-```bash
-docker-compose exec app php artisan migrate
+> Artisan commands must run **inside** the `Laravel_app` container (`docker exec Laravel_app php artisan ...`) — the database host `postgres` only resolves from within the docker network, so running `php artisan` directly on your host will fail to connect.
+
+### 4. Log in
+
+Visit **http://localhost:8000**:
+
+- **Platform admin** (manage tenants, plans, billing): `platformadmin@example.com` / `password` — lands on `/platform` after login.
+- **Tenant admin** (manage the seeded "Default Store" tenant): `admin@example.com` or `superadmin@example.com` / `password` — but log in on the tenant's own host, not the central domain (see below), so it lands on `/dashboard` instead of 404ing.
+
+### Accessing a tenant store locally
+
+The seeded `DefaultTenantSeeder` creates a tenant with slug `default`, reachable at:
+
+```
+http://default.localhost:8000
 ```
 
-5. Seed the database with dummy data:
-```bash
-docker-compose exec app php artisan db:seed
-```
+(Any `{slug}.localhost` subdomain resolves without extra `/etc/hosts` entries on most systems/browsers.) This is where you log in as `admin@example.com` to reach that tenant's storefront and `/dashboard`.
+
+Logging in with tenant credentials on the bare `http://localhost:8000` central domain — or hitting `/dashboard` there directly — won't work: that host has no tenant resolved, so tenant-only routes don't exist there. Platform staff hitting the same routes get redirected back to `/platform` automatically instead of seeing a 404.
 
 ### Seeded Data
 
-The database seeders include the following dummy data:
-
-- **Roles & Permissions**: Super Admin and Admin roles with comprehensive permissions
-- **Admin Users**: 
-  - Super Admin: `superadmin@example.com` / `password`
-  - Admin: `admin@example.com` / `password`
+- **Platform**: one platform-staff account (`platformadmin@example.com`), a `default` plan set (Starter/Growth/Pro), and one tenant (`Default Store`, slug `default`) that owns all of the demo data below.
+- **Tenant admin users**: Super Admin (`superadmin@example.com`) and Admin (`admin@example.com`), both `/password`, with Spatie roles & permissions scoped to the `default` tenant.
 - **Cities**: 15 major cities in Bangladesh (Dhaka, Chittagong, Sylhet, etc.)
 - **Categories**: 6 product categories (Date Molasses, Natural Sweeteners, Honey Products, Organic Foods, Health Supplements, Spices & Herbs)
-- **Products**: 9 products across different categories with descriptions in English and Bengali
-- **Attributes**: Weight, Color, and Size attributes with predefined values
-- **Coupons**: 6 discount coupons (percentage and fixed discounts)
-- **Orders**: 8 sample orders with various statuses (pending, confirmed, processing, shipped, delivered, cancelled)
-- **Order Items**: Multiple order items across different orders
-- **Testimonials**: 6 customer testimonials with ratings
-- **Landing Page Sections**: Pre-configured landing page sections
-- **Navigation Items**: Menu navigation items
+- **Products**: 9 products across categories, with descriptions in English and Bengali
+- **Attributes**: Weight, Color, and Size, with predefined values
+- **Coupons**: 6 discount coupons (percentage and fixed)
+- **Orders**: 8 sample orders across order statuses, with order items
+- **Testimonials**, **landing page sections**, and **navigation items**: pre-configured demo content
 
 ### Ports
 
-- **Laravel Application**: http://localhost:8000 (configurable via `APP_PORT` in `.env`)
+- **Laravel Application (HTTP, dev)**: http://localhost:8000 (configurable via `APP_PORT` in `.env`)
+- **Caddy (TLS, for real domains)**: 80/443 on the host
 - **PostgreSQL**: localhost:5432 (configurable via `DB_PORT` in `.env`)
 
 ### Useful Commands
 
 ```bash
-# Start containers
-docker-compose up -d
-
-# Stop containers
-docker-compose down
+# Start / stop containers
+docker compose up -d
+docker compose down
 
 # Run artisan commands
-docker-compose exec app php artisan <command>
+docker exec Laravel_app php artisan <command>
 
 # View logs
-docker-compose logs -f
+docker compose logs -f
+docker logs Laravel_app
+docker logs Laravel_caddy
 
-# View logs for specific service
-docker-compose logs -f nginx
-docker-compose logs -f app
-
-# Access container shell
-docker-compose exec app bash
+# Access a container shell
+docker exec -it Laravel_app bash
 ```
-
-The project is running in Docker with PostgreSQL, and all migrations have been applied.
 
 ## Official Documentation
 
-Documentation for all Laravel starter kits can be found on the [Laravel website](https://laravel.com/docs/starter-kits).
-
-## Contributing
-
-Thank you for considering contributing to our starter kit! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
-
-## Code of Conduct
-
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
-
-## License
-
-The Laravel + Livewire starter kit is open-sourced software licensed under the MIT license.
+This project is built on the [Laravel Livewire starter kit](https://laravel.com/docs/starter-kits); general Laravel/Livewire documentation applies for anything not covered above.
