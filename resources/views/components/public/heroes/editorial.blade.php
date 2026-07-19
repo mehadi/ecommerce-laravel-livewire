@@ -35,22 +35,24 @@
 
                 <div class="flex flex-wrap items-center gap-5">
                     @if($product)
-                        <a href="#product" class="group inline-flex items-center gap-3 font-bold text-sm sm:text-base text-zinc-900 dark:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-900 dark:focus-visible:ring-white rounded">
-                            <span class="border-b-2 border-[var(--tenant-primary)] pb-0.5">{{ __('Order Now') }}</span>
+                        <a href="{{ $heroPrimaryCtaUrl }}" class="group inline-flex items-center gap-3 font-bold text-sm sm:text-base text-zinc-900 dark:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-900 dark:focus-visible:ring-white rounded">
+                            <span class="border-b-2 border-[var(--tenant-primary)] pb-0.5">{{ $heroPrimaryCtaLabel }}</span>
                             <span class="flex items-center justify-center w-10 h-10 rounded-full bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 transition-transform duration-300 group-hover:rotate-45 motion-reduce:transform-none" aria-hidden="true">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M7 17L17 7M17 7H8m9 0v9"></path></svg>
                             </span>
                         </a>
                     @endif
-                    <a href="/shop" wire:navigate class="text-sm sm:text-base font-semibold text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition-colors underline underline-offset-4 decoration-zinc-300 dark:decoration-zinc-600">
-                        {{ __('Browse Shop') }}
+                    <a href="{{ $heroSecondaryCtaUrl }}" @if($heroSecondaryCtaNavigate) wire:navigate @endif class="text-sm sm:text-base font-semibold text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition-colors underline underline-offset-4 decoration-zinc-300 dark:decoration-zinc-600">
+                        {{ $heroSecondaryCtaLabel }}
                     </a>
                 </div>
 
+                @if($heroShowStats)
                 <div class="mt-auto pt-4 flex flex-wrap items-center gap-x-6 gap-y-2 text-xs text-zinc-500 dark:text-zinc-400 uppercase tracking-wide">
                     <span><span class="font-bold text-zinc-900 dark:text-white tabular-nums normal-case">{{ $heroOrderCountLabel }}</span> {{ __('Orders Delivered') }}</span>
                     <span><span class="font-bold text-zinc-900 dark:text-white tabular-nums normal-case">{{ $heroExtras['productCount'] }}+</span> {{ __('Products') }}</span>
                 </div>
+                @endif
 
                 @include('components.public.heroes._social')
             </div>

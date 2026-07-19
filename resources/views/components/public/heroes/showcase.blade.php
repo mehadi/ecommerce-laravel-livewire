@@ -29,6 +29,7 @@
                     <img src="{{ asset('storage/'.$heroImage) }}" alt="{{ $product->name ?? ($heroTitle ?? '') }}" width="480" height="480" fetchpriority="high" class="relative max-h-64 sm:max-h-80 w-auto object-contain drop-shadow-2xl transition-transform duration-500 hover:scale-[1.04] motion-reduce:transform-none">
 
                     {{-- Floating stat chips --}}
+                    @if($heroShowStats)
                     <div class="hidden sm:flex absolute top-8 -left-4 lg:-left-16 items-center gap-2.5 bg-white dark:bg-zinc-800 rounded-2xl px-4 py-3 shadow-lg ring-1 ring-zinc-900/[0.05] dark:ring-white/[0.08] animate-float motion-reduce:animate-none">
                         <div>
                             <p class="text-sm font-bold text-zinc-900 dark:text-white tabular-nums leading-tight">{{ $heroOrderCountLabel }}</p>
@@ -50,19 +51,20 @@
                             <p class="text-[10px] font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wide">{{ __('Products') }}</p>
                         </div>
                     </div>
+                    @endif
                 </div>
             @endif
 
             {{-- CTA row --}}
             <div class="mt-8 sm:mt-10 flex flex-wrap items-center justify-center gap-3">
                 @if($product)
-                    <a href="#product" class="inline-flex items-center gap-2 bg-[var(--tenant-primary)] hover:brightness-110 text-white px-8 py-3.5 rounded-full font-bold text-sm sm:text-base shadow-lg transition-all duration-300 hover:-translate-y-0.5 motion-reduce:transform-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--tenant-primary)] focus-visible:ring-offset-2">
-                        {{ __('Order Now') }}
+                    <a href="{{ $heroPrimaryCtaUrl }}" class="inline-flex items-center gap-2 bg-[var(--tenant-primary)] hover:brightness-110 text-white px-8 py-3.5 rounded-full font-bold text-sm sm:text-base shadow-lg transition-all duration-300 hover:-translate-y-0.5 motion-reduce:transform-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--tenant-primary)] focus-visible:ring-offset-2">
+                        {{ $heroPrimaryCtaLabel }}
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5 21 12l-7.5 7.5M21 12H3"></path></svg>
                     </a>
                 @endif
-                <a href="/shop" wire:navigate class="inline-flex items-center gap-2 px-8 py-3.5 rounded-full font-bold text-sm sm:text-base text-zinc-800 dark:text-zinc-100 bg-zinc-50 dark:bg-zinc-800 ring-1 ring-zinc-900/[0.08] dark:ring-white/[0.1] hover:bg-zinc-100 dark:hover:bg-zinc-700 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-900 dark:focus-visible:ring-white">
-                    {{ __('Browse Shop') }}
+                <a href="{{ $heroSecondaryCtaUrl }}" @if($heroSecondaryCtaNavigate) wire:navigate @endif class="inline-flex items-center gap-2 px-8 py-3.5 rounded-full font-bold text-sm sm:text-base text-zinc-800 dark:text-zinc-100 bg-zinc-50 dark:bg-zinc-800 ring-1 ring-zinc-900/[0.08] dark:ring-white/[0.1] hover:bg-zinc-100 dark:hover:bg-zinc-700 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-900 dark:focus-visible:ring-white">
+                    {{ $heroSecondaryCtaLabel }}
                 </a>
             </div>
         </div>

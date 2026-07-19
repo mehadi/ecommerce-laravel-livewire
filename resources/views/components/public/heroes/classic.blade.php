@@ -23,17 +23,18 @@
 
                 <div class="flex flex-wrap items-center gap-3">
                     @if($product)
-                        <a href="#product" class="inline-flex items-center gap-2 bg-[var(--tenant-primary)] hover:brightness-110 text-white px-7 py-3.5 rounded-full font-bold text-sm sm:text-base shadow-lg transition-all duration-300 hover:-translate-y-0.5 motion-reduce:transform-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--tenant-primary)] focus-visible:ring-offset-2">
-                            {{ __('Order Now') }}
+                        <a href="{{ $heroPrimaryCtaUrl }}" class="inline-flex items-center gap-2 bg-[var(--tenant-primary)] hover:brightness-110 text-white px-7 py-3.5 rounded-full font-bold text-sm sm:text-base shadow-lg transition-all duration-300 hover:-translate-y-0.5 motion-reduce:transform-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--tenant-primary)] focus-visible:ring-offset-2">
+                            {{ $heroPrimaryCtaLabel }}
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5 21 12l-7.5 7.5M21 12H3"></path></svg>
                         </a>
                     @endif
-                    <a href="/shop" wire:navigate class="inline-flex items-center gap-2 px-7 py-3.5 rounded-full font-bold text-sm sm:text-base text-zinc-800 dark:text-zinc-100 bg-white dark:bg-zinc-800 ring-1 ring-zinc-900/[0.08] dark:ring-white/[0.1] hover:bg-zinc-50 dark:hover:bg-zinc-700 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-900 dark:focus-visible:ring-white">
-                        {{ __('Browse Shop') }}
+                    <a href="{{ $heroSecondaryCtaUrl }}" @if($heroSecondaryCtaNavigate) wire:navigate @endif class="inline-flex items-center gap-2 px-7 py-3.5 rounded-full font-bold text-sm sm:text-base text-zinc-800 dark:text-zinc-100 bg-white dark:bg-zinc-800 ring-1 ring-zinc-900/[0.08] dark:ring-white/[0.1] hover:bg-zinc-50 dark:hover:bg-zinc-700 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-900 dark:focus-visible:ring-white">
+                        {{ $heroSecondaryCtaLabel }}
                     </a>
                 </div>
 
                 {{-- Stats row --}}
+                @if($heroShowStats)
                 <div class="flex items-center gap-6 sm:gap-8 pt-4 border-t border-zinc-900/[0.06] dark:border-white/[0.08] mt-2">
                     <div>
                         <p class="font-display text-xl sm:text-2xl font-bold text-zinc-900 dark:text-white tabular-nums">{{ $heroOrderCountLabel }}</p>
@@ -55,6 +56,7 @@
                         </div>
                     @endif
                 </div>
+                @endif
 
                 @include('components.public.heroes._social')
             </div>

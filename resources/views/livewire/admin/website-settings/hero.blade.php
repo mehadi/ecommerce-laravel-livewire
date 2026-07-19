@@ -42,6 +42,62 @@
             <flux:error name="storefront_hero_variant" />
         </div>
 
+        <!-- Hero Content Card -->
+        <div class="rounded-xl border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-zinc-900 p-6 space-y-6">
+            <div class="flex items-center gap-3">
+                <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-sky-100 dark:bg-sky-900/20">
+                    <flux:icon.pencil-square class="size-5 text-sky-600 dark:text-sky-400" />
+                </div>
+                <div>
+                    <flux:heading size="md" level="3">{{ __('Hero Content') }}</flux:heading>
+                    <flux:text class="text-sm text-neutral-600 dark:text-neutral-400">{{ __('Customize the badge, buttons, and stats shown in the hero. Leave a field empty to use the default.') }}</flux:text>
+                </div>
+            </div>
+
+            <flux:callout icon="information-circle" class="text-sm">
+                {{ __('The hero title, description, and image are managed on the') }}
+                <flux:link :href="route('admin.sections.index')" wire:navigate>{{ __('Sections') }}</flux:link>
+                {{ __('page (section type "Hero").') }}
+            </flux:callout>
+
+            <flux:field>
+                <flux:label>{{ __('Badge Text') }}</flux:label>
+                <flux:input wire:model="hero_badge_text" type="text" placeholder="{{ __('100% Natural & Premium Quality') }}" />
+                <flux:description>{{ __('The small pill shown above the hero title.') }}</flux:description>
+                <flux:error name="hero_badge_text" />
+            </flux:field>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                <flux:field>
+                    <flux:label>{{ __('Primary Button Label') }}</flux:label>
+                    <flux:input wire:model="hero_primary_cta_label" type="text" placeholder="{{ __('Order Now') }}" />
+                    <flux:error name="hero_primary_cta_label" />
+                </flux:field>
+
+                <flux:field>
+                    <flux:label>{{ __('Primary Button Link') }}</flux:label>
+                    <flux:input wire:model="hero_primary_cta_url" type="text" placeholder="#product" />
+                    <flux:description>{{ __('An anchor (#product), a page path (/shop), or a full URL.') }}</flux:description>
+                    <flux:error name="hero_primary_cta_url" />
+                </flux:field>
+
+                <flux:field>
+                    <flux:label>{{ __('Secondary Button Label') }}</flux:label>
+                    <flux:input wire:model="hero_secondary_cta_label" type="text" placeholder="{{ __('Browse Shop') }}" />
+                    <flux:description>{{ __('Shown on every style except Bento Grid.') }}</flux:description>
+                    <flux:error name="hero_secondary_cta_label" />
+                </flux:field>
+
+                <flux:field>
+                    <flux:label>{{ __('Secondary Button Link') }}</flux:label>
+                    <flux:input wire:model="hero_secondary_cta_url" type="text" placeholder="/shop" />
+                    <flux:error name="hero_secondary_cta_url" />
+                </flux:field>
+            </div>
+
+            <flux:switch wire:model="hero_show_stats" :label="__('Show store stats')" :description="__('Orders delivered, product count, and review rating shown in the hero. Bento Grid always shows its stat cards.')" />
+        </div>
+
         <!-- Save Button -->
         <div class="sticky bottom-0 -mx-6 -mb-6 md:mb-0 px-6 py-4 mt-2 bg-white/90 dark:bg-zinc-900/90 backdrop-blur supports-[backdrop-filter]:bg-white/70 dark:supports-[backdrop-filter]:bg-zinc-900/70 border-t border-neutral-200 dark:border-neutral-700 flex items-center justify-between gap-4 rounded-b-xl">
             <div class="flex-1"></div>

@@ -3,7 +3,6 @@
 namespace App\Livewire;
 
 use App\Livewire\Concerns\HasShoppingCart;
-use App\Models\Category;
 use App\Models\LandingPageConfig;
 use App\Models\LandingPageSection;
 use App\Models\Product;
@@ -221,30 +220,6 @@ class LandingPage extends Component
 
         return Cache::remember(Tenancy::cacheKey('testimonials.active'), 3600, function () {
             return Testimonial::where('is_active', true)
-                ->orderBy('order')
-                ->limit(6)
-                ->get();
-        });
-    }
-
-    public function getFeaturedProductsProperty()
-    {
-        return Cache::remember(Tenancy::cacheKey('landing.featured_products'), 3600, function () {
-            return Product::where('is_active', true)
-                ->where('is_featured', true)
-                ->with(['category', 'productAttributes'])
-                ->orderBy('order')
-                ->limit(8)
-                ->get();
-        });
-    }
-
-    public function getFeaturedCategoriesProperty()
-    {
-        return Cache::remember(Tenancy::cacheKey('landing.featured_categories'), 3600, function () {
-            return Category::where('is_active', true)
-                ->whereHas('products', fn ($q) => $q->where('is_active', true))
-                ->withCount(['products' => fn ($q) => $q->where('is_active', true)])
                 ->orderBy('order')
                 ->limit(6)
                 ->get();

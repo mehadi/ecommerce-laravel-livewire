@@ -321,20 +321,7 @@
                     {{-- Product grid --}}
                     <div wire:loading.class="opacity-50 pointer-events-none" wire:target="search, sort, minPrice, maxPrice, inStockOnly, perPage, gotoPage, nextPage, previousPage" class="transition-opacity duration-200 min-w-0">
                         @if($this->products->count() > 0)
-                            @php
-                                // The chosen column count is a ceiling for wide screens; narrower
-                                // viewports still fall back to fewer columns so cards stay readable.
-                                $gridColsClass = match($columns) {
-                                    2 => 'grid-cols-1 sm:grid-cols-2',
-                                    4 => 'grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4',
-                                    default => 'grid-cols-1 sm:grid-cols-2 xl:grid-cols-3',
-                                };
-                            @endphp
-                            <div class="grid {{ $gridColsClass }} gap-5 sm:gap-6">
-                                @foreach($this->products as $product)
-                                    <x-public.product-card :product="$product" />
-                                @endforeach
-                            </div>
+                            <x-public.product-grid :products="$this->products" :columns="$columns" setting-key="storefront_shop_grid_variant" />
 
                             <div class="mt-10 sm:mt-12">
                                 {{ $this->products->links('components.public.pagination') }}

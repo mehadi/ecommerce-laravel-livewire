@@ -85,16 +85,6 @@
             <x-public.trust-badges />
         @endif
 
-        @if($this->shouldShowSection('featured_categories'))
-            <!-- Featured Categories Section -->
-            <x-public.featured-categories-section :categories="$this->featuredCategories" />
-        @endif
-
-        @if($this->shouldShowSection('featured_products'))
-            <!-- Featured Products Section -->
-            <x-public.featured-products-section :products="$this->featuredProducts" />
-        @endif
-
         @if($this->shouldShowSection('product_details'))
             <!-- Product Details Section -->
             <x-public.product-details-section :product="$this->product" />

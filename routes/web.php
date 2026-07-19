@@ -100,7 +100,9 @@ Route::middleware(['tenant'])->group(function () {
     Route::get('/impersonate/enter/{impersonator}/{user}', [\App\Http\Controllers\ImpersonationController::class, 'enter'])
         ->name('impersonation.enter');
 
-    Route::get('/', App\Livewire\LandingPage::class)->name('home');
+    // Storefront homepage — a multi-product store front. Campaign funnels
+    // (single-product landing pages) live on /lp/{slug} below.
+    Route::get('/', App\Livewire\HomePage::class)->name('home');
     Route::get('/shop', App\Livewire\ShopPage::class)->name('shop');
     Route::get('/product/{product}', App\Livewire\ProductPage::class)->name('product.show')->where('product', '[0-9]+');
     Route::get('/categories', App\Livewire\CategoriesPage::class)->name('categories.index');
@@ -142,6 +144,10 @@ Route::middleware(['tenant'])->group(function () {
             Route::get('/', \App\Livewire\Admin\WebsiteSettings\General::class)->name('index');
             Route::get('appearance', \App\Livewire\Admin\WebsiteSettings\Appearance::class)->name('appearance');
             Route::get('hero', \App\Livewire\Admin\WebsiteSettings\Hero::class)->name('hero');
+            Route::get('header', \App\Livewire\Admin\WebsiteSettings\Header::class)->name('header');
+            Route::get('product-grid', \App\Livewire\Admin\WebsiteSettings\ProductGrid::class)->name('product-grid');
+            Route::get('category-grid', \App\Livewire\Admin\WebsiteSettings\CategoryGrid::class)->name('category-grid');
+            Route::get('footer', \App\Livewire\Admin\WebsiteSettings\Footer::class)->name('footer');
             Route::get('contact', \App\Livewire\Admin\WebsiteSettings\Contact::class)->name('contact');
             Route::get('social', \App\Livewire\Admin\WebsiteSettings\Social::class)->name('social');
             Route::get('analytics', \App\Livewire\Admin\WebsiteSettings\Analytics::class)->name('analytics');

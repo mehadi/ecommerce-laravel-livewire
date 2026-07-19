@@ -5,6 +5,10 @@
                 <flux:navlist.item icon="globe-alt" :href="route('admin.website.index')" :current="request()->routeIs('admin.website.index')" wire:navigate>{{ __('General') }}</flux:navlist.item>
                 <flux:navlist.item icon="language" :href="route('admin.website.appearance')" :current="request()->routeIs('admin.website.appearance')" wire:navigate>{{ __('Appearance') }}</flux:navlist.item>
                 <flux:navlist.item icon="sparkles" :href="route('admin.website.hero')" :current="request()->routeIs('admin.website.hero')" wire:navigate>{{ __('Hero Section') }}</flux:navlist.item>
+                <flux:navlist.item icon="bars-3" :href="route('admin.website.header')" :current="request()->routeIs('admin.website.header')" wire:navigate>{{ __('Header') }}</flux:navlist.item>
+                <flux:navlist.item icon="squares-2x2" :href="route('admin.website.product-grid')" :current="request()->routeIs('admin.website.product-grid')" wire:navigate>{{ __('Product Grid') }}</flux:navlist.item>
+                <flux:navlist.item icon="rectangle-group" :href="route('admin.website.category-grid')" :current="request()->routeIs('admin.website.category-grid')" wire:navigate>{{ __('Category Grid') }}</flux:navlist.item>
+                <flux:navlist.item icon="bars-3-bottom-left" :href="route('admin.website.footer')" :current="request()->routeIs('admin.website.footer')" wire:navigate>{{ __('Footer') }}</flux:navlist.item>
                 <flux:navlist.item icon="envelope" :href="route('admin.website.contact')" :current="request()->routeIs('admin.website.contact')" wire:navigate>{{ __('Contact Information') }}</flux:navlist.item>
                 <flux:navlist.item icon="share" :href="route('admin.website.social')" :current="request()->routeIs('admin.website.social')" wire:navigate>{{ __('Social Media') }}</flux:navlist.item>
                 <flux:navlist.item icon="chart-bar" :href="route('admin.website.analytics')" :current="request()->routeIs('admin.website.analytics')" wire:navigate>{{ __('Analytics & Tracking') }}</flux:navlist.item>
@@ -19,6 +23,10 @@
             <flux:button size="sm" :href="route('admin.website.index')" :variant="request()->routeIs('admin.website.index') ? 'primary' : 'ghost'" wire:navigate>{{ __('General') }}</flux:button>
             <flux:button size="sm" :href="route('admin.website.appearance')" :variant="request()->routeIs('admin.website.appearance') ? 'primary' : 'ghost'" wire:navigate>{{ __('Appearance') }}</flux:button>
             <flux:button size="sm" :href="route('admin.website.hero')" :variant="request()->routeIs('admin.website.hero') ? 'primary' : 'ghost'" wire:navigate>{{ __('Hero Section') }}</flux:button>
+            <flux:button size="sm" :href="route('admin.website.header')" :variant="request()->routeIs('admin.website.header') ? 'primary' : 'ghost'" wire:navigate>{{ __('Header') }}</flux:button>
+            <flux:button size="sm" :href="route('admin.website.product-grid')" :variant="request()->routeIs('admin.website.product-grid') ? 'primary' : 'ghost'" wire:navigate>{{ __('Product Grid') }}</flux:button>
+            <flux:button size="sm" :href="route('admin.website.category-grid')" :variant="request()->routeIs('admin.website.category-grid') ? 'primary' : 'ghost'" wire:navigate>{{ __('Category Grid') }}</flux:button>
+            <flux:button size="sm" :href="route('admin.website.footer')" :variant="request()->routeIs('admin.website.footer') ? 'primary' : 'ghost'" wire:navigate>{{ __('Footer') }}</flux:button>
             <flux:button size="sm" :href="route('admin.website.contact')" :variant="request()->routeIs('admin.website.contact') ? 'primary' : 'ghost'" wire:navigate>{{ __('Contact Information') }}</flux:button>
             <flux:button size="sm" :href="route('admin.website.social')" :variant="request()->routeIs('admin.website.social') ? 'primary' : 'ghost'" wire:navigate>{{ __('Social Media') }}</flux:button>
             <flux:button size="sm" :href="route('admin.website.analytics')" :variant="request()->routeIs('admin.website.analytics') ? 'primary' : 'ghost'" wire:navigate>{{ __('Analytics & Tracking') }}</flux:button>

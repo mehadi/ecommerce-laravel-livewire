@@ -7,6 +7,13 @@
     'socialFacebook' => null,
     'socialInstagram' => null,
     'socialTwitter' => null,
+    // Fallback CTA copy/targets when the tenant hasn't configured their own.
+    // The landing-page funnel keeps the buy-focused defaults; the storefront
+    // homepage passes shop-focused ones.
+    'defaultPrimaryCtaLabel' => null,
+    'defaultPrimaryCtaUrl' => null,
+    'defaultSecondaryCtaLabel' => null,
+    'defaultSecondaryCtaUrl' => null,
 ])
 
 @php
@@ -20,7 +27,17 @@
     use App\Support\Tenancy;
     use Illuminate\Support\Facades\Cache;
 
-    $heroVariant = HeroVariants::resolve(Setting::get('storefront_hero_variant'));
+    $heroSettings = Setting::getMany([
+        'storefront_hero_variant',
+        'hero_badge_text',
+        'hero_primary_cta_label',
+        'hero_primary_cta_url',
+        'hero_secondary_cta_label',
+        'hero_secondary_cta_url',
+        'hero_show_stats',
+    ]);
+
+    $heroVariant = HeroVariants::resolve($heroSettings['storefront_hero_variant']);
 
     $heroImage = ($heroSection && $heroSection->image) ? $heroSection->image : $product?->primary_image;
 
@@ -60,7 +77,18 @@
 
     $heroTitle = $customTitle ?: ($heroSection?->title ?? '');
     $heroContent = $customContent ?: ($heroSection?->content ?? '');
-    $heroBadge = ($customBadgeText || $heroSection) ? ($customBadgeText ?: __('100% Natural & Premium Quality')) : null;
+    // Landing-page config override wins, then the tenant's hero settings,
+    // then the stock badge (only when a hero section exists at all).
+    $heroBadge = $customBadgeText
+        ?: ($heroSettings['hero_badge_text']
+        ?: ($heroSection ? __('100% Natural & Premium Quality') : null));
+    $heroPrimaryCtaLabel = $heroSettings['hero_primary_cta_label'] ?: ($defaultPrimaryCtaLabel ?? __('Order Now'));
+    $heroPrimaryCtaUrl = $heroSettings['hero_primary_cta_url'] ?: ($defaultPrimaryCtaUrl ?? '#product');
+    $heroSecondaryCtaLabel = $heroSettings['hero_secondary_cta_label'] ?: ($defaultSecondaryCtaLabel ?? __('Browse Shop'));
+    $heroSecondaryCtaUrl = $heroSettings['hero_secondary_cta_url'] ?: ($defaultSecondaryCtaUrl ?? '/shop');
+    // wire:navigate only works for same-app paths; skip it for anchors/external URLs.
+    $heroSecondaryCtaNavigate = str_starts_with($heroSecondaryCtaUrl, '/');
+    $heroShowStats = ($heroSettings['hero_show_stats'] ?? '1') !== '0';
     $heroOrderCountLabel = $heroExtras['orderCount'] > 999 ? number_format($heroExtras['orderCount'] / 1000, 1).'K+' : $heroExtras['orderCount'].'+';
 @endphp
 

@@ -25,11 +25,7 @@
                     </a>
                 </div>
 
-                <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
-                    @foreach($products as $product)
-                        <x-public.product-card :product="$product" />
-                    @endforeach
-                </div>
+                <x-public.product-grid :products="$products" :columns="4" setting-key="storefront_featured_grid_variant" />
 
                 <a
                     href="{{ route('shop') }}"
