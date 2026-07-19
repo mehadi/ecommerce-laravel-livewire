@@ -141,6 +141,7 @@ Route::middleware(['tenant'])->group(function () {
         Route::prefix('website')->name('website.')->group(function () {
             Route::get('/', \App\Livewire\Admin\WebsiteSettings\General::class)->name('index');
             Route::get('appearance', \App\Livewire\Admin\WebsiteSettings\Appearance::class)->name('appearance');
+            Route::get('hero', \App\Livewire\Admin\WebsiteSettings\Hero::class)->name('hero');
             Route::get('contact', \App\Livewire\Admin\WebsiteSettings\Contact::class)->name('contact');
             Route::get('social', \App\Livewire\Admin\WebsiteSettings\Social::class)->name('social');
             Route::get('analytics', \App\Livewire\Admin\WebsiteSettings\Analytics::class)->name('analytics');
