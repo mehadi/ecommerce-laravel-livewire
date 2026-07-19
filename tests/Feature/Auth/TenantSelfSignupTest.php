@@ -1,9 +1,12 @@
 <?php
 
+use App\Models\PlatformSetting;
 use App\Models\Tenant;
 use App\Models\User;
+use App\Notifications\WelcomeTenant;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Notification;
 use Spatie\Permission\PermissionRegistrar;
 
 uses(RefreshDatabase::class);
@@ -50,6 +53,27 @@ it('creates a new tenant and owner when registering on the central domain', func
     expect($owner->hasRole('admin'))->toBeTrue();
 
     $response->assertRedirect($tenant->primaryUrl().'/login?welcome=1');
+});
+
+it('sends a welcome notification and starts the default trial period', function () {
+    actingOnCentralDomain();
+    Notification::fake();
+    PlatformSetting::setMany(['default_trial_days' => '14']);
+
+    $this->withHeaders(['Host' => '127.0.0.1'])
+        ->post('http://127.0.0.1/register', [
+            'store_name' => 'Trial Co',
+            'name' => 'Trial Owner',
+            'email' => 'trial-owner@example.com',
+            'password' => 'password123',
+            'password_confirmation' => 'password123',
+        ]);
+
+    $tenant = Tenant::where('slug', 'trial-co')->first();
+    $owner = User::where('email', 'trial-owner@example.com')->first();
+
+    Notification::assertSentTo($owner, WelcomeTenant::class);
+    expect($tenant->trial_ends_at?->diffInDays(now()->addDays(14)))->toBeLessThanOrEqual(1);
 });
 
 it('blocks registration on an existing tenant subdomain', function () {

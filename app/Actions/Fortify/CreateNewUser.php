@@ -2,8 +2,10 @@
 
 namespace App\Actions\Fortify;
 
+use App\Models\PlatformSetting;
 use App\Models\Tenant;
 use App\Models\User;
+use App\Notifications\WelcomeTenant;
 use App\Support\Tenancy;
 use Database\Seeders\RolesPermissionsSeeder;
 use Illuminate\Database\UniqueConstraintViolationException;
@@ -98,7 +100,14 @@ class CreateNewUser implements CreatesNewUsers
 
         $registrar->setPermissionsTeamId($previousTeamId);
 
-        $tenant->update(['owner_user_id' => $owner->id]);
+        $trialDays = (int) PlatformSetting::get('default_trial_days', '14');
+
+        $tenant->update([
+            'owner_user_id' => $owner->id,
+            'trial_ends_at' => $trialDays > 0 ? now()->addDays($trialDays) : null,
+        ]);
+
+        $owner->notify(new WelcomeTenant($tenant));
 
         return $owner;
     }

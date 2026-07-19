@@ -9,3 +9,4 @@ Artisan::command('inspire', function () {
 })->purpose('Display an inspiring quote');
 
 Schedule::command('tenants:verify-domains')->everyFiveMinutes();
+Schedule::command('platform:notify-trial-ending')->daily();

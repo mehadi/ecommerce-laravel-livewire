@@ -19,6 +19,7 @@ class Tenant extends Model
         'desired_plan_id',
         'status',
         'trial_ends_at',
+        'trial_ending_notified_at',
         'upgrade_requested_at',
     ];
 
@@ -26,6 +27,7 @@ class Tenant extends Model
     {
         return [
             'trial_ends_at' => 'datetime',
+            'trial_ending_notified_at' => 'datetime',
             'upgrade_requested_at' => 'datetime',
         ];
     }

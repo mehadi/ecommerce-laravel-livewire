@@ -51,6 +51,26 @@ class Tenancy
     }
 
     /**
+     * An absolute URL to the platform's own central domain (staff area, marketing
+     * site), regardless of which host the current code path happens to be running
+     * on — e.g. a notification triggered by a tenant-side action (like requesting
+     * an upgrade) must link platform staff back to the CENTRAL domain, not
+     * whichever tenant subdomain/custom domain the triggering request came in on.
+     * Mirrors Tenant::primaryUrl()'s scheme/port handling for the same reason:
+     * both hosts are served by the same app on the same scheme/port in practice.
+     */
+    public static function platformUrl(string $path = ''): string
+    {
+        $scheme = request()->getScheme();
+        $port = request()->getPort();
+        $portSuffix = in_array($port, [80, 443], true) ? '' : ':'.$port;
+
+        $central = config('tenancy.central_domains')[0] ?? request()->getHost();
+
+        return $scheme.'://'.$central.$portSuffix.$path;
+    }
+
+    /**
      * spatie/laravel-permission's teams mode auto-scopes Role creation and its own
      * findByName()/findById() helpers to the current team, but does NOT scope plain
      * Role::query()/all()/count() calls. This mirrors that same null-or-current-team

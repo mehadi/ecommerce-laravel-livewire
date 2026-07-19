@@ -9,6 +9,8 @@ use App\Models\Product;
 use App\Models\Tenant;
 use App\Models\TenantBillingEvent;
 use App\Models\User;
+use App\Notifications\TenantReactivated;
+use App\Notifications\TenantSuspended;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\URL;
@@ -101,6 +103,13 @@ class Show extends Component
 
         $planChanged = $this->tenant->plan_id !== $validated['plan_id'];
         $statusChanged = $this->tenant->status !== $validated['status'];
+        $trialChanged = $this->tenant->trial_ends_at?->format('Y-m-d') !== $validated['trial_ends_at'];
+
+        // A trial extension/change re-arms the "trial ending soon" reminder, so it
+        // fires again against the new date instead of staying silently suppressed.
+        if ($trialChanged) {
+            $validated['trial_ending_notified_at'] = null;
+        }
 
         $this->tenant->update($validated);
 
@@ -155,6 +164,8 @@ class Show extends Component
         $this->status = 'suspended';
         $this->tenant->refresh();
 
+        $this->tenant->owner?->notify(new TenantSuspended($this->tenant, $validated['suspendReason']));
+
         session()->flash('message', __('Tenant suspended.'));
     }
 
@@ -166,6 +177,8 @@ class Show extends Component
         $this->logEvent('reactivated');
         $this->status = 'active';
         $this->tenant->refresh();
+
+        $this->tenant->owner?->notify(new TenantReactivated($this->tenant));
 
         session()->flash('message', __('Tenant reactivated.'));
     }

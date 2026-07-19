@@ -83,6 +83,13 @@
                 <x-layouts.app.theme-toggle position="right" />
             </div>
 
+            <!-- Notifications -->
+            @auth
+                <div class="flex items-center justify-center rounded-2xl bg-white/70 p-1 shadow-soft ring-1 ring-black/5 dark:bg-white/5 dark:ring-white/10">
+                    <livewire:notification-bell />
+                </div>
+            @endauth
+
             <!-- Desktop User Menu -->
             @auth
                 <div class="rounded-2xl bg-white/70 p-1 shadow-soft ring-1 ring-black/5 dark:bg-white/5 dark:ring-white/10 in-data-flux-sidebar-collapsed-desktop:bg-transparent in-data-flux-sidebar-collapsed-desktop:p-0 in-data-flux-sidebar-collapsed-desktop:shadow-none in-data-flux-sidebar-collapsed-desktop:ring-0">
@@ -107,6 +114,8 @@
                 <flux:spacer />
 
                 <x-layouts.app.theme-toggle position="bottom" />
+
+                <livewire:notification-bell />
 
                 <flux:dropdown position="top" align="end">
                     <flux:profile

@@ -5,8 +5,10 @@ namespace App\Livewire\Admin\Billing;
 use App\Models\Plan;
 use App\Models\Product;
 use App\Models\User;
+use App\Notifications\UpgradeRequestSubmitted;
 use App\Support\Tenancy;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Notification;
 use Livewire\Component;
 
 class Index extends Component
@@ -30,6 +32,11 @@ class Index extends Component
             'upgrade_requested_at' => now(),
             'desired_plan_id' => $validated['desiredPlanId'],
         ]);
+
+        Notification::send(
+            User::whereNull('tenant_id')->get(),
+            new UpgradeRequestSubmitted($tenant->fresh())
+        );
 
         session()->flash('message', __('Upgrade request sent — our team will follow up shortly.'));
     }
