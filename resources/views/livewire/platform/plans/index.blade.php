@@ -19,6 +19,28 @@
         <flux:callout variant="danger">{{ session('error') }}</flux:callout>
     @endif
 
+    <div class="rounded-xl border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-zinc-900 p-6 max-w-md">
+        <flux:heading size="sm">{{ __('Package Currency') }}</flux:heading>
+        <flux:text size="sm" variant="subtle" class="mt-1 mb-4">
+            {{ __('Currency symbol shown for plan prices across the platform.') }}
+        </flux:text>
+        <form wire:submit="updateCurrency" class="flex items-end gap-3">
+            <flux:field class="flex-1">
+                <flux:label>{{ __('Currency') }}</flux:label>
+                <flux:select wire:model="plan_currency_code">
+                    @foreach($currencyRegistry as $code => $symbol)
+                        <option value="{{ $code }}">{{ $code }} ({{ $symbol }})</option>
+                    @endforeach
+                </flux:select>
+                <flux:error name="plan_currency_code" />
+            </flux:field>
+            <flux:button type="submit" variant="primary" wire:loading.attr="disabled">
+                <span wire:loading.remove wire:target="updateCurrency">{{ __('Save') }}</span>
+                <span wire:loading wire:target="updateCurrency">{{ __('Saving...') }}</span>
+            </flux:button>
+        </form>
+    </div>
+
     <div class="overflow-x-auto bg-white dark:bg-zinc-900 rounded-lg shadow">
         <table class="min-w-full divide-y divide-gray-200 dark:divide-zinc-700">
             <thead class="bg-gray-50 dark:bg-zinc-800">

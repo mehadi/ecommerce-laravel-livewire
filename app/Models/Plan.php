@@ -46,13 +46,16 @@ class Plan extends Model
     /**
      * "$29.00/mo" or "$290.00/yr" — the formatted price plus its billing
      * cadence, for consistent display across the plans table, pricing cards,
-     * and every tenant/billing plan picker.
+     * and every tenant/billing plan picker. The currency symbol is the
+     * platform-wide value configured on the Plans page (PlatformSetting
+     * plan_currency_symbol), not the per-tenant storefront currency.
      */
     public function priceLabel(): string
     {
         $suffix = $this->billing_period === 'yearly' ? __('/yr') : __('/mo');
+        $symbol = PlatformSetting::get('plan_currency_symbol', '$');
 
-        return '$'.number_format((float) $this->price, 2).$suffix;
+        return $symbol.number_format((float) $this->price, 2).$suffix;
     }
 
     /**

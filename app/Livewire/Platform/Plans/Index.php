@@ -3,6 +3,7 @@
 namespace App\Livewire\Platform\Plans;
 
 use App\Models\Plan;
+use App\Models\PlatformSetting;
 use Illuminate\Support\Facades\Gate;
 use Livewire\Component;
 
@@ -11,6 +12,8 @@ class Index extends Component
     public bool $showModal = false;
 
     public ?int $editingId = null;
+
+    public string $plan_currency_code = 'USD';
 
     public string $name = '';
 
@@ -33,6 +36,24 @@ class Index extends Component
     public function mount(): void
     {
         Gate::authorize('access platform');
+
+        $this->plan_currency_code = PlatformSetting::get('plan_currency_code', 'USD');
+    }
+
+    public function updateCurrency(): void
+    {
+        $currencies = config('plan_currencies', []);
+
+        $this->validate([
+            'plan_currency_code' => ['required', 'string', 'in:'.implode(',', array_keys($currencies))],
+        ]);
+
+        PlatformSetting::setMany([
+            'plan_currency_code' => $this->plan_currency_code,
+            'plan_currency_symbol' => $currencies[$this->plan_currency_code],
+        ]);
+
+        session()->flash('message', __('Currency updated successfully.'));
     }
 
     protected function rules(): array
@@ -185,6 +206,7 @@ class Index extends Component
         return view('livewire.platform.plans.index', [
             'plans' => Plan::withCount('tenants')->orderBy('sort_order')->orderBy('id')->get(),
             'featureRegistry' => config('plan_features', []),
+            'currencyRegistry' => config('plan_currencies', []),
         ])->layout('components.layouts.app', [
             'title' => __('Plans'),
         ]);
