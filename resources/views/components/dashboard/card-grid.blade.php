@@ -20,6 +20,13 @@
 
     // Whether the dashboard is currently in drag/hide customization mode.
     'isCustomizing' => false,
+
+    // Full chart-key => {labels, data, ...} payload for this page, typically
+    // $this->chartDataBundle(). Used only to decide whether a given chart
+    // card's underlying dataset is empty, so chart-card can render the "No
+    // data for this period" placeholder instead of a blank canvas. Optional —
+    // defaults to [] so pages with no chart cards need not pass it.
+    'chartData' => [],
 ])
 
 @if(count($insights) > 0)
@@ -54,10 +61,12 @@
             @endforeach
         </div>
     @else
-        <div class="rounded-xl border border-zinc-200 bg-white p-12 text-center dark:border-zinc-800 dark:bg-zinc-900">
-            <svg class="mx-auto h-12 w-12 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
-            </svg>
+        <div class="rounded-2xl border border-dashed border-zinc-300 bg-zinc-50/60 p-12 text-center dark:border-zinc-700 dark:bg-white/[2%]">
+            <div class="mx-auto flex h-12 w-12 items-center justify-center rounded-xl bg-white text-zinc-400 shadow-sm ring-1 ring-black/5 dark:bg-zinc-900 dark:ring-white/10">
+                <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                </svg>
+            </div>
             <p class="mt-4 text-sm font-medium text-zinc-900 dark:text-white">{{ __('No metric cards visible') }}</p>
             <p class="mt-2 text-sm text-zinc-500 dark:text-zinc-400">{{ __('Enable metric cards in customization mode to view your key metrics.') }}</p>
             <flux:button wire:click="toggleCustomization" variant="primary" size="sm" class="mt-4">
@@ -78,14 +87,17 @@
                     :card-key="$card['key']"
                     :card="$card"
                     :is-customizing="$isCustomizing"
+                    :empty="empty(data_get($chartData, $card['key'].'.labels', []))"
                 />
             @endforeach
         </div>
     @else
-        <div class="rounded-xl border border-zinc-200 bg-white p-12 text-center dark:border-zinc-800 dark:bg-zinc-900">
-            <svg class="mx-auto h-12 w-12 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
-            </svg>
+        <div class="rounded-2xl border border-dashed border-zinc-300 bg-zinc-50/60 p-12 text-center dark:border-zinc-700 dark:bg-white/[2%]">
+            <div class="mx-auto flex h-12 w-12 items-center justify-center rounded-xl bg-white text-zinc-400 shadow-sm ring-1 ring-black/5 dark:bg-zinc-900 dark:ring-white/10">
+                <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                </svg>
+            </div>
             <p class="mt-4 text-sm font-medium text-zinc-900 dark:text-white">{{ __('No chart cards visible') }}</p>
             <p class="mt-2 text-sm text-zinc-500 dark:text-zinc-400">{{ __('Enable chart cards in customization mode to view your analytics.') }}</p>
             <flux:button wire:click="toggleCustomization" variant="primary" size="sm" class="mt-4">

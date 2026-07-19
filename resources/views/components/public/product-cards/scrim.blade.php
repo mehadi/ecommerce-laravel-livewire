@@ -1,7 +1,7 @@
 {{-- Scrim Card: full-bleed photo, name/price on a bottom gradient overlay. --}}
 @props(['product'])
 
-<article class="group relative overflow-hidden rounded-3xl aspect-[4/5] bg-zinc-100 dark:bg-zinc-800 ring-1 ring-zinc-900/[0.04] dark:ring-white/[0.06] transition-all duration-300 motion-reduce:transition-none hover:-translate-y-1 hover:shadow-[0_12px_32px_-16px_rgb(16_24_40_/_0.25)] motion-reduce:transform-none">
+<article {{ $attributes }} class="group relative overflow-hidden rounded-3xl aspect-[4/5] bg-zinc-100 dark:bg-zinc-800 ring-1 ring-zinc-900/[0.04] dark:ring-white/[0.06] transition-all duration-300 motion-reduce:transition-none hover:-translate-y-1 hover:shadow-[0_12px_32px_-16px_rgb(16_24_40_/_0.25)] motion-reduce:transform-none">
     @if($product->primary_image)
         <img
             src="{{ asset('storage/'.$product->primary_image) }}"

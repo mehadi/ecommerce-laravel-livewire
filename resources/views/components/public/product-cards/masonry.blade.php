@@ -2,7 +2,7 @@
      stack at varying heights within their CSS column. --}}
 @props(['product'])
 
-<article class="group relative bg-zinc-50 dark:bg-zinc-800/60 rounded-3xl ring-1 ring-zinc-900/[0.04] dark:ring-white/[0.06] p-3 sm:p-4 flex flex-col transition-all duration-300 motion-reduce:transition-none hover:ring-emerald-600/20 dark:hover:ring-emerald-500/30 hover:shadow-[0_8px_24px_-8px_rgb(16_24_40_/_0.10)]">
+<article {{ $attributes }} class="group relative bg-zinc-50 dark:bg-zinc-800/60 rounded-3xl ring-1 ring-zinc-900/[0.04] dark:ring-white/[0.06] p-3 sm:p-4 flex flex-col transition-all duration-300 motion-reduce:transition-none hover:ring-emerald-600/20 dark:hover:ring-emerald-500/30 hover:shadow-[0_8px_24px_-8px_rgb(16_24_40_/_0.10)]">
     <div class="relative overflow-hidden rounded-2xl bg-white dark:bg-zinc-900 ring-1 ring-zinc-900/[0.04] dark:ring-white/[0.06]">
         @if($product->primary_image)
             <img

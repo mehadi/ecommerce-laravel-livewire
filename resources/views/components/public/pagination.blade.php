@@ -7,7 +7,7 @@
         @else
             <button
                 type="button"
-                wire:click="previousPage"
+                x-on:click="$wire.previousPage().then(() => document.getElementById('product-results')?.scrollIntoView({ behavior: 'smooth', block: 'start' }))"
                 wire:loading.attr="disabled"
                 rel="prev"
                 aria-label="{{ __('Previous page') }}"
@@ -31,7 +31,7 @@
                     @else
                         <button
                             type="button"
-                            wire:click="gotoPage({{ $page }})"
+                            x-on:click="$wire.gotoPage({{ $page }}).then(() => document.getElementById('product-results')?.scrollIntoView({ behavior: 'smooth', block: 'start' }))"
                             wire:loading.attr="disabled"
                             class="w-10 h-10 rounded-full flex items-center justify-center text-sm font-semibold bg-zinc-50 dark:bg-zinc-800/60 text-zinc-600 dark:text-zinc-300 ring-1 ring-zinc-900/[0.06] dark:ring-white/[0.08] hover:ring-zinc-900/[0.15] dark:hover:ring-white/[0.2] transition-all duration-200 cursor-pointer touch-manipulation tabular-nums focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500"
                         >
@@ -45,7 +45,7 @@
         @if($paginator->hasMorePages())
             <button
                 type="button"
-                wire:click="nextPage"
+                x-on:click="$wire.nextPage().then(() => document.getElementById('product-results')?.scrollIntoView({ behavior: 'smooth', block: 'start' }))"
                 wire:loading.attr="disabled"
                 rel="next"
                 aria-label="{{ __('Next page') }}"

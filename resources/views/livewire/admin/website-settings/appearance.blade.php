@@ -1,14 +1,16 @@
 <x-website-settings.layout :heading="__('Appearance')" :subheading="__('Control how content is displayed to visitors')">
     <form wire:submit="update" class="space-y-8">
         <!-- Appearance Card -->
-        <div class="rounded-xl border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-zinc-900 p-6 space-y-6">
+        <div class="rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 p-6 space-y-6">
             <div class="flex items-center gap-3">
                 <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-teal-100 dark:bg-teal-900/20">
-                    <flux:icon.language class="size-5 text-teal-600 dark:text-teal-400" />
+                    <svg class="size-5 text-teal-600 dark:text-teal-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m10.5 21 5.25-11.25L21 21m-9-3h7.5M3 5.621a48.474 48.474 0 0 1 6-.371m0 0c1.12 0 2.233.038 3.334.114M9 5.25V3m3.334 2.364C11.176 10.658 7.69 15.08 3 17.502m9.334-12.138c.896.061 1.785.147 2.666.257m-4.589 8.495a18.023 18.023 0 0 1-3.827-5.802" />
+                    </svg>
                 </div>
                 <div>
                     <flux:heading size="md" level="3">{{ __('Appearance') }}</flux:heading>
-                    <flux:text class="text-sm text-neutral-600 dark:text-neutral-400">{{ __('Control how content is displayed to visitors') }}</flux:text>
+                    <flux:text class="text-sm text-zinc-600 dark:text-zinc-400">{{ __('Control how content is displayed to visitors') }}</flux:text>
                 </div>
             </div>
 
@@ -36,9 +38,9 @@
                         min="50"
                         max="200"
                         step="5"
-                        class="w-full h-2 rounded-full bg-neutral-200 dark:bg-neutral-700 accent-blue-600 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-zinc-900"
+                        class="w-full h-2 rounded-full bg-zinc-200 dark:bg-zinc-700 accent-teal-600 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-500 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-zinc-900"
                     >
-                    <div class="flex justify-between text-xs text-neutral-500 dark:text-neutral-400 mt-1">
+                    <div class="flex justify-between text-xs text-zinc-500 dark:text-zinc-400 mt-1">
                         <span>50%</span>
                         <span>100%</span>
                         <span>200%</span>
@@ -72,9 +74,9 @@
                         min="960"
                         max="1920"
                         step="10"
-                        class="w-full h-2 rounded-full bg-neutral-200 dark:bg-neutral-700 accent-blue-600 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-zinc-900"
+                        class="w-full h-2 rounded-full bg-zinc-200 dark:bg-zinc-700 accent-teal-600 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-500 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-zinc-900"
                     >
-                    <div class="flex justify-between text-xs text-neutral-500 dark:text-neutral-400 mt-1">
+                    <div class="flex justify-between text-xs text-zinc-500 dark:text-zinc-400 mt-1">
                         <span>960px</span>
                         <span>1440px</span>
                         <span>1920px</span>
@@ -88,8 +90,8 @@
                 <flux:field>
                     <flux:label>{{ __('Primary Brand Color') }}</flux:label>
                     <div class="flex items-center gap-3">
-                        <input type="color" wire:model.live="theme_primary_color" class="h-10 w-14 rounded-lg border border-neutral-200 dark:border-neutral-700 cursor-pointer" />
-                        <flux:input wire:model.live="theme_primary_color" type="text" class="flex-1" />
+                        <input type="color" wire:model.live="theme_primary_color" class="h-10 w-14 rounded-lg border border-zinc-200 dark:border-zinc-700 cursor-pointer" />
+                        <flux:input wire:model.live.debounce.400ms="theme_primary_color" type="text" class="flex-1" />
                     </div>
                     <flux:description>{{ __('Used for primary buttons (Add to Cart, Buy Now) and nav accents across the storefront.') }}</flux:description>
                     <flux:error name="theme_primary_color" />
@@ -98,8 +100,8 @@
                 <flux:field>
                     <flux:label>{{ __('Secondary Brand Color') }}</flux:label>
                     <div class="flex items-center gap-3">
-                        <input type="color" wire:model.live="theme_secondary_color" class="h-10 w-14 rounded-lg border border-neutral-200 dark:border-neutral-700 cursor-pointer" />
-                        <flux:input wire:model.live="theme_secondary_color" type="text" class="flex-1" />
+                        <input type="color" wire:model.live="theme_secondary_color" class="h-10 w-14 rounded-lg border border-zinc-200 dark:border-zinc-700 cursor-pointer" />
+                        <flux:input wire:model.live.debounce.400ms="theme_secondary_color" type="text" class="flex-1" />
                     </div>
                     <flux:description>{{ __('Used for secondary accents across the storefront.') }}</flux:description>
                     <flux:error name="theme_secondary_color" />
@@ -107,13 +109,6 @@
             </div>
         </div>
 
-        <!-- Save Button -->
-        <div class="sticky bottom-0 -mx-6 -mb-6 md:mb-0 px-6 py-4 mt-2 bg-white/90 dark:bg-zinc-900/90 backdrop-blur supports-[backdrop-filter]:bg-white/70 dark:supports-[backdrop-filter]:bg-zinc-900/70 border-t border-neutral-200 dark:border-neutral-700 flex items-center justify-between gap-4 rounded-b-xl">
-            <div class="flex-1"></div>
-            <flux:button variant="primary" type="submit" wire:loading.attr="disabled" class="whitespace-nowrap">
-                <span wire:loading.remove wire:target="update">{{ __('Save') }}</span>
-                <span wire:loading wire:target="update">{{ __('Saving...') }}</span>
-            </flux:button>
-        </div>
+        <x-website-settings.save-bar action="update" />
     </form>
 </x-website-settings.layout>

@@ -3,7 +3,7 @@
      "Noir"/"Dark Spotlight"-style variants. --}}
 @props(['product'])
 
-<article class="group relative bg-zinc-950 rounded-3xl ring-1 ring-white/10 p-4 sm:p-5 flex flex-col transition-all duration-300 motion-reduce:transition-none hover:ring-white/20 hover:-translate-y-1 motion-reduce:transform-none">
+<article {{ $attributes }} class="group relative bg-zinc-950 rounded-3xl ring-1 ring-white/10 p-4 sm:p-5 flex flex-col transition-all duration-300 motion-reduce:transition-none hover:ring-white/20 hover:-translate-y-1 motion-reduce:transform-none">
     <div class="relative overflow-hidden rounded-2xl aspect-square bg-zinc-900 ring-1 ring-white/5">
         @if($product->primary_image)
             <img

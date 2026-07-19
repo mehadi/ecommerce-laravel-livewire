@@ -1,7 +1,7 @@
 {{-- Outline Cards: flat, border-only, no fill or shadow. --}}
 @props(['product'])
 
-<article class="group relative flex flex-col rounded-2xl border border-zinc-200 dark:border-zinc-700 p-4 sm:p-5 transition-colors duration-200 hover:border-zinc-900 dark:hover:border-white">
+<article {{ $attributes }} class="group relative flex flex-col rounded-2xl border border-zinc-200 dark:border-zinc-700 p-4 sm:p-5 transition-colors duration-200 hover:border-zinc-900 dark:hover:border-white">
     <div class="relative overflow-hidden rounded-xl aspect-square bg-zinc-50 dark:bg-zinc-800/40">
         @if($product->primary_image)
             <img

@@ -1,10 +1,9 @@
 {{--
     Sub-navigation between the 5 dashboard pages. Flux has no tab component
-    installed in this app, so this follows the same flux:navbar /
-    flux:navbar.item pattern already used in
-    resources/views/components/layouts/app/header.blade.php (lines ~14-18).
+    installed in this app, so this uses the flux:navbar / flux:navbar.item
+    components directly as a horizontal tab strip.
 --}}
-<flux:navbar class="-mb-px">
+<flux:navbar scrollable class="-mb-px">
     <flux:navbar.item :href="route('dashboard')" :current="request()->routeIs('dashboard')" wire:navigate>
         {{ __('Overview') }}
     </flux:navbar.item>
@@ -19,5 +18,11 @@
     </flux:navbar.item>
     <flux:navbar.item :href="route('dashboard.products')" :current="request()->routeIs('dashboard.products')" wire:navigate>
         {{ __('Products') }}
+    </flux:navbar.item>
+    <flux:navbar.item :href="route('dashboard.profitability')" :current="request()->routeIs('dashboard.profitability')" wire:navigate>
+        {{ __('Profitability') }}
+    </flux:navbar.item>
+    <flux:navbar.item :href="route('dashboard.inventory')" :current="request()->routeIs('dashboard.inventory')" wire:navigate>
+        {{ __('Inventory') }}
     </flux:navbar.item>
 </flux:navbar>

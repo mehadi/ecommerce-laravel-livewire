@@ -3,7 +3,7 @@
 <div class="flex flex-col gap-3 sm:gap-4 max-w-3xl mx-auto">
     @foreach($items as $card)
         @php [$category, $productCount, $subcategories] = [$card['category'], $card['productCount'], $card['subcategories']]; @endphp
-        <article class="group relative flex items-center gap-4 sm:gap-5 rounded-2xl bg-zinc-50 dark:bg-zinc-800/60 ring-1 ring-zinc-900/[0.04] dark:ring-white/[0.06] p-3 sm:p-4 hover:ring-emerald-600/20 dark:hover:ring-emerald-500/30 hover:shadow-[0_8px_24px_-8px_rgb(16_24_40_/_0.10)] transition-all duration-300 motion-reduce:transition-none">
+        <article wire:key="category-{{ $category->id }}" class="group relative flex items-center gap-4 sm:gap-5 rounded-2xl bg-zinc-50 dark:bg-zinc-800/60 ring-1 ring-zinc-900/[0.04] dark:ring-white/[0.06] p-3 sm:p-4 hover:ring-emerald-600/20 dark:hover:ring-emerald-500/30 hover:shadow-[0_8px_24px_-8px_rgb(16_24_40_/_0.10)] transition-all duration-300 motion-reduce:transition-none">
             <div class="relative w-20 h-20 sm:w-24 sm:h-24 flex-shrink-0 rounded-xl overflow-hidden bg-white dark:bg-zinc-900">
                 @include('components.public.category-grids._image', [
                     'category' => $category,

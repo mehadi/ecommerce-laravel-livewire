@@ -11,6 +11,8 @@ class Index extends Component
 {
     use WithPagination;
 
+    public $search = '';
+
     public $showCreateModal = false;
 
     public $showEditModal = false;
@@ -44,6 +46,13 @@ class Index extends Component
     public $valueIsActive = true;
 
     public $attributeValues = [];
+
+    protected $queryString = ['search'];
+
+    public function updatingSearch(): void
+    {
+        $this->resetPage();
+    }
 
     public function openCreateModal(): void
     {
@@ -174,10 +183,22 @@ class Index extends Component
 
     public function render()
     {
-        $allAttributes = Attribute::orderBy('order')->orderBy('name')->paginate(15);
+        $allAttributes = Attribute::query()
+            ->when($this->search, function ($query) {
+                $query->where('name', 'like', '%'.$this->search.'%')
+                    ->orWhere('slug', 'like', '%'.$this->search.'%');
+            })
+            ->orderBy('order')->orderBy('name')->paginate(15);
+
+        $stats = [
+            'total' => Attribute::count(),
+            'active' => Attribute::where('is_active', true)->count(),
+            'inactive' => Attribute::where('is_active', false)->count(),
+        ];
 
         return view('livewire.admin.attributes.index', [
             'allAttributes' => $allAttributes,
+            'stats' => $stats,
         ])->layout('components.layouts.app', [
             'title' => __('Manage Attributes'),
         ]);

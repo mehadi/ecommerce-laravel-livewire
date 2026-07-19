@@ -11,7 +11,7 @@
 
 <div class="{{ $columnsClass }} gap-5 sm:gap-6 [column-fill:balance]">
     @foreach($items as $product)
-        <div class="break-inside-avoid mb-5 sm:mb-6">
+        <div wire:key="product-{{ $product->id }}" class="break-inside-avoid mb-5 sm:mb-6">
             <x-public.product-cards.masonry :product="$product" />
         </div>
     @endforeach

@@ -1,14 +1,16 @@
 <x-website-settings.layout :heading="__('Contact Information')" :subheading="__('Contact details displayed on your website')">
     <form wire:submit="update" class="space-y-8">
         <!-- Contact Information Card -->
-        <div class="rounded-xl border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-zinc-900 p-6 space-y-6">
+        <div class="rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 p-6 space-y-6">
             <div class="flex items-center gap-3">
-                <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-green-100 dark:bg-green-900/20">
-                    <flux:icon.envelope class="size-5 text-green-600 dark:text-green-400" />
+                <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-emerald-100 dark:bg-emerald-900/20">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="size-5 text-emerald-600 dark:text-emerald-400">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 0 1-2.25 2.25h-15a2.25 2.25 0 0 1-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25m19.5 0v.243a2.25 2.25 0 0 1-1.07 1.916l-7.5 4.615a2.25 2.25 0 0 1-2.36 0L3.32 8.91a2.25 2.25 0 0 1-1.07-1.916V6.75" />
+                    </svg>
                 </div>
                 <div>
                     <flux:heading size="md" level="3">{{ __('Contact Information') }}</flux:heading>
-                    <flux:text class="text-sm text-neutral-600 dark:text-neutral-400">{{ __('Contact details displayed on your website') }}</flux:text>
+                    <flux:text class="text-sm text-zinc-600 dark:text-zinc-400">{{ __('Contact details displayed on your website') }}</flux:text>
                 </div>
             </div>
 
@@ -48,12 +50,6 @@
             </div>
         </div>
 
-        <!-- Save Button -->
-        <div class="sticky bottom-0 -mx-6 -mb-6 md:mb-0 px-6 py-4 mt-2 bg-white/90 dark:bg-zinc-900/90 backdrop-blur supports-[backdrop-filter]:bg-white/70 dark:supports-[backdrop-filter]:bg-zinc-900/70 border-t border-neutral-200 dark:border-neutral-700 flex items-center justify-end gap-4 rounded-b-xl">
-            <flux:button variant="primary" type="submit" wire:loading.attr="disabled" class="whitespace-nowrap transition-colors">
-                <span wire:loading.remove wire:target="update">{{ __('Save') }}</span>
-                <span wire:loading wire:target="update">{{ __('Saving...') }}</span>
-            </flux:button>
-        </div>
+        <x-website-settings.save-bar action="update" />
     </form>
 </x-website-settings.layout>

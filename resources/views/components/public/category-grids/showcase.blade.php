@@ -8,7 +8,7 @@
 <div class="flex flex-col gap-5 sm:gap-6">
     @if($featured)
         @php [$category, $productCount, $subcategories] = [$featured['category'], $featured['productCount'], $featured['subcategories']]; @endphp
-        <article class="group relative rounded-3xl overflow-hidden aspect-[16/9] sm:aspect-[21/9] bg-zinc-200 dark:bg-zinc-800 ring-1 ring-zinc-900/[0.04] dark:ring-white/[0.06] hover:shadow-[0_12px_32px_-12px_rgb(16_24_40_/_0.25)] transition-all duration-300 motion-reduce:transition-none">
+        <article wire:key="category-{{ $category->id }}" class="group relative rounded-3xl overflow-hidden aspect-[16/9] sm:aspect-[21/9] bg-zinc-200 dark:bg-zinc-800 ring-1 ring-zinc-900/[0.04] dark:ring-white/[0.06] hover:shadow-[0_12px_32px_-12px_rgb(16_24_40_/_0.25)] transition-all duration-300 motion-reduce:transition-none">
             @include('components.public.category-grids._image', [
                 'category' => $category,
                 'imgClass' => 'absolute inset-0 w-full h-full object-cover group-hover:scale-[1.04] transition-transform duration-500 motion-reduce:transform-none',
@@ -49,7 +49,7 @@
         <div class="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-5">
             @foreach($rest as $card)
                 @php [$category, $productCount] = [$card['category'], $card['productCount']]; @endphp
-                <article class="group relative flex flex-col rounded-2xl bg-zinc-50 dark:bg-zinc-800/60 ring-1 ring-zinc-900/[0.04] dark:ring-white/[0.06] overflow-hidden hover:ring-emerald-600/20 dark:hover:ring-emerald-500/30 hover:-translate-y-0.5 transition-all duration-300 motion-reduce:transition-none motion-reduce:transform-none">
+                <article wire:key="category-{{ $category->id }}" class="group relative flex flex-col rounded-2xl bg-zinc-50 dark:bg-zinc-800/60 ring-1 ring-zinc-900/[0.04] dark:ring-white/[0.06] overflow-hidden hover:ring-emerald-600/20 dark:hover:ring-emerald-500/30 hover:-translate-y-0.5 transition-all duration-300 motion-reduce:transition-none motion-reduce:transform-none">
                     <div class="relative overflow-hidden aspect-[4/3] bg-white dark:bg-zinc-900">
                         @include('components.public.category-grids._image', [
                             'category' => $category,

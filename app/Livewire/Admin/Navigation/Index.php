@@ -381,6 +381,126 @@ class Index extends Component
         session()->flash('message', __('Navigation item moved successfully.'));
     }
 
+    /**
+     * Keyboard-operable alternative to dragging a nav item: swap it with the
+     * sibling immediately above it, reusing the same moveNavigationItem() the
+     * drag-and-drop handler calls.
+     */
+    public function moveItemUp(int $itemId): void
+    {
+        $item = NavigationItem::findOrFail($itemId);
+        $siblingIds = NavigationItem::where('parent_id', $item->parent_id)
+            ->orderBy('order')
+            ->pluck('id')
+            ->all();
+
+        $currentIndex = array_search($itemId, $siblingIds);
+        if ($currentIndex === false || $currentIndex === 0) {
+            return;
+        }
+
+        $this->moveNavigationItem($itemId, $siblingIds[$currentIndex - 1], 'before');
+    }
+
+    /**
+     * Keyboard-operable alternative to dragging a nav item: swap it with the
+     * sibling immediately below it, reusing the same moveNavigationItem() the
+     * drag-and-drop handler calls.
+     */
+    public function moveItemDown(int $itemId): void
+    {
+        $item = NavigationItem::findOrFail($itemId);
+        $siblingIds = NavigationItem::where('parent_id', $item->parent_id)
+            ->orderBy('order')
+            ->pluck('id')
+            ->all();
+
+        $currentIndex = array_search($itemId, $siblingIds);
+        if ($currentIndex === false || $currentIndex === count($siblingIds) - 1) {
+            return;
+        }
+
+        $this->moveNavigationItem($itemId, $siblingIds[$currentIndex + 1], 'after');
+    }
+
+    /**
+     * Keyboard-operable alternative to dragging a nav item out to the top
+     * level (equivalent to dropping it on the empty part of the drop zone).
+     */
+    public function moveItemToTopLevel(int $itemId): void
+    {
+        $this->updateItemParent($itemId, null);
+    }
+
+    /**
+     * Keyboard-operable alternative to dragging a navbar component up/down
+     * within its region, reusing the same order columns the drag handlers use.
+     */
+    public function moveComponentUp(int $id, string $zone): void
+    {
+        $this->moveComponentByOffset($id, $zone, -1);
+    }
+
+    public function moveComponentDown(int $id, string $zone): void
+    {
+        $this->moveComponentByOffset($id, $zone, 1);
+    }
+
+    private function moveComponentByOffset(int $id, string $zone, int $offset): void
+    {
+        if (! in_array($zone, ['desktop', 'mobile'])) {
+            return;
+        }
+
+        $component = NavbarComponent::findOrFail($id);
+
+        $siblingsQuery = NavbarComponent::query()->orderBy("order_{$zone}");
+        if ($zone === 'desktop') {
+            $siblingsQuery->where('zone_desktop', $component->zone_desktop);
+        }
+        $siblingIds = $siblingsQuery->pluck('id')->all();
+
+        $currentIndex = array_search($id, $siblingIds);
+        if ($currentIndex === false) {
+            return;
+        }
+
+        $newIndex = $currentIndex + $offset;
+        if ($newIndex < 0 || $newIndex >= count($siblingIds)) {
+            return;
+        }
+
+        [$siblingIds[$currentIndex], $siblingIds[$newIndex]] = [$siblingIds[$newIndex], $siblingIds[$currentIndex]];
+
+        foreach ($siblingIds as $order => $componentId) {
+            NavbarComponent::where('id', $componentId)->update(["order_{$zone}" => $order]);
+        }
+
+        $this->forgetNavbarCache();
+    }
+
+    /**
+     * Keyboard-operable alternative to dragging a desktop navbar component
+     * into a different region (Start/Middle/End); reuses moveComponentToRegion().
+     */
+    public function moveComponentToRegionByKey(int $componentId, string $region): void
+    {
+        if (! in_array($region, ['start', 'middle', 'end'])) {
+            return;
+        }
+
+        $orderedIds = NavbarComponent::where('zone_desktop', $region)
+            ->orderBy('order_desktop')
+            ->pluck('id')
+            ->all();
+
+        if (! in_array($componentId, $orderedIds)) {
+            $orderedIds[] = $componentId;
+        }
+
+        $this->moveComponentToRegion($componentId, $region, $orderedIds);
+    }
+
     private function reorderItemsAfterParentChange(): void
     {
         // Organize items hierarchically and assign order

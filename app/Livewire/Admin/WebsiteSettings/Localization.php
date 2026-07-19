@@ -37,7 +37,7 @@ class Localization extends Component
 
         Setting::setMany($validated);
 
-        session()->flash('message', __('Localization settings updated successfully.'));
+        session()->flash('message', __('Website settings updated successfully.'));
     }
 
     public function render()

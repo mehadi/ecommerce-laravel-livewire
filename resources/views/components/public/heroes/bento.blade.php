@@ -53,7 +53,7 @@
                             @endif
 
                             @if($product)
-                                <a href="{{ $heroPrimaryCtaUrl }}" class="group inline-flex items-center gap-3 self-start bg-emerald-600 hover:bg-emerald-700 dark:bg-emerald-600 dark:hover:bg-emerald-500 text-white pl-6 pr-1.5 py-1.5 rounded-full font-bold text-sm sm:text-base transition-all duration-300 shadow-md shadow-emerald-600/20 hover:shadow-lg hover:shadow-emerald-600/25 hover:-translate-y-0.5 motion-reduce:transform-none cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600 focus-visible:ring-offset-2">
+                                <a href="{{ $heroPrimaryCtaUrl }}" @if($heroPrimaryCtaNavigate) wire:navigate @endif class="group inline-flex items-center gap-3 self-start bg-emerald-600 hover:bg-emerald-700 dark:bg-emerald-600 dark:hover:bg-emerald-500 text-white pl-6 pr-1.5 py-1.5 rounded-full font-bold text-sm sm:text-base transition-all duration-300 shadow-md shadow-emerald-600/20 hover:shadow-lg hover:shadow-emerald-600/25 hover:-translate-y-0.5 motion-reduce:transform-none cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600 focus-visible:ring-offset-2">
                                     {{ $heroPrimaryCtaLabel }}
                                     <span class="flex items-center justify-center w-10 h-10 rounded-full bg-zinc-900 dark:bg-black text-white transition-transform duration-300 group-hover:rotate-45 motion-reduce:transform-none">
                                         <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">

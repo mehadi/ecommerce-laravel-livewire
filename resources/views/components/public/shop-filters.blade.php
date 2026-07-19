@@ -38,7 +38,7 @@
 
     {{-- Attributes (e.g. Size, Color, Weight) --}}
     @foreach($this->filterableAttributes as $attribute)
-        <div>
+        <div wire:key="filter-attribute-{{ $attribute->id }}">
             <h3 class="text-sm font-bold text-zinc-900 dark:text-white mb-4">{{ $attribute->name }}</h3>
             <div class="flex flex-wrap gap-2" role="group" aria-label="{{ __('Filter by :attribute', ['attribute' => $attribute->name]) }}">
                 @foreach($attribute->filterValues as $value)
@@ -48,6 +48,7 @@
                     @endphp
                     <button
                         type="button"
+                        wire:key="filter-value-{{ $attribute->id }}-{{ $value->id }}"
                         wire:click="toggleAttributeValue({{ $attribute->id }}, '{{ $valueLabel }}')"
                         aria-pressed="{{ $isSelected ? 'true' : 'false' }}"
                         class="min-h-9 px-4 py-1.5 rounded-full text-xs font-semibold transition-all duration-200 cursor-pointer touch-manipulation focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 {{ $isSelected ? 'bg-emerald-600 text-white shadow-sm shadow-emerald-600/20 ring-1 ring-emerald-600' : 'bg-white dark:bg-zinc-900 text-zinc-600 dark:text-zinc-300 ring-1 ring-zinc-900/[0.08] dark:ring-white/[0.1] hover:ring-emerald-500/60 dark:hover:ring-emerald-400/60' }}"

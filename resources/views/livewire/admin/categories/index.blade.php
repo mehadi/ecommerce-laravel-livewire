@@ -1,11 +1,5 @@
 <div class="space-y-6">
-    <div class="flex flex-wrap justify-between items-center gap-4">
-        <div>
-            <flux:heading>{{ __('Categories') }}</flux:heading>
-            <flux:text size="sm" variant="subtle" class="mt-1">
-                {{ __('Manage and organize your product categories') }}
-            </flux:text>
-        </div>
+    <x-admin.page-header :heading="__('Categories')" :description="__('Manage and organize your product categories')">
         <flux:button wire:click="openModal" variant="primary">
             <span class="inline-flex items-center gap-1.5">
                 <svg class="h-4 w-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -14,7 +8,7 @@
                 <span>{{ __('Add New Category') }}</span>
             </span>
         </flux:button>
-    </div>
+    </x-admin.page-header>
 
     @if (session()->has('message'))
         <flux:callout variant="success">{{ session('message') }}</flux:callout>
@@ -26,61 +20,37 @@
 
     {{-- Statistics Cards --}}
     <div class="grid gap-4 md:grid-cols-4">
-        <div class="rounded-lg border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-700 dark:bg-zinc-900">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-sm font-medium text-zinc-600 dark:text-zinc-400">{{ __('Total Categories') }}</p>
-                    <p class="mt-1 text-2xl font-bold text-zinc-900 dark:text-white">{{ $stats['total'] }}</p>
-                </div>
-                <div class="flex h-12 w-12 items-center justify-center rounded-lg bg-blue-100 dark:bg-blue-900/20">
-                    <svg class="h-6 w-6 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
-                    </svg>
-                </div>
-            </div>
-        </div>
+        <x-admin.stat-card :label="__('Total Categories')" :value="$stats['total']" tone="blue">
+            <x-slot:icon>
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
+                </svg>
+            </x-slot:icon>
+        </x-admin.stat-card>
 
-        <div class="rounded-lg border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-700 dark:bg-zinc-900">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-sm font-medium text-zinc-600 dark:text-zinc-400">{{ __('Active') }}</p>
-                    <p class="mt-1 text-2xl font-bold text-emerald-600 dark:text-emerald-400">{{ $stats['active'] }}</p>
-                </div>
-                <div class="flex h-12 w-12 items-center justify-center rounded-lg bg-emerald-100 dark:bg-emerald-900/20">
-                    <svg class="h-6 w-6 text-emerald-600 dark:text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                    </svg>
-                </div>
-            </div>
-        </div>
+        <x-admin.stat-card :label="__('Active')" :value="$stats['active']" tone="emerald">
+            <x-slot:icon>
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+            </x-slot:icon>
+        </x-admin.stat-card>
 
-        <div class="rounded-lg border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-700 dark:bg-zinc-900">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-sm font-medium text-zinc-600 dark:text-zinc-400">{{ __('Inactive') }}</p>
-                    <p class="mt-1 text-2xl font-bold text-zinc-500 dark:text-zinc-400">{{ $stats['inactive'] }}</p>
-                </div>
-                <div class="flex h-12 w-12 items-center justify-center rounded-lg bg-zinc-100 dark:bg-zinc-800">
-                    <svg class="h-6 w-6 text-zinc-500 dark:text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                    </svg>
-                </div>
-            </div>
-        </div>
+        <x-admin.stat-card :label="__('Inactive')" :value="$stats['inactive']" tone="zinc">
+            <x-slot:icon>
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+            </x-slot:icon>
+        </x-admin.stat-card>
 
-        <div class="rounded-lg border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-700 dark:bg-zinc-900">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-sm font-medium text-zinc-600 dark:text-zinc-400">{{ __('Subcategories') }}</p>
-                    <p class="mt-1 text-2xl font-bold text-purple-600 dark:text-purple-400">{{ $stats['subcategories'] }}</p>
-                </div>
-                <div class="flex h-12 w-12 items-center justify-center rounded-lg bg-purple-100 dark:bg-purple-900/20">
-                    <svg class="h-6 w-6 text-purple-600 dark:text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
-                    </svg>
-                </div>
-            </div>
-        </div>
+        <x-admin.stat-card :label="__('Subcategories')" :value="$stats['subcategories']" tone="purple">
+            <x-slot:icon>
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
+                </svg>
+            </x-slot:icon>
+        </x-admin.stat-card>
     </div>
 
     {{-- Filters and Search --}}
@@ -125,26 +95,16 @@
 
     {{-- Bulk Actions --}}
     @if(count($selectedItems) > 0)
-        <div class="flex items-center justify-between gap-4 rounded-lg border border-blue-200 bg-blue-50/50 p-4 dark:border-blue-800 dark:bg-blue-900/20">
-            <div class="flex items-center gap-2">
-                <svg class="h-5 w-5 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                </svg>
-                <span class="text-sm font-medium text-blue-900 dark:text-blue-100">
-                    {{ __(':count item(s) selected', ['count' => count($selectedItems)]) }}
-                </span>
-            </div>
-            <div class="flex gap-2">
-                <flux:button wire:click="bulkToggleStatus" size="sm" variant="ghost">
-                    {{ __('Toggle Status') }}
-                </flux:button>
-                <flux:button wire:click="bulkDelete" 
-                    wire:confirm="{{ __('Are you sure you want to delete the selected categories?') }}"
-                    size="sm" variant="danger">
-                    {{ __('Delete Selected') }}
-                </flux:button>
-            </div>
-        </div>
+        <x-admin.bulk-actions-bar :count="count($selectedItems)">
+            <flux:button wire:click="bulkToggleStatus" size="sm" variant="ghost" wire:loading.attr="disabled" wire:target="bulkToggleStatus">
+                {{ __('Toggle Status') }}
+            </flux:button>
+            <flux:button wire:click="bulkDelete"
+                wire:confirm="{{ __('Are you sure you want to delete the selected categories?') }}"
+                size="sm" variant="danger" wire:loading.attr="disabled" wire:target="bulkDelete">
+                {{ __('Delete Selected') }}
+            </flux:button>
+        </x-admin.bulk-actions-bar>
     @endif
 
     <div class="grid gap-6 lg:grid-cols-2 items-start">
@@ -152,73 +112,37 @@
             <div class="flex flex-col h-full">
                 <div class="flex items-center justify-between mb-4">
                     <flux:heading size="md" level="3">{{ __('List View') }}</flux:heading>
-                    <span class="text-xs text-gray-500 dark:text-gray-400">
+                    <span class="text-xs text-zinc-500 dark:text-zinc-400">
                         {{ __('Total') }}: {{ $categories->total() }}
                     </span>
-                </div>
-                
-                <div class="mb-4">
-                    <flux:field>
-                        <flux:input wire:model.live.debounce.300ms="search" placeholder="{{ __('Search categories...') }}" />
-                    </flux:field>
                 </div>
 
                 <div class="flex-1 flex flex-col min-h-0">
                     <div class="overflow-x-auto bg-white dark:bg-zinc-900 rounded-lg shadow flex-1">
-                        <table class="min-w-full divide-y divide-gray-200 dark:divide-zinc-700">
-                            <thead class="bg-gray-50 dark:bg-zinc-800">
+                        <table class="min-w-full divide-y divide-zinc-200 dark:divide-zinc-700">
+                            <thead class="bg-zinc-50 dark:bg-zinc-800">
                                 <tr>
                                     <th class="px-6 py-3 text-left">
-                                        <flux:checkbox wire:model.live="selectAll" wire:click="toggleSelectAll" />
+                                        <flux:checkbox wire:model.live="selectAll" wire:click="toggleSelectAll" aria-label="{{ __('Select all categories') }}" />
                                     </th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">{{ __('Image') }}</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer hover:bg-gray-100 dark:hover:bg-zinc-700 transition-colors"
-                                        wire:click="sortBy('name_en')">
-                                        <div class="flex items-center gap-2">
-                                            {{ __('Name') }}
-                                            @if($sortField === 'name_en')
-                                                <svg class="w-3 h-3 {{ $sortDirection === 'asc' ? '' : 'rotate-180' }}" fill="currentColor" viewBox="0 0 20 20">
-                                                    <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"/>
-                                                </svg>
-                                            @endif
-                                        </div>
-                                    </th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">{{ __('Parent') }}</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">{{ __('Products') }}</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer hover:bg-gray-100 dark:hover:bg-zinc-700 transition-colors"
-                                        wire:click="sortBy('is_active')">
-                                        <div class="flex items-center gap-2">
-                                            {{ __('Status') }}
-                                            @if($sortField === 'is_active')
-                                                <svg class="w-3 h-3 {{ $sortDirection === 'asc' ? '' : 'rotate-180' }}" fill="currentColor" viewBox="0 0 20 20">
-                                                    <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"/>
-                                                </svg>
-                                            @endif
-                                        </div>
-                                    </th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer hover:bg-gray-100 dark:hover:bg-zinc-700 transition-colors"
-                                        wire:click="sortBy('order')">
-                                        <div class="flex items-center gap-2">
-                                            {{ __('Order') }}
-                                            @if($sortField === 'order')
-                                                <svg class="w-3 h-3 {{ $sortDirection === 'asc' ? '' : 'rotate-180' }}" fill="currentColor" viewBox="0 0 20 20">
-                                                    <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"/>
-                                                </svg>
-                                            @endif
-                                        </div>
-                                    </th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">{{ __('Actions') }}</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">{{ __('Image') }}</th>
+                                    <x-admin.sortable-th field="name_en" :label="__('Name')" :sort-field="$sortField" :sort-direction="$sortDirection" />
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">{{ __('Parent') }}</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">{{ __('Products') }}</th>
+                                    <x-admin.sortable-th field="is_active" :label="__('Status')" :sort-field="$sortField" :sort-direction="$sortDirection" />
+                                    <x-admin.sortable-th field="order" :label="__('Order')" :sort-field="$sortField" :sort-direction="$sortDirection" />
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">{{ __('Actions') }}</th>
                                 </tr>
                             </thead>
-                            <tbody class="bg-white dark:bg-zinc-900 divide-y divide-gray-200 dark:divide-zinc-700">
+                            <tbody class="bg-white dark:bg-zinc-900 divide-y divide-zinc-200 dark:divide-zinc-700">
                                 @forelse($categories as $category)
-                                    <tr class="hover:bg-gray-50 dark:hover:bg-zinc-800 transition-colors">
+                                    <tr class="hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors">
                                         <td class="px-6 py-4 whitespace-nowrap">
-                                            <flux:checkbox wire:model.live="selectedItems" value="{{ $category->id }}" />
+                                            <flux:checkbox wire:model.live="selectedItems" value="{{ $category->id }}" aria-label="{{ __('Select :name', ['name' => $category->name_en]) }}" />
                                         </td>
                                         <td class="px-6 py-4 whitespace-nowrap">
                                             @if($category->image)
-                                                <img src="{{ asset('storage/'.$category->image) }}" alt="{{ $category->name_en }}" 
+                                                <img src="{{ asset('storage/'.$category->image) }}" alt="{{ $category->name_en }}"
                                                     class="h-10 w-10 rounded object-cover">
                                             @else
                                                 <div class="flex h-10 w-10 items-center justify-center rounded bg-zinc-100 dark:bg-zinc-800">
@@ -231,17 +155,17 @@
                                         <td class="px-6 py-4">
                                             <div class="flex items-center gap-2" @if($category->parent_id) style="padding-left: {{ ($category->depth - 1) * 16 }}px" @endif>
                                                 @if($category->parent_id)
-                                                    <span class="text-gray-400 dark:text-gray-500">└─</span>
+                                                    <span class="text-zinc-400 dark:text-zinc-500">└─</span>
                                                 @endif
                                                 <div>
-                                                    <span class="text-gray-900 dark:text-white font-medium">{{ $category->name_en }}</span>
+                                                    <span class="text-zinc-900 dark:text-white font-medium">{{ $category->name_en }}</span>
                                                     @if($category->name_bn)
-                                                        <p class="text-xs text-gray-500 dark:text-gray-400">{{ $category->name_bn }}</p>
+                                                        <p class="text-xs text-zinc-500 dark:text-zinc-400">{{ $category->name_bn }}</p>
                                                     @endif
                                                 </div>
                                             </div>
                                         </td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-gray-500 dark:text-gray-400">
+                                        <td class="px-6 py-4 whitespace-nowrap text-zinc-500 dark:text-zinc-400">
                                             @if($category->parent)
                                                 <span class="inline-flex items-center gap-1">
                                                     <svg class="h-4 w-4 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -250,7 +174,7 @@
                                                     {{ $category->parent->name_en }}
                                                 </span>
                                             @else
-                                                <span class="text-gray-400 dark:text-gray-500">{{ __('Main Category') }}</span>
+                                                <span class="text-zinc-400 dark:text-zinc-500">{{ __('Main Category') }}</span>
                                             @endif
                                         </td>
                                         <td class="px-6 py-4 whitespace-nowrap">
@@ -258,7 +182,7 @@
                                                 <svg class="h-4 w-4 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path>
                                                 </svg>
-                                                <span class="text-gray-900 dark:text-white font-medium">{{ $category->products_count ?? 0 }}</span>
+                                                <span class="text-zinc-900 dark:text-white font-medium">{{ $category->products_count ?? 0 }}</span>
                                                 @if(($category->children_count ?? 0) > 0)
                                                     <flux:badge size="sm" variant="subtle" title="{{ __('Has :count subcategories', ['count' => $category->children_count]) }}">
                                                         {{ $category->children_count }} {{ __('sub') }}
@@ -271,9 +195,10 @@
                                                 <flux:badge :variant="$category->is_active ? 'success' : 'danger'">
                                                     {{ $category->is_active ? __('Active') : __('Inactive') }}
                                                 </flux:badge>
-                                                <button wire:click="toggleStatus({{ $category->id }})" 
+                                                <button wire:click="toggleStatus({{ $category->id }})"
                                                     class="text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300 transition-colors"
-                                                    title="{{ $category->is_active ? __('Deactivate') : __('Activate') }}">
+                                                    title="{{ $category->is_active ? __('Deactivate') : __('Activate') }}"
+                                                    aria-label="{{ $category->is_active ? __('Deactivate :name', ['name' => $category->name_en]) : __('Activate :name', ['name' => $category->name_en]) }}">
                                                     @if($category->is_active)
                                                         <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"></path>
@@ -286,7 +211,7 @@
                                                 </button>
                                             </div>
                                         </td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-gray-900 dark:text-white">{{ $category->order }}</td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-zinc-900 dark:text-white">{{ $category->order }}</td>
                                         <td class="px-6 py-4 whitespace-nowrap">
                                             <div class="flex items-center gap-2">
                                                 <flux:button wire:click="openModal({{ $category->id }})" size="sm" variant="ghost">
@@ -305,37 +230,30 @@
                                                         <span>{{ __('Duplicate') }}</span>
                                                     </span>
                                                 </flux:button>
-                                                <flux:button wire:click="delete({{ $category->id }})" size="sm" variant="danger" 
-                                                    wire:confirm="{{ __('Are you sure you want to delete this category?') }}">
+                                                <x-admin.confirm-delete-button
+                                                    message="{{ __('Are you sure you want to delete this category?') }}"
+                                                    wire:click="delete({{ $category->id }})" size="sm">
                                                     <span class="inline-flex items-center gap-1.5">
                                                         <svg class="h-3 w-3 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
                                                         </svg>
                                                         <span>{{ __('Delete') }}</span>
                                                     </span>
-                                                </flux:button>
+                                                </x-admin.confirm-delete-button>
                                             </div>
                                         </td>
                                     </tr>
                                 @empty
-                                    <tr>
-                                        <td colspan="8" class="px-6 py-12 text-center">
-                                            <div class="flex flex-col items-center gap-3">
-                                                <svg class="h-12 w-12 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
-                                                </svg>
-                                                <div class="text-center">
-                                                    <p class="text-sm font-medium text-gray-900 dark:text-white">{{ __('No categories found') }}</p>
-                                                    <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                                                        {{ __('Get started by creating your first category.') }}
-                                                    </p>
-                                                </div>
-                                                <flux:button wire:click="openModal" variant="primary" size="sm">
-                                                    {{ __('Add New Category') }}
-                                                </flux:button>
-                                            </div>
-                                        </td>
-                                    </tr>
+                                    <x-admin.table-empty-state colspan="8" :title="__('No categories found')" :description="__('Get started by creating your first category.')">
+                                        <x-slot:icon>
+                                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
+                                            </svg>
+                                        </x-slot:icon>
+                                        <flux:button wire:click="openModal" variant="primary" size="sm">
+                                            {{ __('Add New Category') }}
+                                        </flux:button>
+                                    </x-admin.table-empty-state>
                                 @endforelse
                             </tbody>
                         </table>
@@ -355,7 +273,7 @@
                     draggedCategoryId: null,
                     draggedOverParentId: null,
                     draggedCategoryParentId: null,
-                    
+
                     handleDragStart(event, categoryId, parentId) {
                         this.draggedCategoryId = categoryId;
                         this.draggedCategoryParentId = parentId;
@@ -364,7 +282,7 @@
                         event.currentTarget.style.opacity = '0.5';
                         event.currentTarget.style.cursor = 'grabbing';
                     },
-                    
+
                     handleDragEnd(event) {
                         event.currentTarget.style.opacity = '';
                         event.currentTarget.style.cursor = '';
@@ -372,48 +290,48 @@
                         this.draggedOverParentId = null;
                         this.draggedCategoryParentId = null;
                     },
-                    
+
                     handleDragOver(event, parentId) {
                         event.preventDefault();
                         event.dataTransfer.dropEffect = 'move';
                         this.draggedOverParentId = parentId;
                     },
-                    
+
                     handleDragLeave() {
                         this.draggedOverParentId = null;
                     },
-                    
+
                     handleDrop(event, newParentId) {
                         event.preventDefault();
-                        
+
                         if (this.draggedCategoryId === null) {
                             return;
                         }
-                        
+
                         const categoryId = this.draggedCategoryId;
                         const currentParentId = this.draggedCategoryParentId;
-                        
+
                         if (newParentId === currentParentId) {
                             this.handleDragEnd(event);
                             return;
                         }
-                        
+
                         @this.call('updateCategoryParent', categoryId, newParentId);
-                        
+
                         this.handleDragEnd(event);
                     },
-                    
+
                     isDraggedOver(parentId) {
                         return this.draggedOverParentId === parentId && this.draggedCategoryId !== null;
                     },
-                    
+
                     isDragging(categoryId) {
                         return this.draggedCategoryId === categoryId;
                     }
                 }">
                 <div class="flex items-center justify-between mb-4">
                     <flux:heading size="md" level="3">{{ __('Hierarchical View') }}</flux:heading>
-                    <span class="text-xs text-gray-500 dark:text-gray-400">
+                    <span class="text-xs text-zinc-500 dark:text-zinc-400">
                         @php
                             $mainCount = $this->categoryTree->count();
                             $subCount = $stats['subcategories'];
@@ -421,17 +339,17 @@
                         {{ $mainCount }} {{ __('main') }}, {{ $subCount }} {{ __('sub') }}
                     </span>
                 </div>
-                <p class="text-xs text-zinc-500 dark:text-zinc-400 mb-4">{{ __('Drag categories to reorganize - move subcategories between parents or make main categories into subcategories') }}</p>
-                
+                <p class="text-xs text-zinc-500 dark:text-zinc-400 mb-4">{{ __('Drag categories to reorganize, or use the "Move to..." select on each row for a keyboard-friendly alternative.') }}</p>
+
                 <div class="flex-1 flex flex-col min-h-0">
                     <div class="bg-white dark:bg-zinc-900 rounded-lg shadow p-6 flex-1 overflow-y-auto">
                         <div class="space-y-2">
                         @forelse($this->categoryTree as $parentCategory)
-                            @include('livewire.admin.categories.partials.tree-item', ['category' => $parentCategory, 'depth' => 0])
+                            @include('livewire.admin.categories.partials.tree-item', ['category' => $parentCategory, 'depth' => 0, 'allCategories' => $this->flatCategories])
                         @empty
-                            <div class="text-center py-12 text-gray-500 dark:text-gray-400">
+                            <div class="text-center py-12 text-zinc-500 dark:text-zinc-400">
                                 <div class="flex flex-col items-center gap-2">
-                                    <svg class="w-12 h-12 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <svg class="w-12 h-12 text-zinc-400 dark:text-zinc-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
                                     </svg>
                                     <span class="font-medium">{{ __('No categories found.') }}</span>
@@ -439,10 +357,10 @@
                                 </div>
                             </div>
                         @endforelse
-                        
+
                         <!-- Drop zone for moving to no parent (main category) -->
-                        <div 
-                            class="mt-4 p-3 border-2 border-dashed border-gray-300 dark:border-zinc-700 rounded-lg transition-colors text-center"
+                        <div
+                            class="mt-4 p-3 border-2 border-dashed border-zinc-300 dark:border-zinc-700 rounded-lg transition-colors text-center"
                             :class="{
                                 'border-blue-500 dark:border-blue-400 bg-blue-50 dark:bg-blue-900/20': isDraggedOver(null) && draggedCategoryId !== null && draggedCategoryParentId !== null
                             }"
@@ -452,7 +370,7 @@
                             x-show="draggedCategoryId !== null && draggedCategoryParentId !== null"
                             x-transition
                         >
-                            <span class="text-sm text-gray-600 dark:text-gray-400">
+                            <span class="text-sm text-zinc-600 dark:text-zinc-400">
                                 {{ __('Drop here to make it a main category') }}
                             </span>
                         </div>
@@ -498,8 +416,8 @@
 
                         <div class="grid gap-4 sm:grid-cols-2">
                             <flux:field>
-                                <flux:label>{{ __('Name (English)') }} *</flux:label>
-                                <flux:input wire:model.live.debounce.300ms="name_en" placeholder="{{ __('e.g. Fresh Fruits') }}" />
+                                <flux:label badge="{{ __('Required') }}">{{ __('Name (English)') }}</flux:label>
+                                <flux:input required wire:model.live.debounce.300ms="name_en" placeholder="{{ __('e.g. Fresh Fruits') }}" />
                                 <flux:error name="name_en" />
                             </flux:field>
 
@@ -512,14 +430,14 @@
 
                         <flux:field>
                             <div class="flex items-center justify-between">
-                                <flux:label>{{ __('Slug') }} *</flux:label>
+                                <flux:label badge="{{ __('Required') }}">{{ __('Slug') }}</flux:label>
                                 @if($name_en && !$editingId)
                                     <button type="button" wire:click="generateSlug" class="cursor-pointer text-xs font-medium text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300">
                                         {{ __('Regenerate') }}
                                     </button>
                                 @endif
                             </div>
-                            <flux:input wire:model.live.debounce.500ms="slug" placeholder="{{ __('url-friendly-identifier') }}" />
+                            <flux:input required wire:model.live.debounce.500ms="slug" placeholder="{{ __('url-friendly-identifier') }}" />
                             <p class="mt-1 text-xs text-zinc-500 dark:text-zinc-400">{{ __('Auto-generated from the English name. Used in the category URL.') }}</p>
                             <div wire:loading.remove wire:target="checkSlugAvailability,updatedSlug,updatedNameEn,generateSlug" class="mt-1.5">
                                 @if($slugAvailable === true)
@@ -581,9 +499,10 @@
                                             <input type="file" wire:model="image" accept="image/*" class="hidden">
                                         </label>
                                     </div>
-                                    <button type="button" wire:click="removeImage" wire:confirm="{{ __('Remove this image?') }}"
+                                    <button type="button" wire:click="removeImage" wire:confirm="{{ __('Remove this category image? This cannot be undone.') }}"
                                         class="shrink-0 cursor-pointer text-zinc-400 transition-colors hover:text-red-600 dark:hover:text-red-400"
-                                        title="{{ __('Remove image') }}">
+                                        title="{{ __('Remove image') }}"
+                                        aria-label="{{ __('Remove category image') }}">
                                         <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
                                         </svg>

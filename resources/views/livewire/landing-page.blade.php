@@ -1,20 +1,5 @@
 @push('head')
-    @if($metaDescription ?? null)
-        <meta name="description" content="{{ $metaDescription }}" />
-    @elseif($this->product)
-        <meta name="description" content="{{ \Illuminate\Support\Str::limit($this->product->description ?? '', 160) }}" />
-    @endif
     @if($this->product)
-        
-        <!-- Open Graph / Facebook -->
-        <meta property="og:type" content="product" />
-        <meta property="og:url" content="{{ url()->current() }}" />
-        <meta property="og:title" content="{{ $this->product->name }}" />
-        <meta property="og:description" content="{{ \Illuminate\Support\Str::limit($this->product->description ?? '', 160) }}" />
-        @if($this->product->primary_image)
-            <meta property="og:image" content="{{ asset('storage/'.$this->product->primary_image) }}" />
-        @endif
-        
         @php
             $productData = [
                 '@context' => 'https://schema.org/',

@@ -25,7 +25,7 @@ trait HasDashboardAnalytics
         'processing' => ['label' => 'Processing', 'tone' => 'purple', 'hex' => '#a855f7'],
         'shipped' => ['label' => 'Shipped', 'tone' => 'indigo', 'hex' => '#6366f1'],
         'delivered' => ['label' => 'Delivered', 'tone' => 'emerald', 'hex' => '#10b981'],
-        'cancelled' => ['label' => 'Cancelled', 'tone' => 'rose', 'hex' => '#ef4444'],
+        'cancelled' => ['label' => 'Cancelled', 'tone' => 'rose', 'hex' => '#f43f5e'],
     ];
 
     #[Computed]
@@ -49,7 +49,7 @@ trait HasDashboardAnalytics
                 'items' => function ($query) {
                     $query->select(['id', 'order_id', 'product_id', 'product_name', 'quantity', 'subtotal'])
                         ->with([
-                            'product:id,name_en,category_id',
+                            'product:id,name_en,category_id,buying_price',
                             'product.category:id,name_en',
                         ]);
                 },
@@ -238,14 +238,6 @@ trait HasDashboardAnalytics
         $statuses = ['pending', 'confirmed', 'processing', 'shipped', 'delivered', 'cancelled'];
         $data = [];
         $labels = [];
-        $colors = [
-            'pending' => '#fbbf24',
-            'confirmed' => '#3b82f6',
-            'processing' => '#a855f7',
-            'shipped' => '#6366f1',
-            'delivered' => '#10b981',
-            'cancelled' => '#ef4444',
-        ];
         $chartColors = [];
 
         foreach ($statuses as $status) {
@@ -255,7 +247,7 @@ trait HasDashboardAnalytics
             if ($count > 0 || ! $this->statusFilter) {
                 $labels[] = ucfirst($status);
                 $data[] = $count;
-                $chartColors[] = $colors[$status];
+                $chartColors[] = $this->statusMeta($status)['hex'];
             }
         }
 

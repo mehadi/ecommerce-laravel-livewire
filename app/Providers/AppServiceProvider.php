@@ -3,10 +3,12 @@
 namespace App\Providers;
 
 use App\Models\Category;
+use App\Models\Order;
 use App\Models\Product;
 use App\Models\ProductVariation;
 use App\Models\ProductVariationCombination;
 use App\Models\Testimonial;
+use App\Observers\OrderObserver;
 use App\Observers\ProductVariationCombinationObserver;
 use App\Observers\ProductVariationObserver;
 use App\Support\Tenancy;
@@ -32,6 +34,7 @@ class AppServiceProvider extends ServiceProvider
         // Register model observers
         ProductVariationCombination::observe(ProductVariationCombinationObserver::class);
         ProductVariation::observe(ProductVariationObserver::class);
+        Order::observe(OrderObserver::class);
 
         // Define admin gate (tenant-scoped: hasRole() is implicitly scoped to the
         // current tenant via spatie/laravel-permission teams mode)

@@ -10,6 +10,15 @@ import Sortable from 'sortablejs';
  * <x-dashboard.chart-bootstrap>).
  */
 
+// Match the app's type system and keep gridlines subtle in both themes
+// instead of Chart.js's default browser sans-serif + high-contrast grid.
+Chart.defaults.font.family = "'Instrument Sans', ui-sans-serif, system-ui, sans-serif";
+Chart.defaults.color = '#a1a1aa';
+Chart.defaults.borderColor = 'rgba(161, 161, 170, 0.15)';
+Chart.defaults.plugins.tooltip.padding = 10;
+Chart.defaults.plugins.tooltip.cornerRadius = 8;
+Chart.defaults.plugins.tooltip.titleFont = { weight: '600' };
+
 if (!window.dashboardExistingCharts) {
     window.dashboardExistingCharts = {};
 }

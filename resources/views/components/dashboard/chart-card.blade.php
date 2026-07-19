@@ -2,6 +2,7 @@
     'cardKey',
     'card',
     'isCustomizing' => false,
+    'empty' => false,
 ])
 
 <div
@@ -9,8 +10,8 @@
     data-dashboard-chart-card="{{ $cardKey }}"
     wire:key="chart-card-{{ $cardKey }}"
     @class([
-        'dashboard-chart-card group relative rounded-xl border bg-white p-6 shadow-sm transition-all duration-200 dark:bg-zinc-900',
-        'border-neutral-200 dark:border-neutral-700' => ! $isCustomizing,
+        'dashboard-chart-card group relative rounded-2xl border bg-white p-6 shadow-sm transition-all duration-200 hover:shadow-md dark:bg-zinc-900',
+        'border-zinc-200 dark:border-zinc-800' => ! $isCustomizing,
         'cursor-grab border-blue-300 ring-2 ring-blue-200/50 hover:border-blue-400 hover:ring-blue-300/50 dark:border-blue-700 dark:ring-blue-800/30' => $isCustomizing,
     ])
 >
@@ -41,9 +42,25 @@
         </div>
     @endif
 
-    <h3 class="mb-4 text-lg font-semibold text-neutral-900 dark:text-white">{{ $card['title'] }}</h3>
-    <div class="h-64">
-        <canvas id="{{ $cardKey }}Chart"></canvas>
+    <div class="mb-5 flex items-center gap-2.5">
+        <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-zinc-100 text-zinc-500 ring-1 ring-inset ring-black/5 dark:bg-white/5 dark:text-zinc-400 dark:ring-white/10">
+            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+            </svg>
+        </span>
+        <h3 class="text-base font-semibold text-zinc-900 dark:text-white">{{ $card['title'] }}</h3>
     </div>
+    @if($empty)
+        <div class="flex h-64 flex-col items-center justify-center gap-2 text-zinc-400 dark:text-zinc-500">
+            <svg class="h-10 w-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+            </svg>
+            <p class="text-sm font-medium">{{ __('No data for this period') }}</p>
+        </div>
+    @else
+        <div class="h-64">
+            <canvas id="{{ $cardKey }}Chart"></canvas>
+        </div>
+    @endif
 </div>
 

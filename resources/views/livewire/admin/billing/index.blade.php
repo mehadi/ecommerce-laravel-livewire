@@ -1,15 +1,12 @@
 <div class="space-y-6">
-    <div>
-        <flux:heading>{{ __('Billing') }}</flux:heading>
-        <flux:text size="sm" variant="subtle" class="mt-1">{{ __('Your current plan and usage') }}</flux:text>
-    </div>
+    <x-admin.page-header :heading="__('Billing')" :description="__('Your current plan and usage')" />
 
     @if (session()->has('message'))
         <flux:callout variant="success">{{ session('message') }}</flux:callout>
     @endif
 
     <div class="grid gap-6 lg:grid-cols-2">
-        <div class="rounded-xl border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-zinc-900 p-6 space-y-4">
+        <div class="rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 p-6 space-y-4">
             <div class="flex items-center justify-between">
                 <div class="flex items-center gap-3">
                     <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-emerald-100 dark:bg-emerald-900/20">
@@ -49,14 +46,15 @@
                         </flux:select>
                         <flux:error name="desiredPlanId" />
                     </flux:field>
-                    <flux:button type="submit" variant="primary">
-                        {{ __('Request Upgrade') }}
+                    <flux:button type="submit" variant="primary" wire:loading.attr="disabled" wire:target="requestUpgrade">
+                        <span wire:loading.remove wire:target="requestUpgrade">{{ __('Request Upgrade') }}</span>
+                        <span wire:loading wire:target="requestUpgrade">{{ __('Requesting...') }}</span>
                     </flux:button>
                 </form>
             @endif
         </div>
 
-        <div class="rounded-xl border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-zinc-900 p-6 space-y-4">
+        <div class="rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 p-6 space-y-4">
             <div class="flex items-center gap-3">
                 <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-100 dark:bg-blue-900/20">
                     <flux:icon.chart-bar class="size-5 text-blue-600 dark:text-blue-400" />

@@ -2,8 +2,6 @@
 
 declare(strict_types=1);
 
-use App\Livewire\Admin\Permissions\Create;
-use App\Livewire\Admin\Permissions\Edit;
 use App\Livewire\Admin\Permissions\Index;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -43,17 +41,14 @@ test('admin can create a permission', function () {
     $admin = User::factory()->create();
     $admin->assignRole('admin');
 
-    actingAs($admin)
-        ->get(route('admin.permissions.create'))
-        ->assertSuccessful()
-        ->assertSeeLivewire('admin.permissions.create');
-
     Livewire::actingAs($admin)
-        ->test(Create::class)
+        ->test(Index::class)
+        ->call('createPermission')
+        ->assertSet('showModal', true)
         ->set('name', 'create.products')
-        ->call('save')
+        ->call('savePermission')
         ->assertHasNoErrors()
-        ->assertRedirect(route('admin.permissions.index'));
+        ->assertSet('showModal', false);
 
     expect(Permission::where('name', 'create.products')->exists())->toBeTrue();
 });
@@ -64,17 +59,14 @@ test('admin can edit a permission', function () {
 
     $permission = Permission::create(['name' => 'create.products', 'guard_name' => 'web']);
 
-    actingAs($admin)
-        ->get(route('admin.permissions.edit', $permission))
-        ->assertSuccessful()
-        ->assertSeeLivewire('admin.permissions.edit');
-
     Livewire::actingAs($admin)
-        ->test(Edit::class, ['permission' => $permission])
+        ->test(Index::class)
+        ->call('editPermission', $permission)
+        ->assertSet('name', 'create.products')
         ->set('name', 'edit.products')
-        ->call('update')
+        ->call('savePermission')
         ->assertHasNoErrors()
-        ->assertRedirect(route('admin.permissions.index'));
+        ->assertSet('showModal', false);
 
     $permission->refresh();
     expect($permission->name)->toBe('edit.products');
@@ -99,9 +91,10 @@ test('permission name is required', function () {
     $admin->assignRole('admin');
 
     Livewire::actingAs($admin)
-        ->test(Create::class)
+        ->test(Index::class)
+        ->call('createPermission')
         ->set('name', '')
-        ->call('save')
+        ->call('savePermission')
         ->assertHasErrors(['name']);
 });
 
@@ -112,9 +105,10 @@ test('permission name must be unique', function () {
     Permission::create(['name' => 'create.products', 'guard_name' => 'web']);
 
     Livewire::actingAs($admin)
-        ->test(Create::class)
+        ->test(Index::class)
+        ->call('createPermission')
         ->set('name', 'create.products')
-        ->call('save')
+        ->call('savePermission')
         ->assertHasErrors(['name']);
 });
 
@@ -153,7 +147,7 @@ test('permissions index shows role counts', function () {
 
 test('manager role cannot access roles and permissions', function () {
     $manager = User::factory()->create();
-    $managerRole = Role::firstOrCreate(['name' => 'manager', 'guard_name' => 'web']);
+    Role::firstOrCreate(['name' => 'manager', 'guard_name' => 'web']);
     $manager->assignRole('manager');
 
     actingAs($manager)

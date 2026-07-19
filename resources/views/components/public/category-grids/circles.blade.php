@@ -3,7 +3,7 @@
 <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-x-4 gap-y-8 sm:gap-x-6 sm:gap-y-10">
     @foreach($items as $card)
         @php [$category, $productCount] = [$card['category'], $card['productCount']]; @endphp
-        <article class="group relative flex flex-col items-center text-center">
+        <article wire:key="category-{{ $category->id }}" class="group relative flex flex-col items-center text-center">
             <div class="relative w-28 h-28 sm:w-32 sm:h-32 rounded-full overflow-hidden bg-zinc-100 dark:bg-zinc-800/60 ring-1 ring-zinc-900/[0.06] dark:ring-white/[0.08] group-hover:ring-2 group-hover:ring-emerald-500/60 group-hover:shadow-[0_8px_24px_-8px_rgb(16_24_40_/_0.18)] transition-all duration-300 motion-reduce:transition-none mb-4">
                 @include('components.public.category-grids._image', [
                     'category' => $category,

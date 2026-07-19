@@ -2,7 +2,7 @@
      smaller grid below it, toggled by the $featured prop. --}}
 @props(['product', 'featured' => false])
 
-<article class="group relative bg-zinc-50 dark:bg-zinc-800/60 rounded-3xl ring-1 ring-zinc-900/[0.04] dark:ring-white/[0.06] overflow-hidden flex transition-all duration-300 motion-reduce:transition-none hover:ring-emerald-600/20 dark:hover:ring-emerald-500/30 hover:shadow-[0_8px_24px_-8px_rgb(16_24_40_/_0.10)] hover:-translate-y-1 motion-reduce:transform-none {{ $featured ? 'flex-col sm:flex-row' : 'flex-col' }}">
+<article {{ $attributes }} class="group relative bg-zinc-50 dark:bg-zinc-800/60 rounded-3xl ring-1 ring-zinc-900/[0.04] dark:ring-white/[0.06] overflow-hidden flex transition-all duration-300 motion-reduce:transition-none hover:ring-emerald-600/20 dark:hover:ring-emerald-500/30 hover:shadow-[0_8px_24px_-8px_rgb(16_24_40_/_0.10)] hover:-translate-y-1 motion-reduce:transform-none {{ $featured ? 'flex-col sm:flex-row' : 'flex-col' }}">
     <div class="relative overflow-hidden bg-white dark:bg-zinc-900 ring-1 ring-zinc-900/[0.04] dark:ring-white/[0.06] {{ $featured ? 'aspect-square sm:aspect-auto sm:w-1/2' : 'aspect-square' }}">
         @if($product->primary_image)
             <img

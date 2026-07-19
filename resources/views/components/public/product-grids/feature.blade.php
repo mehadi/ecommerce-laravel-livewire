@@ -12,13 +12,13 @@
 
 <div class="flex flex-col gap-5 sm:gap-6">
     @if($featured)
-        <x-public.product-cards.feature :product="$featured" :featured="true" />
+        <x-public.product-cards.feature :product="$featured" :featured="true" wire:key="product-{{ $featured->id }}" />
     @endif
 
     @if($rest->isNotEmpty())
         <div class="grid {{ $gridColsClass }} gap-5 sm:gap-6">
             @foreach($rest as $product)
-                <x-public.product-cards.feature :product="$product" :featured="false" />
+                <x-public.product-cards.feature :product="$product" :featured="false" wire:key="product-{{ $product->id }}" />
             @endforeach
         </div>
     @endif

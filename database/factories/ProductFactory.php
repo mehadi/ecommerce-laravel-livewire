@@ -20,14 +20,19 @@ class ProductFactory extends Factory
      */
     public function definition(): array
     {
+        $price = fake()->randomFloat(2, 50, 500);
+
         return [
             'category_id' => Category::factory(),
             'name_en' => fake()->words(3, true),
             'name_bn' => fake('bn_BD')->words(3, true),
             'description_en' => fake()->paragraph(),
             'description_bn' => fake('bn_BD')->paragraph(),
-            'price' => fake()->randomFloat(2, 50, 500),
+            'price' => $price,
             'compare_at_price' => fake()->optional()->randomFloat(2, 500, 700),
+            // 85% of products have a cost price set — the rest exercise the
+            // "missing cost data" caveat in the Profitability/Inventory reports.
+            'buying_price' => fake()->optional(0.85)->passthrough(round($price * fake()->randomFloat(2, 0.45, 0.8), 2)),
             'sku' => fake()->unique()->bothify('SKU-#####'),
             'stock' => fake()->numberBetween(0, 100),
             'primary_image' => null,

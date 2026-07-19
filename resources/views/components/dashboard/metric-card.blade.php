@@ -9,15 +9,22 @@
 @php
     $variant = $card['style'] ?? 'default';
 
+    // NOTE: 'green' is kept as an alias of 'emerald' (identical classes)
+    // rather than removed outright — App\Livewire\Dashboard\DashboardPageComponent
+    // (outside this cluster's file scope) still assigns 'color' => 'green' to
+    // the total_revenue/total_discounts metric definitions. Aliasing keeps
+    // the single-hue "positive/success = emerald" rule visually true without
+    // changing those cards' appearance; a follow-up pass should update those
+    // definitions to 'emerald' directly and drop this alias.
     $colorClasses = [
-        'green' => ['bg' => 'bg-green-100 dark:bg-green-900/20', 'text' => 'text-green-600 dark:text-green-400'],
-        'blue' => ['bg' => 'bg-blue-100 dark:bg-blue-900/20', 'text' => 'text-blue-600 dark:text-blue-400'],
-        'purple' => ['bg' => 'bg-purple-100 dark:bg-purple-900/20', 'text' => 'text-purple-600 dark:text-purple-400'],
-        'indigo' => ['bg' => 'bg-indigo-100 dark:bg-indigo-900/20', 'text' => 'text-indigo-600 dark:text-indigo-400'],
-        'emerald' => ['bg' => 'bg-emerald-100 dark:bg-emerald-900/20', 'text' => 'text-emerald-600 dark:text-emerald-400'],
-        'amber' => ['bg' => 'bg-amber-100 dark:bg-amber-900/20', 'text' => 'text-amber-600 dark:text-amber-400'],
-        'cyan' => ['bg' => 'bg-cyan-100 dark:bg-cyan-900/20', 'text' => 'text-cyan-600 dark:text-cyan-400'],
-        'red' => ['bg' => 'bg-red-100 dark:bg-red-900/20', 'text' => 'text-red-600 dark:text-red-400'],
+        'green' => ['bg' => 'bg-emerald-100 dark:bg-emerald-900/20', 'text' => 'text-emerald-600 dark:text-emerald-400', 'accent' => 'bg-emerald-500'],
+        'blue' => ['bg' => 'bg-blue-100 dark:bg-blue-900/20', 'text' => 'text-blue-600 dark:text-blue-400', 'accent' => 'bg-blue-500'],
+        'purple' => ['bg' => 'bg-purple-100 dark:bg-purple-900/20', 'text' => 'text-purple-600 dark:text-purple-400', 'accent' => 'bg-purple-500'],
+        'indigo' => ['bg' => 'bg-indigo-100 dark:bg-indigo-900/20', 'text' => 'text-indigo-600 dark:text-indigo-400', 'accent' => 'bg-indigo-500'],
+        'emerald' => ['bg' => 'bg-emerald-100 dark:bg-emerald-900/20', 'text' => 'text-emerald-600 dark:text-emerald-400', 'accent' => 'bg-emerald-500'],
+        'amber' => ['bg' => 'bg-amber-100 dark:bg-amber-900/20', 'text' => 'text-amber-600 dark:text-amber-400', 'accent' => 'bg-amber-500'],
+        'cyan' => ['bg' => 'bg-cyan-100 dark:bg-cyan-900/20', 'text' => 'text-cyan-600 dark:text-cyan-400', 'accent' => 'bg-cyan-500'],
+        'red' => ['bg' => 'bg-red-100 dark:bg-red-900/20', 'text' => 'text-red-600 dark:text-red-400', 'accent' => 'bg-red-500'],
     ];
 
     $icons = [
@@ -35,9 +42,10 @@
     $iconPath = $icons[$card['icon'] ?? 'chart'] ?? $icons['chart'];
 
     $isGrowthMetric = $cardKey === 'revenue_growth';
+    $isPositiveGrowth = $isGrowthMetric && $value >= 0;
     $valueClass = $isGrowthMetric
-        ? ($value >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400')
-        : 'text-neutral-900 dark:text-white';
+        ? ($isPositiveGrowth ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400')
+        : 'text-zinc-900 dark:text-white';
 
     $formattedValue = $isGrowthMetric
         ? ($value >= 0 ? '+' : '').number_format($value, 1).'%'
@@ -56,11 +64,13 @@
     data-card-key="{{ $cardKey }}"
     wire:key="metric-card-{{ $cardKey }}"
     @class([
-        "dashboard-metric-card group relative rounded-xl border bg-white shadow-sm transition-all duration-200 dark:bg-zinc-900 {$paddingClass}",
-        'border-neutral-200 dark:border-neutral-700' => ! $isCustomizing,
+        "dashboard-metric-card group relative overflow-hidden rounded-2xl border bg-white shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg dark:bg-zinc-900 {$paddingClass}",
+        'border-zinc-200 dark:border-zinc-800' => ! $isCustomizing,
         'cursor-grab border-blue-300 ring-2 ring-blue-200/50 hover:border-blue-400 hover:ring-blue-300/50 dark:border-blue-700 dark:ring-blue-800/30' => $isCustomizing,
     ])
 >
+    <span class="absolute inset-x-0 top-0 h-1 {{ $color['accent'] }} opacity-70"></span>
+
     @if($isCustomizing)
         <div class="absolute -top-2 -right-2 flex h-6 w-6 items-center justify-center rounded-full bg-blue-500 text-white shadow-lg">
             <svg class="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -79,6 +89,7 @@
                 type="button"
                 wire:click.stop="toggleCardVisibility('{{ $cardKey }}')"
                 class="no-drag rounded p-1.5 text-zinc-500 transition hover:bg-zinc-100 hover:text-zinc-700 dark:hover:bg-zinc-800 dark:hover:text-zinc-200"
+                aria-label="{{ __('Toggle Visibility') }}"
                 title="{{ __('Toggle Visibility') }}"
             >
                 <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -91,8 +102,13 @@
 
     @if($variant === 'minimal')
         <div>
-            <p class="text-xs font-medium text-zinc-600 dark:text-zinc-400">{{ $card['title'] }}</p>
-            <p class="mt-1 text-2xl font-semibold {!! $isGrowthMetric ? 'tracking-tight' : 'tracking-normal' !!} {{ $valueClass }}">
+            <p class="text-xs font-medium text-zinc-500 dark:text-zinc-400">{{ $card['title'] }}</p>
+            <p class="mt-1.5 flex items-center gap-1 text-2xl font-semibold tabular-nums {!! $isGrowthMetric ? 'tracking-tight' : 'tracking-normal' !!} {{ $valueClass }}">
+                @if($isGrowthMetric)
+                    <svg class="h-4 w-4 shrink-0 {{ $isPositiveGrowth ? '' : 'rotate-180' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 15l7-7 7 7" />
+                    </svg>
+                @endif
                 {!! $formattedValue !!}
             </p>
             @if($subtitle)
@@ -101,16 +117,21 @@
         </div>
     @else
         <div class="flex items-center justify-between gap-4">
-            <div class="space-y-1">
-                <p class="text-sm font-medium text-zinc-600 dark:text-zinc-400">{{ $card['title'] }}</p>
-                <p class="text-3xl font-semibold {{ $valueClass }}">
+            <div class="min-w-0 space-y-1">
+                <p class="truncate text-sm font-medium text-zinc-500 dark:text-zinc-400">{{ $card['title'] }}</p>
+                <p class="flex items-center gap-1.5 text-3xl font-semibold tabular-nums {{ $valueClass }}">
+                    @if($isGrowthMetric)
+                        <svg class="h-5 w-5 shrink-0 {{ $isPositiveGrowth ? '' : 'rotate-180' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 15l7-7 7 7" />
+                        </svg>
+                    @endif
                     {!! $formattedValue !!}
                 </p>
                 @if($subtitle)
-                    <p class="text-xs text-zinc-500 dark:text-zinc-500">{{ $subtitle }}</p>
+                    <p class="truncate text-xs text-zinc-500 dark:text-zinc-500">{{ $subtitle }}</p>
                 @endif
             </div>
-            <div class="rounded-lg {{ $color['bg'] }} p-3">
+            <div class="shrink-0 rounded-xl {{ $color['bg'] }} p-3 ring-1 ring-inset ring-black/5 dark:ring-white/10">
                 <svg class="h-6 w-6 {{ $color['text'] }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     {!! $iconPath !!}
                 </svg>

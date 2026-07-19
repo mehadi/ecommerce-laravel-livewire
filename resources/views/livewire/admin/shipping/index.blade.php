@@ -1,19 +1,12 @@
 <div class="space-y-6">
-    <div class="flex flex-wrap justify-between items-center gap-4">
-        <div>
-            <flux:heading>{{ __('Shipping Management') }}</flux:heading>
-            <flux:text size="sm" variant="subtle" class="mt-1">
-                {{ __('Configure shipping options and rates') }}
-            </flux:text>
-        </div>
-    </div>
+    <x-admin.page-header :heading="__('Shipping Management')" :description="__('Configure shipping options and rates')" />
 
     @if (session()->has('message'))
-        <flux:callout variant="success" wire:key="success-message-{{ time() }}">{{ session('message') }}</flux:callout>
+        <flux:callout variant="success">{{ session('message') }}</flux:callout>
     @endif
 
     @if (session()->has('error'))
-        <flux:callout variant="danger" wire:key="error-message-{{ time() }}">{{ session('error') }}</flux:callout>
+        <flux:callout variant="danger">{{ session('error') }}</flux:callout>
     @endif
 
     {{-- Current Status Summary --}}
@@ -61,7 +54,7 @@
             </div>
             <div>
                 <flux:heading size="md" level="3">{{ __('Shipping Mode') }}</flux:heading>
-                <flux:text class="text-sm text-neutral-600 dark:text-neutral-400">{{ __('Choose how shipping costs are calculated for orders') }}</flux:text>
+                <flux:text class="text-sm text-zinc-600 dark:text-zinc-400">{{ __('Choose how shipping costs are calculated for orders') }}</flux:text>
             </div>
         </div>
 
@@ -164,7 +157,7 @@
             @endif
 
             <flux:field>
-                <flux:checkbox wire:model="isActive" label="{{ __('Active') }}" description="{{ __('Enable this shipping configuration') }}" />
+                <flux:switch wire:model="isActive" label="{{ __('Active') }}" description="{{ __('Enable this shipping configuration') }}" />
             </flux:field>
 
             <div class="flex justify-end">
@@ -190,7 +183,7 @@
                     </div>
                     <div>
                         <flux:heading size="md" level="3">{{ __('City-Specific Rates') }}</flux:heading>
-                        <flux:text class="text-sm text-neutral-600 dark:text-neutral-400">
+                        <flux:text class="text-sm text-zinc-600 dark:text-zinc-400">
                             {{ __('Configure shipping rates for specific cities or set a default rate for all other cities') }}
                         </flux:text>
                     </div>
@@ -230,12 +223,12 @@
                     <table class="w-full">
                         <thead class="bg-zinc-50 dark:bg-zinc-800">
                             <tr class="border-b border-zinc-200 dark:border-zinc-700">
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">{{ __('City') }}</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">{{ __('Base Weight') }} (KG)</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">{{ __('Base Rate') }}</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">{{ __('Per KG Rate') }}</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">{{ __('Status') }}</th>
-                                <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">{{ __('Actions') }}</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">{{ __('City') }}</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">{{ __('Base Weight') }} (KG)</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">{{ __('Base Rate') }}</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">{{ __('Per KG Rate') }}</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">{{ __('Status') }}</th>
+                                <th class="px-6 py-3 text-right text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">{{ __('Actions') }}</th>
                             </tr>
                         </thead>
                         <tbody class="bg-white dark:bg-zinc-900 divide-y divide-zinc-200 dark:divide-zinc-700">
@@ -380,7 +373,7 @@
                 </flux:field>
 
                 <flux:field>
-                    <flux:checkbox wire:model="cityIsActive" label="{{ __('Active') }}" description="{{ __('Enable this city rate') }}" />
+                    <flux:switch wire:model="cityIsActive" label="{{ __('Active') }}" description="{{ __('Enable this city rate') }}" />
                 </flux:field>
             </div>
 

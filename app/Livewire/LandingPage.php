@@ -480,6 +480,8 @@ class LandingPage extends Component
             'metaDescription' => $metaDescription,
         ])->layout('components.layouts.public', [
             'title' => $title,
+            'ogType' => $this->product ? 'product' : 'website',
+            'ogImage' => $this->product?->primary_image,
             'showNavigation' => true,
             'showFooter' => true,
             'showCookieConsent' => true,

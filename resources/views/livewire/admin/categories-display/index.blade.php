@@ -1,26 +1,21 @@
 <div class="space-y-6">
-    <div class="flex flex-wrap justify-between items-center gap-4">
-        <div>
-            <flux:heading>{{ __('Categories Page Display') }}</flux:heading>
-            <flux:text size="sm" variant="subtle" class="mt-1">
-                {{ __('Control the grid layout and pagination options shown on the public /categories page') }}
-            </flux:text>
-        </div>
-    </div>
+    <x-admin.page-header :heading="__('Categories Page Display')" :description="__('Control the grid layout and pagination options shown on the public /categories page')" />
 
     @if (session()->has('message'))
         <flux:callout variant="success" wire:key="success-message-{{ time() }}">{{ session('message') }}</flux:callout>
     @endif
 
     <form wire:submit="save" class="space-y-6">
-        <div class="rounded-xl border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-zinc-900 p-6 space-y-6">
+        <div class="rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 p-6 space-y-6 shadow-sm">
             <div class="flex items-center gap-3">
                 <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-emerald-100 dark:bg-emerald-900/20">
-                    <flux:icon.view-columns class="size-5 text-emerald-600 dark:text-emerald-400" />
+                    <svg class="h-5 w-5 text-emerald-600 dark:text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                    </svg>
                 </div>
                 <div>
                     <flux:heading size="md" level="3">{{ __('Grid Columns') }}</flux:heading>
-                    <flux:text class="text-sm text-neutral-600 dark:text-neutral-400">{{ __('Choose how many columns visitors can switch between on the categories grid') }}</flux:text>
+                    <flux:text class="text-sm text-zinc-600 dark:text-zinc-400">{{ __('Choose how many columns visitors can switch between on the categories grid') }}</flux:text>
                 </div>
             </div>
 
@@ -39,14 +34,16 @@
             </flux:field>
         </div>
 
-        <div class="rounded-xl border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-zinc-900 p-6 space-y-6">
+        <div class="rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 p-6 space-y-6 shadow-sm">
             <div class="flex items-center gap-3">
                 <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-100 dark:bg-blue-900/20">
-                    <flux:icon.squares-2x2 class="size-5 text-blue-600 dark:text-blue-400" />
+                    <svg class="h-5 w-5 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h7v7H3V3zm0 11h7v7H3v-7zm11-11h7v7h-7V3zm0 11h7v7h-7v-7z" />
+                    </svg>
                 </div>
                 <div>
                     <flux:heading size="md" level="3">{{ __('Pagination Options') }}</flux:heading>
-                    <flux:text class="text-sm text-neutral-600 dark:text-neutral-400">{{ __('Choose how many categories are shown per page') }}</flux:text>
+                    <flux:text class="text-sm text-zinc-600 dark:text-zinc-400">{{ __('Choose how many categories are shown per page') }}</flux:text>
                 </div>
             </div>
 
@@ -66,7 +63,10 @@
         </div>
 
         <div class="flex justify-end">
-            <flux:button type="submit" variant="primary">{{ __('Save Settings') }}</flux:button>
+            <flux:button type="submit" variant="primary" wire:loading.attr="disabled" wire:target="save">
+                <span wire:loading.remove wire:target="save">{{ __('Save Settings') }}</span>
+                <span wire:loading wire:target="save">{{ __('Saving...') }}</span>
+            </flux:button>
         </div>
     </form>
 </div>

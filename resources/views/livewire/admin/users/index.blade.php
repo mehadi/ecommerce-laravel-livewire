@@ -1,11 +1,5 @@
 <div class="space-y-6">
-    <div class="flex flex-wrap justify-between items-center gap-4">
-        <div>
-            <flux:heading>{{ __('Users') }}</flux:heading>
-            <flux:text size="sm" variant="subtle" class="mt-1">
-                {{ __('Manage system users and their roles') }}
-            </flux:text>
-        </div>
+    <x-admin.page-header :heading="__('Users')" :description="__('Manage system users and their roles')">
         @can('create users')
             <flux:button wire:click="openModal" variant="primary">
                 <span class="inline-flex items-center gap-1.5">
@@ -16,7 +10,7 @@
                 </span>
             </flux:button>
         @endcan
-    </div>
+    </x-admin.page-header>
 
     @if (session()->has('message'))
         <flux:callout variant="success">{{ session('message') }}</flux:callout>
@@ -28,61 +22,37 @@
 
     {{-- Statistics Cards --}}
     <div class="grid gap-4 md:grid-cols-4">
-        <div class="rounded-lg border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-700 dark:bg-zinc-900">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-sm font-medium text-zinc-600 dark:text-zinc-400">{{ __('Total Users') }}</p>
-                    <p class="mt-1 text-2xl font-bold text-zinc-900 dark:text-white">{{ $stats['total'] }}</p>
-                </div>
-                <div class="flex h-12 w-12 items-center justify-center rounded-lg bg-blue-100 dark:bg-blue-900/20">
-                    <svg class="h-6 w-6 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path>
-                    </svg>
-                </div>
-            </div>
-        </div>
+        <x-admin.stat-card :label="__('Total Users')" :value="$stats['total']" tone="blue">
+            <x-slot:icon>
+                <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path>
+                </svg>
+            </x-slot:icon>
+        </x-admin.stat-card>
 
-        <div class="rounded-lg border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-700 dark:bg-zinc-900">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-sm font-medium text-zinc-600 dark:text-zinc-400">{{ __('Verified') }}</p>
-                    <p class="mt-1 text-2xl font-bold text-emerald-600 dark:text-emerald-400">{{ $stats['verified'] }}</p>
-                </div>
-                <div class="flex h-12 w-12 items-center justify-center rounded-lg bg-emerald-100 dark:bg-emerald-900/20">
-                    <svg class="h-6 w-6 text-emerald-600 dark:text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                    </svg>
-                </div>
-            </div>
-        </div>
+        <x-admin.stat-card :label="__('Verified')" :value="$stats['verified']" tone="emerald">
+            <x-slot:icon>
+                <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+            </x-slot:icon>
+        </x-admin.stat-card>
 
-        <div class="rounded-lg border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-700 dark:bg-zinc-900">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-sm font-medium text-zinc-600 dark:text-zinc-400">{{ __('Unverified') }}</p>
-                    <p class="mt-1 text-2xl font-bold text-amber-600 dark:text-amber-400">{{ $stats['unverified'] }}</p>
-                </div>
-                <div class="flex h-12 w-12 items-center justify-center rounded-lg bg-amber-100 dark:bg-amber-900/20">
-                    <svg class="h-6 w-6 text-amber-600 dark:text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
-                    </svg>
-                </div>
-            </div>
-        </div>
+        <x-admin.stat-card :label="__('Unverified')" :value="$stats['unverified']" tone="amber">
+            <x-slot:icon>
+                <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                </svg>
+            </x-slot:icon>
+        </x-admin.stat-card>
 
-        <div class="rounded-lg border border-zinc-200 bg-white p-6 shadow-sm dark:bg-zinc-700 dark:bg-zinc-900">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-sm font-medium text-zinc-600 dark:text-zinc-400">{{ __('With Roles') }}</p>
-                    <p class="mt-1 text-2xl font-bold text-purple-600 dark:text-purple-400">{{ $stats['with_roles'] }}</p>
-                </div>
-                <div class="flex h-12 w-12 items-center justify-center rounded-lg bg-purple-100 dark:bg-purple-900/20">
-                    <svg class="h-6 w-6 text-purple-600 dark:text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
-                    </svg>
-                </div>
-            </div>
-        </div>
+        <x-admin.stat-card :label="__('With Roles')" :value="$stats['with_roles']" tone="purple">
+            <x-slot:icon>
+                <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
+                </svg>
+            </x-slot:icon>
+        </x-admin.stat-card>
     </div>
 
     {{-- Filters and Search --}}
@@ -111,58 +81,31 @@
     </div>
 
     <div class="overflow-x-auto bg-white dark:bg-zinc-900 rounded-lg shadow">
-        <table class="min-w-full divide-y divide-gray-200 dark:divide-zinc-700">
-            <thead class="bg-gray-50 dark:bg-zinc-800">
+        <table class="min-w-full divide-y divide-zinc-200 dark:divide-zinc-700">
+            <thead class="bg-zinc-50 dark:bg-zinc-800">
                 <tr>
-                    <th wire:click="sortBy('name')" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer hover:bg-gray-100 dark:hover:bg-zinc-700 transition-colors">
-                        <div class="flex items-center gap-2">
-                            {{ __('Name') }}
-                            @if($sortField === 'name')
-                                <svg class="w-3 h-3 {{ $sortDirection === 'asc' ? '' : 'rotate-180' }}" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"/>
-                                </svg>
-                            @endif
-                        </div>
-                    </th>
-                    <th wire:click="sortBy('email')" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer hover:bg-gray-100 dark:hover:bg-zinc-700 transition-colors">
-                        <div class="flex items-center gap-2">
-                            {{ __('Email') }}
-                            @if($sortField === 'email')
-                                <svg class="w-3 h-3 {{ $sortDirection === 'asc' ? '' : 'rotate-180' }}" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"/>
-                                </svg>
-                            @endif
-                        </div>
-                    </th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">{{ __('Roles') }}</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">{{ __('Status') }}</th>
-                    <th wire:click="sortBy('created_at')" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer hover:bg-gray-100 dark:hover:bg-zinc-700 transition-colors">
-                        <div class="flex items-center gap-2">
-                            {{ __('Created') }}
-                            @if($sortField === 'created_at')
-                                <svg class="w-3 h-3 {{ $sortDirection === 'asc' ? '' : 'rotate-180' }}" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"/>
-                                </svg>
-                            @endif
-                        </div>
-                    </th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">{{ __('Actions') }}</th>
+                    <x-admin.sortable-th field="name" :label="__('Name')" :sort-field="$sortField" :sort-direction="$sortDirection" />
+                    <x-admin.sortable-th field="email" :label="__('Email')" :sort-field="$sortField" :sort-direction="$sortDirection" />
+                    <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400">{{ __('Roles') }}</th>
+                    <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400">{{ __('Status') }}</th>
+                    <x-admin.sortable-th field="created_at" :label="__('Created')" :sort-field="$sortField" :sort-direction="$sortDirection" />
+                    <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400">{{ __('Actions') }}</th>
                 </tr>
             </thead>
-            <tbody class="bg-white dark:bg-zinc-900 divide-y divide-gray-200 dark:divide-zinc-700">
+            <tbody class="bg-white dark:bg-zinc-900 divide-y divide-zinc-200 dark:divide-zinc-700">
                 @forelse($users as $user)
                     @php
                         $isSuperAdmin = $user->hasRole('super admin');
                         $isCurrentUser = $user->id === auth()->id();
                     @endphp
-                    <tr class="hover:bg-gray-50 dark:hover:bg-zinc-800 transition-colors">
+                    <tr class="hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors">
                         <td class="px-6 py-4 whitespace-nowrap">
                             <div class="flex items-center gap-2">
                                 <div class="flex h-8 w-8 items-center justify-center rounded-lg bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 text-sm font-medium">
                                     {{ $user->initials() }}
                                 </div>
                                 <div>
-                                    <div class="font-medium text-gray-900 dark:text-white">{{ $user->name }}</div>
+                                    <div class="font-medium text-zinc-900 dark:text-white">{{ $user->name }}</div>
                                     @if($isCurrentUser)
                                         <div class="text-xs text-zinc-500 dark:text-zinc-400">{{ __('You') }}</div>
                                     @endif
@@ -170,13 +113,13 @@
                             </div>
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="text-gray-900 dark:text-white">{{ $user->email }}</div>
+                            <div class="text-zinc-900 dark:text-white">{{ $user->email }}</div>
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap">
                             <div class="flex flex-wrap gap-1">
                                 @forelse($user->roles as $role)
-                                    <flux:badge 
-                                        :variant="$role->name === 'super admin' ? 'warning' : ($role->name === 'admin' ? 'info' : 'subtle')" 
+                                    <flux:badge
+                                        :variant="$role->name === 'super admin' ? 'warning' : ($role->name === 'admin' ? 'info' : 'subtle')"
                                         size="sm">
                                         {{ ucfirst($role->name) }}
                                     </flux:badge>
@@ -198,7 +141,7 @@
                                 @endif
                             </div>
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-gray-500 dark:text-gray-400 text-sm">{{ $user->created_at->format('M d, Y') }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-zinc-500 dark:text-zinc-400 text-sm">{{ $user->created_at->format('M d, Y') }}</td>
                         <td class="px-6 py-4 whitespace-nowrap">
                             <div class="flex gap-2">
                                 @can('edit users')
@@ -215,15 +158,18 @@
                                 @endcan
                                 @can('delete users')
                                     @if(!$isSuperAdmin && !$isCurrentUser)
-                                        <flux:button wire:click="delete({{ $user->id }})" size="sm" variant="danger" 
-                                            wire:confirm="{{ __('Are you sure you want to delete this user?') }}">
+                                        <x-admin.confirm-delete-button
+                                            :message="__('Are you sure you want to delete this user?')"
+                                            wire:click="delete({{ $user->id }})"
+                                            size="sm"
+                                        >
                                             <span class="inline-flex items-center gap-1.5">
                                                 <svg class="h-3 w-3 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
                                                 </svg>
                                                 <span>{{ __('Delete') }}</span>
                                             </span>
-                                        </flux:button>
+                                        </x-admin.confirm-delete-button>
                                     @else
                                         <flux:button disabled size="sm" variant="ghost" class="opacity-50 cursor-not-allowed">
                                             <span class="inline-flex items-center gap-1.5">
@@ -239,26 +185,18 @@
                         </td>
                     </tr>
                 @empty
-                    <tr>
-                        <td colspan="6" class="px-6 py-12 text-center">
-                            <div class="flex flex-col items-center gap-3">
-                                <svg class="h-12 w-12 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path>
-                                </svg>
-                                <div class="text-center">
-                                    <p class="text-sm font-medium text-gray-900 dark:text-white">{{ __('No users found') }}</p>
-                                    <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                                        {{ __('Get started by creating your first user.') }}
-                                    </p>
-                                </div>
-                                @can('create users')
-                                    <flux:button wire:click="openModal" variant="primary" size="sm">
-                                        {{ __('Add New User') }}
-                                    </flux:button>
-                                @endcan
-                            </div>
-                        </td>
-                    </tr>
+                    <x-admin.table-empty-state colspan="6" :title="__('No users found')" :description="__('Get started by creating your first user.')">
+                        <x-slot:icon>
+                            <svg class="h-12 w-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path>
+                            </svg>
+                        </x-slot:icon>
+                        @can('create users')
+                            <flux:button wire:click="openModal" variant="primary" size="sm">
+                                {{ __('Add New User') }}
+                            </flux:button>
+                        @endcan
+                    </x-admin.table-empty-state>
                 @endforelse
             </tbody>
         </table>
@@ -319,8 +257,8 @@
                     <div class="space-y-2 max-h-[300px] overflow-y-auto border border-zinc-200 dark:border-zinc-700 rounded-lg p-4">
                         @forelse($roles as $role)
                             <div class="flex items-center" wire:key="role-{{ $role->id }}">
-                                <flux:checkbox 
-                                    wire:model.live="selectedRoles" 
+                                <flux:checkbox
+                                    wire:model.live="selectedRoles"
                                     value="{{ (string) $role->id }}"
                                     label="{{ ucfirst($role->name) }}"
                                     class="flex-1"

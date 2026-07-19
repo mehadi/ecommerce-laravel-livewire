@@ -17,6 +17,14 @@ uses(TestCase::class)->in('Unit');
 // in test code see a consistent tenant. Guarded by hasTable so it's a no-op for any
 // Feature test that (unusually) doesn't use RefreshDatabase / has no tenants table.
 uses(TestCase::class)->beforeEach(function () {
+    // Settings are memoized in a static PHP array in front of the cache store
+    // (see App\Models\Setting/PlatformSetting) for performance. RefreshDatabase
+    // rolls back each test's DB changes but doesn't touch that cache, so without
+    // this reset a value committed in one test can leak into the next.
+    \Illuminate\Support\Facades\Cache::flush();
+    \App\Models\Setting::flushCache();
+    \App\Models\PlatformSetting::flushCache();
+
     if (! \Illuminate\Support\Facades\Schema::hasTable('tenants')) {
         return;
     }

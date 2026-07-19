@@ -2,8 +2,6 @@
 
 declare(strict_types=1);
 
-use App\Livewire\Admin\Roles\Create;
-use App\Livewire\Admin\Roles\Edit;
 use App\Livewire\Admin\Roles\Index;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -42,18 +40,15 @@ test('admin can create a role', function () {
 
     $permission = Permission::create(['name' => 'test.permission', 'guard_name' => 'web']);
 
-    actingAs($admin)
-        ->get(route('admin.roles.create'))
-        ->assertSuccessful()
-        ->assertSeeLivewire('admin.roles.create');
-
     Livewire::actingAs($admin)
-        ->test(Create::class)
+        ->test(Index::class)
+        ->call('createRole')
+        ->assertSet('showModal', true)
         ->set('name', 'editor')
         ->set('selectedPermissions', [(string) $permission->id])
-        ->call('save')
+        ->call('saveRole')
         ->assertHasNoErrors()
-        ->assertRedirect(route('admin.roles.index'));
+        ->assertSet('showModal', false);
 
     expect(Role::where('name', 'editor')->exists())->toBeTrue();
     expect(Role::where('name', 'editor')->first()->permissions)->toHaveCount(1);
@@ -72,22 +67,18 @@ test('admin can edit a role', function () {
 
     $role->givePermissionTo($permission1);
 
-    actingAs($admin)
-        ->get(route('admin.roles.edit', $role))
-        ->assertSuccessful()
-        ->assertSeeLivewire('admin.roles.edit');
-
     $component = Livewire::actingAs($admin)
-        ->test(Edit::class, ['role' => $role])
+        ->test(Index::class)
+        ->call('editRole', $role)
         ->assertSet('name', 'editor')
         ->assertSet('selectedPermissions', [(string) $permission1->id]);
 
     $component
         ->set('name', 'senior-editor')
         ->set('selectedPermissions', [(string) $permission1->id, (string) $permission2->id])
-        ->call('update')
+        ->call('saveRole')
         ->assertHasNoErrors()
-        ->assertRedirect(route('admin.roles.index'));
+        ->assertSet('showModal', false);
 
     $role->refresh();
     expect($role->name)->toBe('senior-editor');
@@ -119,9 +110,10 @@ test('role name is required', function () {
     $admin->assignRole('admin');
 
     Livewire::actingAs($admin)
-        ->test(Create::class)
+        ->test(Index::class)
+        ->call('createRole')
         ->set('name', '')
-        ->call('save')
+        ->call('saveRole')
         ->assertHasErrors(['name']);
 });
 
@@ -132,10 +124,28 @@ test('role name must be unique', function () {
     Role::create(['name' => 'editor', 'guard_name' => 'web']);
 
     Livewire::actingAs($admin)
-        ->test(Create::class)
+        ->test(Index::class)
+        ->call('createRole')
         ->set('name', 'editor')
-        ->call('save')
+        ->call('saveRole')
         ->assertHasErrors(['name']);
+});
+
+test('admin cannot rename the super admin role', function () {
+    Role::firstOrCreate(['name' => 'admin', 'guard_name' => 'web']);
+    $superAdmin = Role::firstOrCreate(['name' => 'super admin', 'guard_name' => 'web']);
+
+    $admin = User::factory()->create();
+    $admin->assignRole('admin');
+
+    Livewire::actingAs($admin)
+        ->test(Index::class)
+        ->call('editRole', $superAdmin)
+        ->assertSet('editingIsSuperAdmin', true)
+        ->set('name', 'renamed-admin')
+        ->call('saveRole');
+
+    expect($superAdmin->refresh()->name)->toBe('super admin');
 });
 
 test('roles index shows search functionality', function () {

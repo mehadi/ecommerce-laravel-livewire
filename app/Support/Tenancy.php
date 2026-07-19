@@ -42,6 +42,15 @@ class Tenancy
     }
 
     /**
+     * Whether the current tenant's plan has a given feature flag enabled
+     * (e.g. 'advanced_analytics_enabled'). False with no tenant resolved.
+     */
+    public static function hasFeature(string $key): bool
+    {
+        return static::current()?->hasFeature($key) ?? false;
+    }
+
+    /**
      * spatie/laravel-permission's teams mode auto-scopes Role creation and its own
      * findByName()/findById() helpers to the current team, but does NOT scope plain
      * Role::query()/all()/count() calls. This mirrors that same null-or-current-team

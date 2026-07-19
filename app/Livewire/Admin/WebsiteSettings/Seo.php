@@ -110,7 +110,7 @@ class Seo extends Component
         $length = $this->metaDescriptionLength;
 
         if ($length === 0) {
-            return 'text-gray-500';
+            return 'text-zinc-500';
         }
 
         if ($length < 120) {

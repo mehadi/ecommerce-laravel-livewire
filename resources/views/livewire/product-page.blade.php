@@ -1,18 +1,4 @@
 @push('head')
-    @if($metaDescription ?? null)
-        <meta name="description" content="{{ $metaDescription }}" />
-    @endif
-    <!-- Open Graph / Facebook -->
-    <meta property="og:type" content="product" />
-    <meta property="og:url" content="{{ url()->current() }}" />
-    <meta property="og:title" content="{{ $this->product->name }}" />
-    @if($metaDescription ?? null)
-        <meta property="og:description" content="{{ $metaDescription }}" />
-    @endif
-    @if($this->product->primary_image)
-        <meta property="og:image" content="{{ asset('storage/'.$this->product->primary_image) }}" />
-    @endif
-
     @php
         $productData = [
             '@context' => 'https://schema.org/',
@@ -97,7 +83,7 @@
     </section>
 
     <!-- Product Details Section -->
-    <x-public.product-details-section :product="$this->product" />
+    <x-public.product-details-section :product="$this->product" :asH1="true" />
 
     <!-- Related Products -->
     @if($this->relatedProducts->count() > 0)
@@ -120,7 +106,7 @@
                     </div>
                     <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">
                         @foreach($this->relatedProducts as $related)
-                            <x-public.product-card :product="$related" />
+                            <x-public.product-card :product="$related" wire:key="related-product-{{ $related->id }}" />
                         @endforeach
                     </div>
                 </div>

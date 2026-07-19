@@ -126,4 +126,13 @@
             @endfor
         </div>
         @break
+
+    @default
+        <div class="w-full h-full flex flex-col items-center justify-center gap-1 text-zinc-400 dark:text-zinc-500">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3.75H6.912a2.25 2.25 0 00-2.15 1.588L2.35 13.177a2.25 2.25 0 00-.1.661V18a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18v-4.162c0-.224-.034-.447-.1-.661L19.24 5.338a2.25 2.25 0 00-2.15-1.588H15M9 3.75V3a1.5 1.5 0 011.5-1.5h3A1.5 1.5 0 0115 3v.75M9 3.75h6"></path>
+            </svg>
+            <span class="text-[10px] font-medium">{{ __('Preview unavailable') }}</span>
+        </div>
+        @break
 @endswitch

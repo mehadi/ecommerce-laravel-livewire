@@ -1,7 +1,7 @@
 {{-- List View: horizontal row, image left, details right. --}}
 @props(['product'])
 
-<article class="group relative flex items-center gap-4 sm:gap-5 bg-zinc-50 dark:bg-zinc-800/60 rounded-2xl ring-1 ring-zinc-900/[0.04] dark:ring-white/[0.06] p-3 sm:p-4 transition-all duration-300 motion-reduce:transition-none hover:ring-emerald-600/20 dark:hover:ring-emerald-500/30 hover:shadow-[0_8px_24px_-8px_rgb(16_24_40_/_0.10)]">
+<article {{ $attributes }} class="group relative flex items-center gap-4 sm:gap-5 bg-zinc-50 dark:bg-zinc-800/60 rounded-2xl ring-1 ring-zinc-900/[0.04] dark:ring-white/[0.06] p-3 sm:p-4 transition-all duration-300 motion-reduce:transition-none hover:ring-emerald-600/20 dark:hover:ring-emerald-500/30 hover:shadow-[0_8px_24px_-8px_rgb(16_24_40_/_0.10)]">
     <div class="relative shrink-0 w-20 h-20 sm:w-28 sm:h-28 overflow-hidden rounded-xl bg-white dark:bg-zinc-900 ring-1 ring-zinc-900/[0.04] dark:ring-white/[0.06]">
         @if($product->primary_image)
             <img

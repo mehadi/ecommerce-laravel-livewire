@@ -35,7 +35,7 @@
 
                 <div class="flex flex-wrap items-center gap-5">
                     @if($product)
-                        <a href="{{ $heroPrimaryCtaUrl }}" class="group inline-flex items-center gap-3 font-bold text-sm sm:text-base text-zinc-900 dark:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-900 dark:focus-visible:ring-white rounded">
+                        <a href="{{ $heroPrimaryCtaUrl }}" @if($heroPrimaryCtaNavigate) wire:navigate @endif class="group inline-flex items-center gap-3 font-bold text-sm sm:text-base text-zinc-900 dark:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-900 dark:focus-visible:ring-white rounded">
                             <span class="border-b-2 border-[var(--tenant-primary)] pb-0.5">{{ $heroPrimaryCtaLabel }}</span>
                             <span class="flex items-center justify-center w-10 h-10 rounded-full bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 transition-transform duration-300 group-hover:rotate-45 motion-reduce:transform-none" aria-hidden="true">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M7 17L17 7M17 7H8m9 0v9"></path></svg>

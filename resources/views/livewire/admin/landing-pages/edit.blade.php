@@ -1,4 +1,4 @@
-<div class="w-full space-y-8">
+<div class="w-full space-y-6">
     <div class="flex flex-wrap items-start justify-between gap-4">
         <div class="space-y-1">
             <flux:heading size="lg">{{ __('Edit Landing Page') }}</flux:heading>
@@ -12,8 +12,8 @@
         </flux:button>
     </div>
 
-    <form wire:submit="update" class="space-y-8">
-        <section class="space-y-6 rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-700 dark:bg-zinc-900">
+    <form wire:submit="update" class="space-y-6">
+        <section class="space-y-6 rounded-lg border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-700 dark:bg-zinc-900">
             <div class="flex items-center gap-3">
                 <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-100 dark:bg-blue-900/20">
                     <svg class="h-5 w-5 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -110,7 +110,7 @@
                             </svg>
                             <span class="text-sm font-medium text-emerald-900 dark:text-emerald-100">{{ __('Live Preview') }}</span>
                         </div>
-                        <flux:button :href="route('landing-page', $slug)" target="_blank" size="sm" variant="ghost">
+                        <flux:button :href="route('landing-page', $slug)" target="_blank" rel="noopener" size="sm" variant="ghost">
                             {{ __('View Page') }}
                             <svg class="ml-1 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
@@ -121,7 +121,7 @@
             @endif
         </section>
 
-        <section class="space-y-6 rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-700 dark:bg-zinc-900">
+        <section class="space-y-6 rounded-lg border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-700 dark:bg-zinc-900">
             <div class="flex items-center gap-3">
                 <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-purple-100 dark:bg-purple-900/20">
                     <svg class="h-5 w-5 text-purple-600 dark:text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -235,7 +235,7 @@
             </div>
         </section>
 
-        <section class="space-y-6 rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-700 dark:bg-zinc-900">
+        <section class="space-y-6 rounded-lg border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-700 dark:bg-zinc-900">
             <div class="flex items-center gap-3">
                 <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-emerald-100 dark:bg-emerald-900/20">
                     <svg class="h-5 w-5 text-emerald-600 dark:text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -251,32 +251,32 @@
 
             <div class="grid gap-3 md:grid-cols-2">
                 <div class="flex items-center gap-3 rounded-lg border border-zinc-200 bg-zinc-50/50 p-3 dark:border-zinc-700 dark:bg-zinc-800/50">
-                    <flux:checkbox wire:model="config.show_trust_badges" label="{{ __('Trust Badges') }}" />
+                    <flux:switch wire:model="config.show_trust_badges" label="{{ __('Trust Badges') }}" />
                 </div>
 
                 <div class="flex items-center gap-3 rounded-lg border border-zinc-200 bg-zinc-50/50 p-3 dark:border-zinc-700 dark:bg-zinc-800/50">
-                    <flux:checkbox wire:model="config.show_product_details" label="{{ __('Product Details') }}" />
+                    <flux:switch wire:model="config.show_product_details" label="{{ __('Product Details') }}" />
                 </div>
 
                 <div class="flex items-center gap-3 rounded-lg border border-zinc-200 bg-zinc-50/50 p-3 dark:border-zinc-700 dark:bg-zinc-800/50">
-                    <flux:checkbox wire:model="config.show_features" label="{{ __('Features') }}" />
+                    <flux:switch wire:model="config.show_features" label="{{ __('Features') }}" />
                 </div>
 
                 <div class="flex items-center gap-3 rounded-lg border border-zinc-200 bg-zinc-50/50 p-3 dark:border-zinc-700 dark:bg-zinc-800/50">
-                    <flux:checkbox wire:model="config.show_testimonials" label="{{ __('Testimonials') }}" />
+                    <flux:switch wire:model="config.show_testimonials" label="{{ __('Testimonials') }}" />
                 </div>
 
                 <div class="flex items-center gap-3 rounded-lg border border-zinc-200 bg-zinc-50/50 p-3 dark:border-zinc-700 dark:bg-zinc-800/50">
-                    <flux:checkbox wire:model="config.show_faq" label="{{ __('FAQ') }}" />
+                    <flux:switch wire:model="config.show_faq" label="{{ __('FAQ') }}" />
                 </div>
 
                 <div class="flex items-center gap-3 rounded-lg border border-zinc-200 bg-zinc-50/50 p-3 dark:border-zinc-700 dark:bg-zinc-800/50">
-                    <flux:checkbox wire:model="config.show_cta" label="{{ __('Call to Action') }}" />
+                    <flux:switch wire:model="config.show_cta" label="{{ __('Call to Action') }}" />
                 </div>
             </div>
         </section>
 
-        <section class="space-y-6 rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-700 dark:bg-zinc-900">
+        <section class="space-y-6 rounded-lg border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-700 dark:bg-zinc-900">
             <div class="flex items-center gap-3">
                 <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-orange-100 dark:bg-orange-900/20">
                     <svg class="h-5 w-5 text-orange-600 dark:text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -292,7 +292,7 @@
 
             <div class="grid gap-6 md:grid-cols-2">
                 <div class="rounded-lg border border-zinc-200 bg-zinc-50/50 p-4 dark:border-zinc-700 dark:bg-zinc-800/50">
-                    <flux:checkbox wire:model="is_active" label="{{ __('Active') }}" />
+                    <flux:switch wire:model="is_active" label="{{ __('Active') }}" />
                     <flux:description class="mt-2">{{ __('Only active landing pages are accessible to visitors') }}</flux:description>
                 </div>
 
@@ -314,11 +314,12 @@
                 <flux:button :href="route('admin.landing-pages.index')" wire:navigate variant="ghost">
                     {{ __('Cancel') }}
                 </flux:button>
-                <flux:button type="submit" variant="primary">
+                <flux:button type="submit" variant="primary" wire:loading.attr="disabled" wire:target="update">
                     <svg class="mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
                     </svg>
-                    {{ __('Update Landing Page') }}
+                    <span wire:loading.remove wire:target="update">{{ __('Update Landing Page') }}</span>
+                    <span wire:loading wire:target="update">{{ __('Updating...') }}</span>
                 </flux:button>
             </div>
         </div>

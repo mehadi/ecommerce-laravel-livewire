@@ -1,7 +1,7 @@
 {{-- Minimal Grid: no card fill/ring, just a thin bottom divider. --}}
 @props(['product'])
 
-<article class="group relative flex flex-col pb-5 border-b border-zinc-200 dark:border-zinc-800">
+<article {{ $attributes }} class="group relative flex flex-col pb-5 border-b border-zinc-200 dark:border-zinc-800">
     <div class="relative overflow-hidden rounded-xl aspect-square bg-zinc-50 dark:bg-zinc-800/40">
         @if($product->primary_image)
             <img

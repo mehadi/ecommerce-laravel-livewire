@@ -2,7 +2,6 @@
 
 namespace App\Livewire\Concerns;
 
-use App\Models\Attribute;
 use App\Models\City;
 use App\Models\Coupon;
 use App\Models\Order;
@@ -15,7 +14,9 @@ use App\Models\ShippingSetting;
 use App\Services\ShippingService;
 use App\Support\PhoneFormats;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\Computed;
+use Livewire\Attributes\Locked;
 
 /**
  * Session-backed cart, coupon, shipping estimate, and checkout flow shared by
@@ -23,6 +24,13 @@ use Livewire\Attributes\Computed;
  */
 trait HasShoppingCart
 {
+    /**
+     * Mutated only by this trait's own methods (quickAddToCart, updateCartQuantity,
+     * removeFromCart, addToCart/buyNow on LandingPage) which always write through
+     * to the session first — #[Locked] so it can't be overwritten directly from
+     * the client (e.g. `$wire.set('cart', ...)` from devtools).
+     */
+    #[Locked]
     public array $cart = [];
 
     public bool $showCart = false;
@@ -31,6 +39,11 @@ trait HasShoppingCart
 
     public string $couponCode = '';
 
+    /**
+     * Set only by applyCoupon() after validating the code — #[Locked] so a
+     * client can't skip that validation by setting an arbitrary coupon id.
+     */
+    #[Locked]
     public ?int $appliedCouponId = null;
 
     public string $customerName = '';
@@ -131,22 +144,9 @@ trait HasShoppingCart
             if (isset($item['product_attribute_id']) && isset($productAttributes[$item['product_attribute_id']])) {
                 $productAttribute = $productAttributes[$item['product_attribute_id']];
                 $weight = $productAttribute->getWeightFromAttribute();
-
-                if ($weight === null && ! empty($productAttribute->attribute_data)) {
-                    foreach ($productAttribute->attribute_data as $key => $value) {
-                        $attribute = Attribute::where('slug', strtolower($key))
-                            ->orWhere('name', $key)
-                            ->first();
-
-                        if ($attribute && $attribute->isWeight()) {
-                            $weight = (float) $value;
-                            break;
-                        }
-                    }
-                }
             }
 
-            if ($weight === null || $weight === 0) {
+            if ($weight === null || (float) $weight === 0.0) {
                 $product = $products->firstWhere('id', $productId);
                 $weight = $product && $product->weight_kg ? (float) $product->weight_kg : 1.00;
             }
@@ -314,6 +314,29 @@ trait HasShoppingCart
     }
 
     /**
+     * The tenant's configured phone format preset (Admin > Website Settings),
+     * so checkout's client-side hint/pattern matches the server-side regex
+     * instead of assuming Bangladesh for every tenant.
+     */
+    #[Computed]
+    public function phoneFormatPreset(): string
+    {
+        return Setting::get('phone_format_preset', PhoneFormats::DEFAULT_PRESET);
+    }
+
+    #[Computed]
+    public function phonePattern(): string
+    {
+        return PhoneFormats::regexFor($this->phoneFormatPreset);
+    }
+
+    #[Computed]
+    public function phonePlaceholder(): string
+    {
+        return PhoneFormats::placeholderFor($this->phoneFormatPreset);
+    }
+
+    /**
      * One-click add of a single-variant product from a product card/grid.
      * Products with attributes are not supported here — those require a
      * variant picker, which only exists on the product detail page
@@ -367,12 +390,25 @@ trait HasShoppingCart
     {
         $cart = session()->get('cart', []);
 
-        if (isset($cart[$productId])) {
-            if ($quantity <= 0) {
-                unset($cart[$productId]);
-            } else {
-                $cart[$productId]['quantity'] = $quantity;
+        if (! isset($cart[$productId])) {
+            return;
+        }
+
+        $quantity = (int) $quantity;
+
+        if ($quantity <= 0) {
+            unset($cart[$productId]);
+        } else {
+            $item = $cart[$productId];
+            $maxStock = ! empty($item['product_attribute_id'])
+                ? ProductAttribute::find($item['product_attribute_id'])?->stock
+                : Product::find($item['id'] ?? $productId)?->stock;
+
+            if ($maxStock !== null) {
+                $quantity = min($quantity, max(1, (int) $maxStock));
             }
+
+            $cart[$productId]['quantity'] = $quantity;
         }
 
         session()->put('cart', $cart);
@@ -432,71 +468,177 @@ trait HasShoppingCart
             'customerPhone.regex' => __('Please enter a valid phone number (e.g., :example)', ['example' => PhoneFormats::placeholderFor($phonePreset)]),
         ]);
 
-        if (empty($this->cart)) {
+        // The order is built from the session cart and authoritative, freshly
+        // fetched product/attribute rows — never from $this->cart or any other
+        // client-supplied price/quantity — so a tampered Livewire payload can't
+        // change what a customer is charged.
+        $sessionCart = session()->get('cart', []);
+
+        if (empty($sessionCart)) {
             session()->flash('error', __('Cart is empty'));
 
             return;
         }
 
-        $city = City::find($this->shippingCityId);
-        $subtotal = $this->cartSubtotal;
-        $discount = $this->appliedCouponId ? $this->cartDiscount : 0;
+        $productIds = array_unique(array_column($sessionCart, 'id'));
+        $products = Product::where('is_active', true)->whereIn('id', $productIds)->get()->keyBy('id');
 
-        $cartWeight = $this->cartWeight;
+        $attributeIds = array_values(array_filter(array_column($sessionCart, 'product_attribute_id')));
+        $attributes = $attributeIds
+            ? ProductAttribute::where('is_active', true)->whereIn('id', $attributeIds)->get()->keyBy('id')
+            : collect();
+
+        $lines = [];
+        $unavailable = [];
+
+        foreach ($sessionCart as $cartKey => $item) {
+            $product = $products->get($item['id'] ?? null);
+            $quantity = max(1, (int) ($item['quantity'] ?? 0));
+            $attributeId = $item['product_attribute_id'] ?? null;
+            $name = $item['name'] ?? $product?->name ?? __('Item');
+
+            if (! $product) {
+                $unavailable[] = $name;
+
+                continue;
+            }
+
+            if ($attributeId) {
+                $attribute = $attributes->get($attributeId);
+
+                if (! $attribute || $attribute->product_id !== $product->id || $attribute->stock < $quantity) {
+                    $unavailable[] = $name;
+
+                    continue;
+                }
+
+                $price = (float) $attribute->price;
+                $weight = $attribute->getWeightFromAttribute() ?: ((float) ($product->weight_kg ?: 1.0));
+            } else {
+                if (! $product->isInStock() || $product->stock < $quantity) {
+                    $unavailable[] = $name;
+
+                    continue;
+                }
+
+                $attribute = null;
+                $price = (float) $product->price;
+                $weight = (float) ($product->weight_kg ?: 1.0);
+            }
+
+            $lines[] = [
+                'cart_key' => $cartKey,
+                'product' => $product,
+                'attribute' => $attribute,
+                'name' => $name,
+                'price' => $price,
+                'quantity' => $quantity,
+                'weight' => $weight,
+                'attribute_data' => $item['attribute_data'] ?? $item['variation_data'] ?? null,
+            ];
+        }
+
+        if (! empty($unavailable)) {
+            // Prune the session cart down to the survivors and stop short of
+            // creating an order, so the customer sees the corrected cart first.
+            $prunedCart = [];
+            foreach ($lines as $line) {
+                $prunedCart[$line['cart_key']] = $sessionCart[$line['cart_key']];
+            }
+
+            session()->put('cart', $prunedCart);
+            $this->cart = $prunedCart;
+            $this->dispatch('cart-updated');
+
+            session()->flash('error', __('Some items in your cart are no longer available and were removed: :items. Please review your cart and try again.', ['items' => implode(', ', $unavailable)]));
+
+            return;
+        }
+
+        $subtotal = collect($lines)->sum(fn ($line) => $line['price'] * $line['quantity']);
+
+        $appliedCoupon = null;
+        $discount = 0;
+
+        if ($this->appliedCouponId) {
+            $appliedCoupon = Coupon::find($this->appliedCouponId);
+
+            if ($appliedCoupon && $appliedCoupon->isValid()) {
+                $discount = $appliedCoupon->calculateDiscount($subtotal);
+            } else {
+                $appliedCoupon = null;
+                $this->appliedCouponId = null;
+            }
+        }
+
+        $city = City::find($this->shippingCityId);
+
+        $cartWeight = collect($lines)->sum(fn ($line) => $line['weight'] * $line['quantity']);
         $shippingService = app(ShippingService::class);
-        $shippingCost = $shippingService->calculate($cartWeight, $this->shippingCityId);
+        $shippingCost = $cartWeight > 0 ? $shippingService->calculate($cartWeight, $this->shippingCityId) : 0;
 
         $total = max(0, $subtotal - $discount + $shippingCost);
 
-        $order = Order::create([
-            'customer_name' => $this->customerName,
-            'customer_email' => $this->customerEmail ?: '',
-            'customer_phone' => $this->customerPhone,
-            'shipping_address' => $this->shippingAddress,
-            'shipping_city' => $city?->name ?? '',
-            'shipping_postal_code' => $this->shippingPostalCode,
-            'subtotal' => $subtotal,
-            'discount' => $discount,
-            'shipping_cost' => $shippingCost,
-            'total' => $total,
-            'payment_method' => 'cod',
-            'status' => 'pending',
-            'notes' => $this->notes,
-        ]);
+        try {
+            $order = DB::transaction(function () use ($lines, $subtotal, $discount, $shippingCost, $total, $city, $appliedCoupon) {
+                // Re-check stock under a row lock inside the transaction, so two
+                // concurrent checkouts for the last unit can't both succeed.
+                foreach ($lines as $line) {
+                    $locked = $line['attribute']
+                        ? ProductAttribute::whereKey($line['attribute']->id)->lockForUpdate()->first()
+                        : Product::whereKey($line['product']->id)->lockForUpdate()->first();
 
-        foreach ($this->cart as $item) {
-            $product = Product::find($item['id']);
-            if ($product) {
-                OrderItem::create([
-                    'order_id' => $order->id,
-                    'product_id' => $product->id,
-                    'product_name' => $item['name'],
-                    'attribute_data' => $item['attribute_data'] ?? $item['variation_data'] ?? null,
-                    'price' => $item['price'],
-                    'quantity' => $item['quantity'],
-                    'subtotal' => $item['price'] * $item['quantity'],
+                    if (! $locked || $locked->stock < $line['quantity']) {
+                        throw new \RuntimeException(__('Sorry, ":name" just sold out. Please update your cart and try again.', ['name' => $line['name']]));
+                    }
+                }
+
+                $order = Order::create([
+                    'customer_name' => $this->customerName,
+                    'customer_email' => $this->customerEmail ?: '',
+                    'customer_phone' => $this->customerPhone,
+                    'shipping_address' => $this->shippingAddress,
+                    'shipping_city' => $city?->name ?? '',
+                    'shipping_postal_code' => $this->shippingPostalCode,
+                    'subtotal' => $subtotal,
+                    'discount' => $discount,
+                    'shipping_cost' => $shippingCost,
+                    'total' => $total,
+                    'payment_method' => 'cod',
+                    'status' => 'pending',
+                    'notes' => $this->notes,
                 ]);
 
-                if (isset($item['product_attribute_id'])) {
-                    $productAttribute = ProductAttribute::find($item['product_attribute_id']);
-                    if ($productAttribute) {
-                        $productAttribute->decrement('stock', $item['quantity']);
+                foreach ($lines as $line) {
+                    OrderItem::create([
+                        'order_id' => $order->id,
+                        'product_id' => $line['product']->id,
+                        'product_name' => $line['name'],
+                        'attribute_data' => $line['attribute_data'],
+                        'price' => $line['price'],
+                        'quantity' => $line['quantity'],
+                        'subtotal' => $line['price'] * $line['quantity'],
+                    ]);
+
+                    if ($line['attribute']) {
+                        $line['attribute']->decrement('stock', $line['quantity']);
+                    } else {
+                        $line['product']->decrement('stock', $line['quantity']);
                     }
-                } else {
-                    $product->decrement('stock', $item['quantity']);
                 }
-            }
+
+                $appliedCoupon?->incrementUsage();
+
+                return $order;
+            });
+        } catch (\RuntimeException $e) {
+            session()->flash('error', $e->getMessage());
+
+            return;
         }
 
-        // Store cart items for Facebook Pixel before clearing
-        $cartItemsForPixel = $this->cart;
-
-        if ($this->appliedCouponId) {
-            $coupon = Coupon::find($this->appliedCouponId);
-            if ($coupon) {
-                $coupon->incrementUsage();
-            }
-        }
+        // Snapshot cart lines for the Facebook Pixel before clearing.
+        $cartItemsForPixel = $lines;
 
         session()->forget('cart');
         $this->cart = [];
@@ -507,9 +649,9 @@ trait HasShoppingCart
         $this->dispatch('fbq:track', 'Purchase', [
             'value' => $total,
             'currency' => Setting::get('currency_code', 'BDT'),
-            'contents' => array_map(fn ($item) => [
-                'id' => $item['id'],
-                'quantity' => $item['quantity'],
+            'contents' => array_map(fn ($line) => [
+                'id' => $line['product']->id,
+                'quantity' => $line['quantity'],
             ], $cartItemsForPixel),
         ]);
 

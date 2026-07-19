@@ -87,6 +87,7 @@
     $heroSecondaryCtaLabel = $heroSettings['hero_secondary_cta_label'] ?: ($defaultSecondaryCtaLabel ?? __('Browse Shop'));
     $heroSecondaryCtaUrl = $heroSettings['hero_secondary_cta_url'] ?: ($defaultSecondaryCtaUrl ?? '/shop');
     // wire:navigate only works for same-app paths; skip it for anchors/external URLs.
+    $heroPrimaryCtaNavigate = str_starts_with($heroPrimaryCtaUrl, '/');
     $heroSecondaryCtaNavigate = str_starts_with($heroSecondaryCtaUrl, '/');
     $heroShowStats = ($heroSettings['hero_show_stats'] ?? '1') !== '0';
     $heroOrderCountLabel = $heroExtras['orderCount'] > 999 ? number_format($heroExtras['orderCount'] / 1000, 1).'K+' : $heroExtras['orderCount'].'+';

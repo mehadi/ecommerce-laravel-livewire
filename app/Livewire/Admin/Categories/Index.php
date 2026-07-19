@@ -403,6 +403,17 @@ class Index extends Component
         return $this->buildTree($all, null);
     }
 
+    /**
+     * Flat, depth-annotated list of every category, used to build the keyboard-operable
+     * "Move to parent" select in the tree view (drag-and-drop's non-pointer fallback).
+     */
+    public function getFlatCategoriesProperty()
+    {
+        $all = Category::orderBy('order')->orderBy('name_en')->get();
+
+        return $this->flattenTree($all, null);
+    }
+
     private function buildTree($all, ?int $parentId)
     {
         return $all->where('parent_id', $parentId)->map(function ($category) use ($all) {

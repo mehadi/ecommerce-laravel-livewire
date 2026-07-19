@@ -1,8 +1,22 @@
-@props(['category', 'depth' => 0])
+@props(['category', 'depth' => 0, 'allCategories' => []])
+
+@php
+    $collectDescendantIds = function ($cat) use (&$collectDescendantIds) {
+        $ids = [];
+        foreach ($cat->children as $child) {
+            $ids[] = $child->id;
+            $ids = array_merge($ids, $collectDescendantIds($child));
+        }
+
+        return $ids;
+    };
+    $excludeIds = array_merge([$category->id], $collectDescendantIds($category));
+    $moveOptions = collect($allCategories)->reject(fn ($item) => in_array($item['category']->id, $excludeIds, true));
+@endphp
 
 <div class="space-y-1">
     <div
-        class="flex items-center justify-between {{ $depth === 0 ? 'p-3' : 'p-2' }} bg-gray-50 dark:bg-zinc-800 rounded-lg transition-all cursor-move"
+        class="flex flex-wrap items-center justify-between gap-2 {{ $depth === 0 ? 'p-3' : 'p-2' }} bg-zinc-50 dark:bg-zinc-800 rounded-lg transition-all cursor-move"
         :class="{
             'ring-2 ring-blue-500 dark:ring-blue-400 bg-blue-50 dark:bg-blue-900/20': isDraggedOver({{ $category->id }}),
             'opacity-50 ring-2 ring-blue-500 dark:ring-blue-400': isDragging({{ $category->id }})
@@ -14,13 +28,13 @@
         @dragleave.stop="handleDragLeave"
         @drop.prevent.stop="handleDrop($event, {{ $category->id }})"
     >
-        <div class="flex items-center gap-3 flex-1">
-            <svg class="w-4 h-4 text-gray-400 dark:text-gray-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div class="flex items-center gap-3 flex-1 min-w-0">
+            <svg class="w-4 h-4 text-zinc-400 dark:text-zinc-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8h16M4 16h16"></path>
             </svg>
-            <span class="{{ $depth === 0 ? 'font-semibold text-gray-900 dark:text-white' : 'text-gray-700 dark:text-gray-300' }}">
+            <span class="{{ $depth === 0 ? 'font-semibold text-zinc-900 dark:text-white' : 'text-zinc-700 dark:text-zinc-300' }}">
                 @if($depth > 0)
-                    <span class="text-gray-400 dark:text-gray-500">└─</span>
+                    <span class="text-zinc-400 dark:text-zinc-500">└─</span>
                 @endif
                 {{ $category->name_en }}
             </span>
@@ -28,7 +42,7 @@
                 {{ $category->is_active ? __('Active') : __('Inactive') }}
             </flux:badge>
             @if($category->children->count() > 0)
-                <span class="text-xs text-gray-500 dark:text-gray-400">
+                <span class="text-xs text-zinc-500 dark:text-zinc-400">
                     ({{ $category->children->count() }} {{ __('subcategories') }})
                 </span>
             @endif
@@ -38,7 +52,23 @@
                 {{ __('Drop here') }}
             </span>
         </div>
-        <div class="flex gap-2">
+        <div class="flex flex-wrap items-center gap-2">
+            <div @click.stop @dragstart.stop.prevent>
+                <label class="sr-only" for="move-parent-{{ $category->id }}">
+                    {{ __('Move :name to a different parent category', ['name' => $category->name_en]) }}
+                </label>
+                <select id="move-parent-{{ $category->id }}"
+                    draggable="false"
+                    class="no-drag rounded-md border-zinc-300 bg-white py-1 pl-2 pr-7 text-xs text-zinc-700 focus:border-blue-500 focus:ring-blue-500 dark:border-zinc-600 dark:bg-zinc-900 dark:text-zinc-300"
+                    onchange="if (this.value !== '__placeholder__') { window.Livewire.find('{{ $__livewire->getId() }}').call('updateCategoryParent', {{ $category->id }}, this.value === '' ? null : parseInt(this.value, 10)); }"
+                >
+                    <option value="__placeholder__" selected>{{ __('Move to...') }}</option>
+                    <option value="">{{ __('Main Category (No Parent)') }}</option>
+                    @foreach($moveOptions as $item)
+                        <option value="{{ $item['category']->id }}">{{ str_repeat('— ', $item['depth']) }}{{ $item['category']->name_en }}</option>
+                    @endforeach
+                </select>
+            </div>
             <flux:button wire:click="openModal({{ $category->id }})" size="sm" variant="ghost"
                 @click.stop
                 class="no-drag">
@@ -48,9 +78,9 @@
     </div>
 
     @if($category->children->count() > 0)
-        <div class="ml-6 space-y-1 border-l-2 border-gray-200 dark:border-zinc-700 pl-4">
+        <div class="ml-6 space-y-1 border-l-2 border-zinc-200 dark:border-zinc-700 pl-4">
             @foreach($category->children as $child)
-                @include('livewire.admin.categories.partials.tree-item', ['category' => $child, 'depth' => $depth + 1])
+                @include('livewire.admin.categories.partials.tree-item', ['category' => $child, 'depth' => $depth + 1, 'allCategories' => $allCategories])
             @endforeach
         </div>
     @endif

@@ -105,6 +105,11 @@ class Index extends Component
         $this->resetPage();
     }
 
+    public function updatingPerPage(): void
+    {
+        $this->resetPage();
+    }
+
     public function sortBy($field): void
     {
         if ($this->sortField === $field) {
@@ -137,7 +142,14 @@ class Index extends Component
             return;
         }
 
-        Order::whereIn('id', $this->selectedItems)->update(['status' => $status]);
+        // Looping (rather than a single whereIn()->update()) so each order goes
+        // through Eloquent's update event — OrderObserver relies on that to log
+        // the status transition for the Fulfillment/SLA report.
+        $orders = Order::whereIn('id', $this->selectedItems)->get();
+        foreach ($orders as $order) {
+            $order->update(['status' => $status]);
+        }
+
         session()->flash('message', __(':count order(s) status updated successfully.', ['count' => count($this->selectedItems)]));
         $this->selectedItems = [];
         $this->selectAll = false;

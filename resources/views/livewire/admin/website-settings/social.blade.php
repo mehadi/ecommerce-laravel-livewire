@@ -1,14 +1,16 @@
 <x-website-settings.layout :heading="__('Social Media')" :subheading="__('Connect your social media profiles')">
     <form wire:submit="update" class="space-y-8">
         <!-- Social Media Links Card -->
-        <div class="rounded-xl border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-zinc-900 p-6 space-y-6">
+        <div class="rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 p-6 space-y-6">
             <div class="flex items-center gap-3">
                 <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-purple-100 dark:bg-purple-900/20">
-                    <flux:icon.link class="size-5 text-purple-600 dark:text-purple-400" />
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="size-5 text-purple-600 dark:text-purple-400">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M13.19 8.688a4.5 4.5 0 0 1 1.242 7.244l-4.5 4.5a4.5 4.5 0 0 1-6.364-6.364l1.757-1.757m13.35-.622 1.757-1.757a4.5 4.5 0 0 0-6.364-6.364l-4.5 4.5a4.5 4.5 0 0 0 1.242 7.244" />
+                    </svg>
                 </div>
                 <div>
                     <flux:heading size="md" level="3">{{ __('Social Media Links') }}</flux:heading>
-                    <flux:text class="text-sm text-neutral-600 dark:text-neutral-400">{{ __('Connect your social media profiles') }}</flux:text>
+                    <flux:text class="text-sm text-zinc-600 dark:text-zinc-400">{{ __('Connect your social media profiles') }}</flux:text>
                 </div>
             </div>
 
@@ -96,12 +98,6 @@
             </div>
         </div>
 
-        <!-- Save Button -->
-        <div class="sticky bottom-0 py-4 mt-2 bg-white/90 dark:bg-zinc-900/90 backdrop-blur supports-[backdrop-filter]:bg-white/70 dark:supports-[backdrop-filter]:bg-zinc-900/70 border-t border-neutral-200 dark:border-neutral-700 flex items-center justify-end gap-4">
-            <flux:button variant="primary" type="submit" wire:loading.attr="disabled" class="whitespace-nowrap transition-colors">
-                <span wire:loading.remove wire:target="update">{{ __('Save') }}</span>
-                <span wire:loading wire:target="update">{{ __('Saving...') }}</span>
-            </flux:button>
-        </div>
+        <x-website-settings.save-bar action="update" />
     </form>
 </x-website-settings.layout>

@@ -1,60 +1,43 @@
 <x-website-settings.layout :heading="__('Hero Section')" :subheading="__('Choose how the hero banner at the top of your storefront looks')">
     <form wire:submit="update" class="space-y-8">
-        <div class="rounded-xl border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-zinc-900 p-6 space-y-6">
+        <div class="rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 p-6 space-y-6">
             <div class="flex items-center gap-3">
                 <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-violet-100 dark:bg-violet-900/20">
-                    <flux:icon.sparkles class="size-5 text-violet-600 dark:text-violet-400" />
+                    <svg class="size-5 text-violet-600 dark:text-violet-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.813 15.904 9 18.75l-.813-2.846a4.5 4.5 0 0 0-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 0 0 3.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 0 0 3.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 0 0-3.09 3.09ZM18.259 8.715 18 9.75l-.259-1.035a3.375 3.375 0 0 0-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 0 0 2.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 0 0 2.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 0 0-2.456 2.456ZM16.894 20.567 16.5 21.75l-.394-1.183a2.25 2.25 0 0 0-1.423-1.423L13.5 18.75l1.183-.394a2.25 2.25 0 0 0 1.423-1.423l.394-1.183.394 1.183a2.25 2.25 0 0 0 1.423 1.423l1.183.394-1.183.394a2.25 2.25 0 0 0-1.423 1.423Z" />
+                    </svg>
                 </div>
                 <div>
                     <flux:heading size="md" level="3">{{ __('Hero Style') }}</flux:heading>
-                    <flux:text class="text-sm text-neutral-600 dark:text-neutral-400">{{ __('The selected style applies to your home and landing pages. Your hero title, text, image, and brand colors are used automatically.') }}</flux:text>
+                    <flux:text class="text-sm text-zinc-600 dark:text-zinc-400">{{ __('The selected style applies to your home and landing pages. Your hero title, text, image, and brand colors are used automatically.') }}</flux:text>
                 </div>
             </div>
 
-            <div class="grid sm:grid-cols-2 xl:grid-cols-3 gap-4">
-                @foreach($variants as $key => $variant)
-                    <label class="relative flex flex-col cursor-pointer rounded-xl overflow-hidden border-2 transition-all duration-150 {{ $storefront_hero_variant === $key ? 'border-violet-600 dark:border-violet-500 shadow-md' : 'border-neutral-200 dark:border-neutral-700 hover:border-neutral-300 dark:hover:border-neutral-600' }}">
-                        <input type="radio" wire:model.live="storefront_hero_variant" value="{{ $key }}" class="sr-only" name="storefront_hero_variant">
-
-                        {{-- Miniature layout preview --}}
-                        <div class="aspect-[16/10] bg-zinc-100 dark:bg-zinc-800 p-3">
-                            @include('livewire.admin.website-settings.hero-preview', ['variant' => $key])
-                        </div>
-
-                        <div class="flex-1 p-4 pt-3 border-t border-neutral-100 dark:border-neutral-800 bg-white dark:bg-zinc-900">
-                            <p class="text-sm font-semibold text-zinc-900 dark:text-white flex items-center gap-2">
-                                {{ $variant['name'] }}
-                                @if($key === \App\Support\HeroVariants::DEFAULT)
-                                    <span class="text-[10px] font-bold uppercase tracking-wide text-neutral-400 dark:text-neutral-500">{{ __('Default') }}</span>
-                                @endif
-                            </p>
-                            <p class="mt-1 text-xs text-neutral-500 dark:text-neutral-400 leading-relaxed">{{ $variant['description'] }}</p>
-                        </div>
-
-                        @if($storefront_hero_variant === $key)
-                            <span class="absolute top-2.5 right-2.5 flex items-center justify-center w-6 h-6 rounded-full bg-violet-600 text-white shadow-md" aria-hidden="true">
-                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5"></path></svg>
-                            </span>
-                        @endif
-                    </label>
-                @endforeach
-            </div>
+            @include('livewire.admin.website-settings._variant-picker', [
+                'variants' => $variants,
+                'wireModel' => 'storefront_hero_variant',
+                'selected' => $storefront_hero_variant,
+                'previewView' => 'livewire.admin.website-settings.hero-preview',
+                'defaultKey' => \App\Support\HeroVariants::DEFAULT,
+            ])
             <flux:error name="storefront_hero_variant" />
         </div>
 
         <!-- Hero Content Card -->
-        <div class="rounded-xl border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-zinc-900 p-6 space-y-6">
+        <div class="rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 p-6 space-y-6">
             <div class="flex items-center gap-3">
                 <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-sky-100 dark:bg-sky-900/20">
-                    <flux:icon.pencil-square class="size-5 text-sky-600 dark:text-sky-400" />
+                    <svg class="size-5 text-sky-600 dark:text-sky-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" />
+                    </svg>
                 </div>
                 <div>
                     <flux:heading size="md" level="3">{{ __('Hero Content') }}</flux:heading>
-                    <flux:text class="text-sm text-neutral-600 dark:text-neutral-400">{{ __('Customize the badge, buttons, and stats shown in the hero. Leave a field empty to use the default.') }}</flux:text>
+                    <flux:text class="text-sm text-zinc-600 dark:text-zinc-400">{{ __('Customize the badge, buttons, and stats shown in the hero. Leave a field empty to use the default.') }}</flux:text>
                 </div>
             </div>
 
-            <flux:callout icon="information-circle" class="text-sm">
+            <flux:callout variant="info" icon="information-circle" class="text-sm">
                 {{ __('The hero title, description, and image are managed on the') }}
                 <flux:link :href="route('admin.sections.index')" wire:navigate>{{ __('Sections') }}</flux:link>
                 {{ __('page (section type "Hero").') }}
@@ -98,13 +81,6 @@
             <flux:switch wire:model="hero_show_stats" :label="__('Show store stats')" :description="__('Orders delivered, product count, and review rating shown in the hero. Bento Grid always shows its stat cards.')" />
         </div>
 
-        <!-- Save Button -->
-        <div class="sticky bottom-0 -mx-6 -mb-6 md:mb-0 px-6 py-4 mt-2 bg-white/90 dark:bg-zinc-900/90 backdrop-blur supports-[backdrop-filter]:bg-white/70 dark:supports-[backdrop-filter]:bg-zinc-900/70 border-t border-neutral-200 dark:border-neutral-700 flex items-center justify-between gap-4 rounded-b-xl">
-            <div class="flex-1"></div>
-            <flux:button variant="primary" type="submit" wire:loading.attr="disabled" class="whitespace-nowrap">
-                <span wire:loading.remove wire:target="update">{{ __('Save') }}</span>
-                <span wire:loading wire:target="update">{{ __('Saving...') }}</span>
-            </flux:button>
-        </div>
+        <x-website-settings.save-bar action="update" />
     </form>
 </x-website-settings.layout>

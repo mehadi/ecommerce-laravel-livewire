@@ -4,13 +4,13 @@
         @include('partials.head')
     </head>
     <body class="min-h-screen bg-white dark:bg-zinc-800">
-        <flux:sidebar sticky stashable collapsible class="border-e border-zinc-200 bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-900">
+        <flux:sidebar sticky stashable collapsible class="border-e border-zinc-200 bg-gradient-to-b from-zinc-50 to-zinc-100/60 dark:border-zinc-800 dark:from-zinc-900 dark:to-zinc-950">
             <div class="flex items-center gap-1">
                 <flux:sidebar.toggle class="lg:hidden" icon="x-mark" />
 
-                <flux:sidebar.brand :name="\App\Models\Setting::get('site_name', config('app.name'))" :href="route('dashboard')" wire:navigate class="flex-1 rounded-xl bg-white/70 shadow-soft dark:bg-white/5 in-data-flux-sidebar-collapsed-desktop:bg-transparent in-data-flux-sidebar-collapsed-desktop:shadow-none">
+                <flux:sidebar.brand :name="\App\Models\Setting::get('site_name', config('app.name'))" :href="route('dashboard')" wire:navigate class="flex-1 rounded-xl bg-white/70 shadow-soft ring-1 ring-black/5 dark:bg-white/5 dark:ring-white/10 in-data-flux-sidebar-collapsed-desktop:bg-transparent in-data-flux-sidebar-collapsed-desktop:shadow-none in-data-flux-sidebar-collapsed-desktop:ring-0">
                     <x-slot name="logo">
-                        <div class="flex aspect-square size-6 items-center justify-center rounded-md bg-gradient-to-br from-accent-content to-accent-content/70 text-accent-foreground">
+                        <div class="flex aspect-square size-6 items-center justify-center rounded-md bg-gradient-to-br from-accent-content to-accent-content/70 text-accent-foreground shadow-sm">
                             <x-app-logo-icon class="size-3.5 fill-current text-white dark:text-black" />
                         </div>
                     </x-slot>
@@ -79,18 +79,13 @@
             </flux:navlist>--}}
 
             <!-- Theme Toggle -->
-            <div class="flex items-center justify-center rounded-xl bg-white/70 p-1 shadow-soft dark:bg-white/5">
-                <flux:tooltip :content="__('Toggle theme')" position="right">
-                    <flux:button x-data x-on:click="$flux.appearance = ($flux.appearance === 'dark' ? 'light' : 'dark')" variant="ghost" size="sm" square>
-                        <flux:icon.sun class="dark:hidden" variant="mini" />
-                        <flux:icon.moon class="hidden dark:block" variant="mini" />
-                    </flux:button>
-                </flux:tooltip>
+            <div class="flex items-center justify-center rounded-2xl bg-white/70 p-1 shadow-soft ring-1 ring-black/5 dark:bg-white/5 dark:ring-white/10">
+                <x-layouts.app.theme-toggle position="right" />
             </div>
 
             <!-- Desktop User Menu -->
             @auth
-                <div class="rounded-xl bg-white/70 p-1 shadow-soft dark:bg-white/5 in-data-flux-sidebar-collapsed-desktop:bg-transparent in-data-flux-sidebar-collapsed-desktop:p-0 in-data-flux-sidebar-collapsed-desktop:shadow-none">
+                <div class="rounded-2xl bg-white/70 p-1 shadow-soft ring-1 ring-black/5 dark:bg-white/5 dark:ring-white/10 in-data-flux-sidebar-collapsed-desktop:bg-transparent in-data-flux-sidebar-collapsed-desktop:p-0 in-data-flux-sidebar-collapsed-desktop:shadow-none in-data-flux-sidebar-collapsed-desktop:ring-0">
                     <flux:dropdown class="hidden lg:block" position="bottom" align="start">
                         <flux:sidebar.profile
                             :name="auth()->user()->name"
@@ -98,41 +93,7 @@
                             icon:trailing="chevrons-up-down"
                         />
 
-                        <flux:menu class="w-[220px]">
-                            <flux:menu.radio.group>
-                                <div class="p-0 text-sm font-normal">
-                                    <div class="flex items-center gap-2 px-1 py-1.5 text-start text-sm">
-                                        <span class="relative flex h-8 w-8 shrink-0 overflow-hidden rounded-lg">
-                                            <span
-                                                class="flex h-full w-full items-center justify-center rounded-lg bg-neutral-200 text-black dark:bg-neutral-700 dark:text-white"
-                                            >
-                                                {{ auth()->user()->initials() }}
-                                            </span>
-                                        </span>
-
-                                        <div class="grid flex-1 text-start text-sm leading-tight">
-                                            <span class="truncate font-semibold">{{ auth()->user()->name }}</span>
-                                            <span class="truncate text-xs">{{ auth()->user()->email }}</span>
-                                        </div>
-                                    </div>
-                                </div>
-                            </flux:menu.radio.group>
-
-                            <flux:menu.separator />
-
-                            <flux:menu.radio.group>
-                                <flux:menu.item :href="route('profile.edit')" icon="cog" wire:navigate>{{ __('Settings') }}</flux:menu.item>
-                            </flux:menu.radio.group>
-
-                            <flux:menu.separator />
-
-                            <form method="POST" action="{{ route('logout') }}" class="w-full">
-                                @csrf
-                                <flux:menu.item as="button" type="submit" icon="arrow-right-start-on-rectangle" class="w-full">
-                                    {{ __('Log Out') }}
-                                </flux:menu.item>
-                            </form>
-                        </flux:menu>
+                        <x-layouts.app.user-menu />
                     </flux:dropdown>
                 </div>
             @endauth
@@ -145,12 +106,7 @@
 
                 <flux:spacer />
 
-                <flux:tooltip :content="__('Toggle theme')" position="bottom">
-                    <flux:button x-data x-on:click="$flux.appearance = ($flux.appearance === 'dark' ? 'light' : 'dark')" variant="ghost" size="sm" square>
-                        <flux:icon.sun class="dark:hidden" variant="mini" />
-                        <flux:icon.moon class="hidden dark:block" variant="mini" />
-                    </flux:button>
-                </flux:tooltip>
+                <x-layouts.app.theme-toggle position="bottom" />
 
                 <flux:dropdown position="top" align="end">
                     <flux:profile
@@ -158,41 +114,7 @@
                         icon-trailing="chevron-down"
                     />
 
-                    <flux:menu>
-                        <flux:menu.radio.group>
-                            <div class="p-0 text-sm font-normal">
-                                <div class="flex items-center gap-2 px-1 py-1.5 text-start text-sm">
-                                    <span class="relative flex h-8 w-8 shrink-0 overflow-hidden rounded-lg">
-                                        <span
-                                            class="flex h-full w-full items-center justify-center rounded-lg bg-neutral-200 text-black dark:bg-neutral-700 dark:text-white"
-                                        >
-                                            {{ auth()->user()->initials() }}
-                                        </span>
-                                    </span>
-
-                                    <div class="grid flex-1 text-start text-sm leading-tight">
-                                        <span class="truncate font-semibold">{{ auth()->user()->name }}</span>
-                                        <span class="truncate text-xs">{{ auth()->user()->email }}</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </flux:menu.radio.group>
-
-                        <flux:menu.separator />
-
-                        <flux:menu.radio.group>
-                            <flux:menu.item :href="route('profile.edit')" icon="cog" wire:navigate>{{ __('Settings') }}</flux:menu.item>
-                        </flux:menu.radio.group>
-
-                        <flux:menu.separator />
-
-                        <form method="POST" action="{{ route('logout') }}" class="w-full">
-                            @csrf
-                            <flux:menu.item as="button" type="submit" icon="arrow-right-start-on-rectangle" class="w-full">
-                                {{ __('Log Out') }}
-                            </flux:menu.item>
-                        </form>
-                    </flux:menu>
+                    <x-layouts.app.user-menu />
                 </flux:dropdown>
             </flux:header>
         @endauth
@@ -202,7 +124,9 @@
                 {{ __('You are impersonating :name.', ['name' => auth()->user()->name]) }}
                 <form method="POST" action="{{ route('impersonation.stop') }}" class="inline">
                     @csrf
-                    <button type="submit" class="underline font-medium">{{ __('Return to Platform') }}</button>
+                    <flux:button as="button" type="submit" variant="ghost" size="sm" class="underline">
+                        {{ __('Return to Platform') }}
+                    </flux:button>
                 </form>
             </flux:callout>
         @endif

@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Models\Concerns\BelongsToTenant;
+use App\Support\Tenancy;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -61,9 +62,7 @@ class ProductAttribute extends Model
         // Try to extract weight from attribute_data
         if (! empty($this->attribute_data)) {
             foreach ($this->attribute_data as $key => $value) {
-                $attribute = Attribute::where('slug', strtolower($key))
-                    ->orWhere('name', $key)
-                    ->first();
+                $attribute = static::weightLookupAttribute($key);
 
                 if ($attribute && $attribute->isWeight()) {
                     return (float) $value;
@@ -72,5 +71,27 @@ class ProductAttribute extends Model
         }
 
         return null;
+    }
+
+    /**
+     * @var array<string, Attribute|false>
+     */
+    private static array $weightLookupCache = [];
+
+    /**
+     * Memoized per-tenant lookup so resolving weight for N cart/order lines
+     * doesn't re-run the same Attribute query for every repeated key.
+     */
+    private static function weightLookupAttribute(string $key): ?Attribute
+    {
+        $cacheKey = Tenancy::id().'::'.strtolower($key);
+
+        if (! array_key_exists($cacheKey, static::$weightLookupCache)) {
+            static::$weightLookupCache[$cacheKey] = Attribute::where('slug', strtolower($key))
+                ->orWhere('name', $key)
+                ->first() ?? false;
+        }
+
+        return static::$weightLookupCache[$cacheKey] ?: null;
     }
 }

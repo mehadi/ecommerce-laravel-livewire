@@ -2,6 +2,7 @@
 
 namespace App\Livewire;
 
+use App\Livewire\Concerns\FiltersProductGrid;
 use App\Livewire\Concerns\HasShoppingCart;
 use App\Models\Category;
 use App\Models\Product;
@@ -10,44 +11,14 @@ use App\Support\Tenancy;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Str;
 use Livewire\Attributes\Computed;
-use Livewire\Attributes\Url;
 use Livewire\Component;
 use Livewire\WithPagination;
 
 class CategoryPage extends Component
 {
-    use HasShoppingCart, WithPagination;
-
-    /** Allowed values for the "products per page" control. */
-    public const PER_PAGE_OPTIONS = [6, 12, 24, 48];
-
-    /** Allowed values for the "grid columns" control. */
-    public const COLUMN_OPTIONS = [2, 3, 4];
+    use FiltersProductGrid, HasShoppingCart, WithPagination;
 
     public Category $category;
-
-    #[Url(except: '')]
-    public string $search = '';
-
-    #[Url(except: 'featured')]
-    public string $sort = 'featured';
-
-    #[Url(except: '')]
-    public string $minPrice = '';
-
-    #[Url(except: '')]
-    public string $maxPrice = '';
-
-    #[Url(except: false)]
-    public bool $inStockOnly = false;
-
-    #[Url(except: 6)]
-    public int $perPage = 6;
-
-    #[Url(except: 3)]
-    public int $columns = 3;
-
-    public bool $showFilters = false;
 
     public function mount(Category $category): void
     {
@@ -56,56 +27,10 @@ class CategoryPage extends Component
         $this->category = $category;
     }
 
-    public function updatedSearch(): void
-    {
-        $this->resetPage();
-    }
-
-    public function updatedSort(): void
-    {
-        $this->resetPage();
-    }
-
-    public function updatedMinPrice(): void
-    {
-        $this->resetPage();
-    }
-
-    public function updatedMaxPrice(): void
-    {
-        $this->resetPage();
-    }
-
-    public function updatedInStockOnly(): void
-    {
-        $this->resetPage();
-    }
-
-    public function updatedPerPage(int $value): void
-    {
-        if (! in_array($value, self::PER_PAGE_OPTIONS, true)) {
-            $this->perPage = 6;
-        }
-
-        $this->resetPage();
-    }
-
-    public function updatedColumns(int $value): void
-    {
-        if (! in_array($value, self::COLUMN_OPTIONS, true)) {
-            $this->columns = 3;
-        }
-    }
-
     public function clearFilters(): void
     {
-        $this->reset('search', 'sort', 'minPrice', 'maxPrice', 'inStockOnly');
+        $this->reset(...$this->commonFilterProperties());
         $this->resetPage();
-    }
-
-    public function toggleFilters(): void
-    {
-        $this->showFilters = ! $this->showFilters;
     }
 
     /**
@@ -199,42 +124,13 @@ class CategoryPage extends Component
             ->whereIn('category_id', $this->categoryIds)
             ->with(['category', 'productAttributes']);
 
-        if ($this->search !== '') {
-            $query->where(function ($q) {
-                $q->where('name_en', 'ilike', '%'.$this->search.'%')
-                    ->orWhere('name_bn', 'ilike', '%'.$this->search.'%');
-            });
-        }
-
         // Effective price: cheapest active variant if the product has attributes, else the base price.
         $effectivePrice = 'COALESCE((SELECT MIN(pa.price) FROM product_attributes pa WHERE pa.product_id = products.id AND pa.is_active = true), products.price)';
 
-        if ($this->minPrice !== '' && is_numeric($this->minPrice)) {
-            $query->whereRaw("$effectivePrice >= ?", [(float) $this->minPrice]);
-        }
+        $this->applyCommonProductFilters($query, $effectivePrice);
+        $this->applyProductSort($query);
 
-        if ($this->maxPrice !== '' && is_numeric($this->maxPrice)) {
-            $query->whereRaw("$effectivePrice <= ?", [(float) $this->maxPrice]);
-        }
-
-        if ($this->inStockOnly) {
-            $query->where(function ($q) {
-                $q->where(function ($q2) {
-                    $q2->whereDoesntHave('productAttributes')->where('stock', '>', 0);
-                })->orWhereHas('productAttributes', fn ($q2) => $q2->where('stock', '>', 0));
-            });
-        }
-
-        match ($this->sort) {
-            'price_asc' => $query->orderBy('price'),
-            'price_desc' => $query->orderByDesc('price'),
-            'newest' => $query->orderByDesc('created_at'),
-            default => $query->orderByDesc('is_featured')->orderBy('order'),
-        };
-
-        $perPage = in_array($this->perPage, self::PER_PAGE_OPTIONS, true) ? $this->perPage : 6;
-
-        return $query->paginate($perPage)->withQueryString();
+        return $query->paginate($this->normalizedPerPage())->withQueryString();
     }
 
     public function render()

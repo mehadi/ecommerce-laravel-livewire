@@ -31,6 +31,8 @@ class Index extends Component
 
     public $name = '';
 
+    public $editingIsSuperAdmin = false;
+
     /**
      * @var array<int, string>
      */
@@ -76,7 +78,7 @@ class Index extends Component
 
     public function createRole(): void
     {
-        $this->reset(['editingId', 'name', 'selectedPermissions']);
+        $this->reset(['editingId', 'name', 'selectedPermissions', 'editingIsSuperAdmin']);
         $this->showModal = true;
     }
 
@@ -86,6 +88,7 @@ class Index extends Component
 
         $this->editingId = $role->id;
         $this->name = $role->name;
+        $this->editingIsSuperAdmin = $role->name === 'super admin';
         $this->selectedPermissions = $role->permissions
             ->pluck('id')
             ->map(fn ($id) => (string) $id)
@@ -96,7 +99,7 @@ class Index extends Component
     public function closeModal(): void
     {
         $this->showModal = false;
-        $this->reset(['editingId', 'name', 'selectedPermissions']);
+        $this->reset(['editingId', 'name', 'selectedPermissions', 'editingIsSuperAdmin']);
     }
 
     public function selectAllPermissions(): void
@@ -144,6 +147,15 @@ class Index extends Component
         if ($this->editingId) {
             $role = Role::findOrFail($this->editingId);
             abort_unless($role->tenant_id === null || $role->tenant_id === Tenancy::id(), 404);
+
+            // Prevent renaming the super admin role — Spatie matches it by name
+            // (hasRole('super admin')), so renaming it would silently break every
+            // super-admin check in the app.
+            if ($role->name === 'super admin' && $this->name !== 'super admin') {
+                session()->flash('error', __('The Super Admin role name is protected and cannot be changed.'));
+
+                return;
+            }
 
             $role->update([
                 'name' => $this->name,

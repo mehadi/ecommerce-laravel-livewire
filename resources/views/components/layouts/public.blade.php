@@ -3,16 +3,21 @@
     $siteName = Setting::get('site_name', config('app.name'));
     $siteTagline = Setting::get('site_tagline', '');
     $siteDescription = Setting::get('site_description', '');
-    $siteUrl = Setting::get('site_url', config('app.url'));
     $metaDescription = $metaDescription ?? Setting::get('meta_description', $siteDescription);
     $metaKeywords = Setting::get('meta_keywords', '');
     $siteFavicon = Setting::get('site_favicon');
     $siteOgImage = Setting::get('site_og_image');
+    // Pages with their own social image (a product, a landing page) pass $ogImage;
+    // otherwise fall back to the tenant's default social image.
+    $ogImageUrl = isset($ogImage) && $ogImage ? asset('storage/'.$ogImage) : ($siteOgImage ? asset('storage/'.$siteOgImage) : null);
+    $ogType = $ogType ?? 'website';
     $googleVerificationCode = Setting::get('google_verification_code');
     $bingVerificationCode = Setting::get('bing_verification_code');
     $googleAnalyticsId = Setting::get('google_analytics_id');
     $googleTagManagerId = Setting::get('google_tag_manager_id');
     $facebookPixelId = Setting::get('facebook_pixel_id');
+    $customHeaderCode = Setting::get('custom_header_code');
+    $customFooterCode = Setting::get('custom_footer_code');
 
     $textSizePresets = ['xs' => 80, 'sm' => 90, 'medium' => 100, 'lg' => 112.5, 'xl' => 125, 'xxl' => 137.5];
     $textSize = Setting::get('frontend_text_size', 'medium');
@@ -71,29 +76,29 @@
     @endif
     
     <!-- Open Graph / Facebook -->
-    <meta property="og:type" content="website" />
+    <meta property="og:type" content="{{ $ogType }}" />
     <meta property="og:url" content="{{ url()->current() }}" />
     <meta property="og:title" content="{{ $title ?? $siteName }}" />
     @if($metaDescription)
         <meta property="og:description" content="{{ $metaDescription }}" />
     @endif
-    @if($siteOgImage)
-        <meta property="og:image" content="{{ asset('storage/'.$siteOgImage) }}" />
+    @if($ogImageUrl)
+        <meta property="og:image" content="{{ $ogImageUrl }}" />
     @endif
     <meta property="og:site_name" content="{{ $siteName }}" />
-    
+
     <!-- Twitter -->
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="{{ $title ?? $siteName }}" />
     @if($metaDescription)
         <meta name="twitter:description" content="{{ $metaDescription }}" />
     @endif
-    @if($siteOgImage)
-        <meta name="twitter:image" content="{{ asset('storage/'.$siteOgImage) }}" />
+    @if($ogImageUrl)
+        <meta name="twitter:image" content="{{ $ogImageUrl }}" />
     @endif
     
     <!-- Canonical URL -->
-    <link rel="canonical" href="{{ $siteUrl }}{{ request()->getRequestUri() }}" />
+    <link rel="canonical" href="{{ url()->current() }}" />
     
     <!-- Site Verification -->
     @if($googleVerificationCode)
@@ -115,21 +120,30 @@
     @endif
     
     @vite(['resources/css/app.css', 'resources/js/app.js'])
-    
+
     @stack('head')
+
+    {{-- Custom Header Code (Admin > Website Settings > Custom Code) --}}
+    @if($customHeaderCode)
+        {!! $customHeaderCode !!}
+    @endif
 </head>
 <body class="min-h-screen bg-zinc-100 dark:bg-zinc-950">
+    <a href="#main-content" class="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-[100] focus:px-4 focus:py-2 focus:rounded-full focus:bg-emerald-600 focus:text-white focus:text-sm focus:font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white">
+        {{ __('Skip to content') }}
+    </a>
+
     <!-- Google Tag Manager (noscript) -->
     @if($googleTagManagerId)
     <noscript><iframe src="https://www.googletagmanager.com/ns.html?id={{ $googleTagManagerId }}"
     height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     @endif
-    
+
     @if($showNavigation ?? true)
         <x-public.navigation />
     @endif
 
-    <main>
+    <main id="main-content">
         {{ $slot }}
     </main>
 
@@ -177,6 +191,16 @@
         'https://connect.facebook.net/en_US/fbevents.js');
         fbq('init', '{{ $facebookPixelId }}');
         fbq('track', 'PageView');
+
+        // Cart/checkout components dispatch fbq:track(eventName, data) via
+        // $this->dispatch() (see HasShoppingCart, LandingPage) for AddToCart,
+        // InitiateCheckout, and Purchase — relay those into the pixel here.
+        document.addEventListener('livewire:init', () => {
+            Livewire.on('fbq:track', (params) => {
+                const [eventName, data] = params;
+                fbq('track', eventName, data || {});
+            });
+        });
     </script>
     <noscript><img height="1" width="1" style="display:none"
         src="https://www.facebook.com/tr?id={{ $facebookPixelId }}&ev=PageView&noscript=1"
@@ -184,6 +208,12 @@
     @endif
 
     @stack('scripts')
+
+    {{-- Custom Footer Code (Admin > Website Settings > Custom Code) --}}
+    @if($customFooterCode)
+        {!! $customFooterCode !!}
+    @endif
+
     @fluxScripts
 </body>
 </html>

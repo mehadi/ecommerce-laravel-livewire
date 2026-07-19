@@ -3,7 +3,9 @@
 namespace App\Models;
 
 use App\Models\Concerns\BelongsToTenant;
+use App\Support\Tenancy;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Cache;
 
 class Setting extends Model
 {
@@ -15,15 +17,23 @@ class Setting extends Model
     ];
 
     /**
+     * Per-tenant snapshot of all of this tenant's own settings, memoized for
+     * the request and shared via cache. This tiny table is otherwise read
+     * dozens of times per storefront render (once per Setting::get() call),
+     * each a separate query.
+     *
+     * @var array<int|string, array<string, ?string>>
+     */
+    protected static array $memo = [];
+
+    /**
      * Get a setting value by key. Falls back to the platform-wide default
      * (set by Platform Admin under Website Defaults) when the tenant hasn't
      * configured their own value, before falling back to $default.
      */
     public static function get(string $key, ?string $default = null): ?string
     {
-        $setting = static::where('key', $key)->first();
-
-        return $setting?->value ?? PlatformSetting::get($key) ?? $default;
+        return static::allCached()[$key] ?? PlatformSetting::get($key) ?? $default;
     }
 
     /**
@@ -35,6 +45,8 @@ class Setting extends Model
             ['key' => $key],
             ['value' => $value]
         );
+
+        static::forgetCache();
     }
 
     /**
@@ -60,7 +72,7 @@ class Setting extends Model
      */
     public static function getOwn(string $key, ?string $default = null): ?string
     {
-        return static::where('key', $key)->first()?->value ?? $default;
+        return static::allCached()[$key] ?? $default;
     }
 
     /**
@@ -68,7 +80,7 @@ class Setting extends Model
      */
     public static function getManyOwn(array $keys): array
     {
-        $settings = static::whereIn('key', $keys)->pluck('value', 'key')->toArray();
+        $settings = static::allCached();
 
         $result = [];
         foreach ($keys as $key) {
@@ -84,7 +96,42 @@ class Setting extends Model
     public static function setMany(array $settings): void
     {
         foreach ($settings as $key => $value) {
-            static::set($key, $value);
+            static::updateOrCreate(
+                ['key' => $key],
+                ['value' => $value]
+            );
         }
+
+        static::forgetCache();
+    }
+
+    /**
+     * @return array<string, ?string>
+     */
+    protected static function allCached(): array
+    {
+        $tenantKey = Tenancy::id() ?? 'none';
+
+        return static::$memo[$tenantKey] ??= Cache::remember(
+            Tenancy::cacheKey('settings.all'),
+            3600,
+            fn () => static::pluck('value', 'key')->all()
+        );
+    }
+
+    protected static function forgetCache(): void
+    {
+        unset(static::$memo[Tenancy::id() ?? 'none']);
+        Cache::forget(Tenancy::cacheKey('settings.all'));
+    }
+
+    /**
+     * Reset the in-process memo for every tenant. Tests need this because the
+     * static array otherwise outlives each test's DB transaction rollback
+     * (RefreshDatabase resets the database, not this in-memory array).
+     */
+    public static function flushCache(): void
+    {
+        static::$memo = [];
     }
 }

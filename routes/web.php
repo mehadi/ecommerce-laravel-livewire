@@ -116,6 +116,8 @@ Route::middleware(['tenant'])->group(function () {
             Route::get('orders', App\Livewire\Dashboard\Orders::class)->name('orders');
             Route::get('customers', App\Livewire\Dashboard\Customers::class)->name('customers');
             Route::get('products', App\Livewire\Dashboard\Products::class)->name('products');
+            Route::get('profitability', App\Livewire\Dashboard\Profitability::class)->name('profitability');
+            Route::get('inventory', App\Livewire\Dashboard\Inventory::class)->name('inventory');
         });
     });
 
@@ -146,6 +148,7 @@ Route::middleware(['tenant'])->group(function () {
             Route::get('hero', \App\Livewire\Admin\WebsiteSettings\Hero::class)->name('hero');
             Route::get('header', \App\Livewire\Admin\WebsiteSettings\Header::class)->name('header');
             Route::get('product-grid', \App\Livewire\Admin\WebsiteSettings\ProductGrid::class)->name('product-grid');
+            Route::get('product-details', \App\Livewire\Admin\WebsiteSettings\ProductDetails::class)->name('product-details');
             Route::get('category-grid', \App\Livewire\Admin\WebsiteSettings\CategoryGrid::class)->name('category-grid');
             Route::get('footer', \App\Livewire\Admin\WebsiteSettings\Footer::class)->name('footer');
             Route::get('contact', \App\Livewire\Admin\WebsiteSettings\Contact::class)->name('contact');
@@ -155,6 +158,7 @@ Route::middleware(['tenant'])->group(function () {
             Route::get('seo', \App\Livewire\Admin\WebsiteSettings\Seo::class)->name('seo');
             Route::get('domains', \App\Livewire\Admin\WebsiteSettings\Domains::class)->name('domains');
             Route::get('localization', \App\Livewire\Admin\WebsiteSettings\Localization::class)->name('localization');
+            Route::get('custom-code', \App\Livewire\Admin\WebsiteSettings\CustomCode::class)->name('custom-code');
         });
 
         // Products
@@ -197,15 +201,11 @@ Route::middleware(['tenant'])->group(function () {
         Route::get('landing-pages/create', App\Livewire\Admin\LandingPages\Create::class)->name('landing-pages.create');
         Route::get('landing-pages/{landingPage}/edit', App\Livewire\Admin\LandingPages\Edit::class)->name('landing-pages.edit');
 
-        // Roles
+        // Roles (modal-based create/edit lives in Roles\Index — no dedicated routed pages)
         Route::get('roles', App\Livewire\Admin\Roles\Index::class)->name('roles.index');
-        Route::get('roles/create', App\Livewire\Admin\Roles\Create::class)->name('roles.create');
-        Route::get('roles/{role}/edit', App\Livewire\Admin\Roles\Edit::class)->name('roles.edit');
 
-        // Permissions
+        // Permissions (modal-based create/edit lives in Permissions\Index — no dedicated routed pages)
         Route::get('permissions', App\Livewire\Admin\Permissions\Index::class)->name('permissions.index');
-        Route::get('permissions/create', App\Livewire\Admin\Permissions\Create::class)->name('permissions.create');
-        Route::get('permissions/{permission}/edit', App\Livewire\Admin\Permissions\Edit::class)->name('permissions.edit');
 
         // Users
         Route::get('users', App\Livewire\Admin\Users\Index::class)->name('users.index');

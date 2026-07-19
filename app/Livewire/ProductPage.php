@@ -53,6 +53,8 @@ class ProductPage extends LandingPage
             ->layout('components.layouts.public', [
                 'title' => $this->product->name.' - '.$this->siteName,
                 'metaDescription' => Str::limit($this->product->description ?? '', 160),
+                'ogType' => 'product',
+                'ogImage' => $this->product->primary_image,
                 'showNavigation' => true,
                 'showFooter' => true,
                 'showCookieConsent' => true,

@@ -8,6 +8,6 @@
 
 <div class="grid {{ $gridColsClass }} gap-x-5 sm:gap-x-6 gap-y-8 sm:gap-y-10">
     @foreach($items as $product)
-        <x-public.product-cards.minimal :product="$product" />
+        <x-public.product-cards.minimal :product="$product" wire:key="product-{{ $product->id }}" />
     @endforeach
 </div>

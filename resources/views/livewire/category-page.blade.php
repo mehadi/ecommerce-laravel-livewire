@@ -216,7 +216,7 @@
                 </div>
 
                 {{-- Results count + display controls --}}
-                <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
+                <div id="product-results" class="flex flex-wrap items-center justify-between gap-3 mb-4">
                     <p class="text-sm text-zinc-500 dark:text-zinc-400">
                         @if($this->products->total() > 0)
                             {{ __('Showing :first–:last of :total products', ['first' => $this->products->firstItem(), 'last' => $this->products->lastItem(), 'total' => $this->products->total()]) }}

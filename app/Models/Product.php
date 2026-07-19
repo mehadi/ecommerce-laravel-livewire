@@ -62,6 +62,10 @@ class Product extends Model
 
     public function hasAttributes(): bool
     {
+        if ($this->relationLoaded('productAttributes')) {
+            return $this->productAttributes->isNotEmpty();
+        }
+
         return $this->productAttributes()->exists();
     }
 
