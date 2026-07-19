@@ -50,6 +50,16 @@ class ResolveTenant
 
     protected function resolveViaDomain(string $host): ?Tenant
     {
+        // A central domain (bare "localhost", the platform's own production host, etc.)
+        // must never resolve a tenant via the custom-domains table — it's reserved for
+        // the platform frontend/staff area. This is a defense-in-depth guard: addDomain()
+        // already rejects central domains and their subdomains at the point of entry, but
+        // this keeps a stray/manually-inserted row from silently hijacking the central
+        // domain again.
+        if ($this->isCentralDomain($host) || $this->isCentralSubdomain($host)) {
+            return null;
+        }
+
         return Domain::whereNotNull('verified_at')
             ->where('domain', $host)
             ->first()
@@ -74,5 +84,21 @@ class ResolveTenant
     protected function isCentralDomain(string $host): bool
     {
         return in_array($host, config('tenancy.central_domains', []), true);
+    }
+
+    /**
+     * Whether $host is a "{anything}.{central domain}" subdomain — that namespace is
+     * reserved for tenant slugs (resolveViaSubdomain), so it must never also be claimable
+     * as a different tenant's custom domain in the `domains` table.
+     */
+    protected function isCentralSubdomain(string $host): bool
+    {
+        foreach (config('tenancy.central_domains', []) as $central) {
+            if (str_ends_with($host, '.'.$central)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

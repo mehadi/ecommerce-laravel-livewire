@@ -1,6 +1,5 @@
 <?php
 
-use App\Models\Domain;
 use App\Models\Tenant;
 use App\Models\User;
 use Spatie\Permission\Models\Role;
@@ -9,12 +8,12 @@ use Tests\TestCase;
 
 uses(TestCase::class)->in('Unit');
 
-// Every Feature test's HTTP requests default to Host: localhost. Since routes/web.php
-// wraps the storefront/dashboard/admin routes in tenant-resolution middleware, every
-// such test needs *some* tenant bound or it 404s. Map localhost -> one shared test
-// tenant, and set it as the current permissions team, so both HTTP-level requests
-// (resolved by App\Http\Middleware\ResolveTenant) and direct role/permission checks
-// in test code see a consistent tenant. Guarded by hasTable so it's a no-op for any
+// Every Feature test's HTTP requests hit Host: default.localhost (see TestCase::$baseUrl),
+// which App\Http\Middleware\ResolveTenant resolves via the "{slug}.{central domain}"
+// subdomain scheme — the same path real tenant traffic takes. Seed the matching 'default'
+// tenant and set it as the current permissions team, so both HTTP-level requests and
+// direct role/permission checks in test code (Livewire::test(), which never goes through
+// HTTP middleware) see a consistent tenant. Guarded by hasTable so it's a no-op for any
 // Feature test that (unusually) doesn't use RefreshDatabase / has no tenants table.
 uses(TestCase::class)->beforeEach(function () {
     // Settings are memoized in a static PHP array in front of the cache store
@@ -34,8 +33,6 @@ uses(TestCase::class)->beforeEach(function () {
     // weren't team-scoped) keep working against a real seeded dev database, while also
     // being self-sufficient (firstOrCreate) for a genuinely fresh/CI database.
     $tenant = Tenant::firstOrCreate(['slug' => 'default'], ['name' => 'Default Store', 'status' => 'active']);
-
-    Domain::firstOrCreate(['domain' => 'localhost'], ['tenant_id' => $tenant->id, 'verified_at' => now()]);
 
     app()->instance('currentTenant', $tenant);
     app(PermissionRegistrar::class)->setPermissionsTeamId($tenant->id);

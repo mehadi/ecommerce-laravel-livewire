@@ -29,6 +29,21 @@ class Domains extends Component
                 'max:255',
                 'regex:/^[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?(\.[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?)+$/i',
                 Rule::unique('domains', 'domain'),
+                // Reject the platform's own central domain(s) and the "{slug}.{central}"
+                // subdomain namespace reserved for tenant slugs — either would let this
+                // tenant hijack the platform frontend or another tenant's free subdomain
+                // (see App\Http\Middleware\ResolveTenant's matching guard).
+                function (string $attribute, string $value, \Closure $fail): void {
+                    $value = strtolower($value);
+
+                    foreach (config('tenancy.central_domains', []) as $central) {
+                        if ($value === $central || str_ends_with($value, '.'.$central)) {
+                            $fail(__('This domain is reserved by the platform and cannot be used as a custom domain.'));
+
+                            return;
+                        }
+                    }
+                },
             ],
         ]);
 
