@@ -91,6 +91,71 @@ class AppServiceProvider extends ServiceProvider
             return $user->hasRole('super admin') || $user->hasRole('admin') || $user->hasRole('manager') || $user->hasPermissionTo('manage inventory settings');
         });
 
+        // POS gates. 'access pos' (and the cashier-tier actions below it) include
+        // the 'cashier' role explicitly, since a cashier account intentionally
+        // cannot reach 'access admin' — POS routes are gated separately from the
+        // rest of the backoffice (see routes/web.php's 'pos' group).
+        Gate::define('access pos', function ($user) {
+            return $user->tenant_id !== null && (
+                $user->hasRole('super admin') || $user->hasRole('admin') || $user->hasRole('manager') || $user->hasRole('cashier')
+                || $user->hasPermissionTo('access pos')
+            );
+        });
+
+        Gate::define('process pos sales', function ($user) {
+            return $user->hasRole('super admin') || $user->hasRole('admin') || $user->hasRole('manager') || $user->hasRole('cashier') || $user->hasPermissionTo('process pos sales');
+        });
+
+        Gate::define('apply pos discounts', function ($user) {
+            return $user->hasRole('super admin') || $user->hasRole('admin') || $user->hasRole('manager') || $user->hasRole('cashier') || $user->hasPermissionTo('apply pos discounts');
+        });
+
+        Gate::define('hold pos sales', function ($user) {
+            return $user->hasRole('super admin') || $user->hasRole('admin') || $user->hasRole('manager') || $user->hasRole('cashier') || $user->hasPermissionTo('hold pos sales');
+        });
+
+        Gate::define('void pos sale line', function ($user) {
+            return $user->hasRole('super admin') || $user->hasRole('admin') || $user->hasRole('manager') || $user->hasRole('cashier') || $user->hasPermissionTo('void pos sale line');
+        });
+
+        Gate::define('open pos shift', function ($user) {
+            return $user->hasRole('super admin') || $user->hasRole('admin') || $user->hasRole('manager') || $user->hasRole('cashier') || $user->hasPermissionTo('open pos shift');
+        });
+
+        Gate::define('close pos shift', function ($user) {
+            return $user->hasRole('super admin') || $user->hasRole('admin') || $user->hasRole('manager') || $user->hasRole('cashier') || $user->hasPermissionTo('close pos shift');
+        });
+
+        Gate::define('manage cash drawer', function ($user) {
+            return $user->hasRole('super admin') || $user->hasRole('admin') || $user->hasRole('manager') || $user->hasRole('cashier') || $user->hasPermissionTo('manage cash drawer');
+        });
+
+        // Manager-and-above-only POS actions — deliberately excludes 'cashier'.
+        Gate::define('void pos sale', function ($user) {
+            return $user->hasRole('super admin') || $user->hasRole('admin') || $user->hasRole('manager') || $user->hasPermissionTo('void pos sale');
+        });
+
+        Gate::define('process pos refunds', function ($user) {
+            return $user->hasRole('super admin') || $user->hasRole('admin') || $user->hasRole('manager') || $user->hasPermissionTo('process pos refunds');
+        });
+
+        Gate::define('force close pos shift', function ($user) {
+            return $user->hasRole('super admin') || $user->hasRole('admin') || $user->hasRole('manager') || $user->hasPermissionTo('force close pos shift');
+        });
+
+        Gate::define('view pos reports', function ($user) {
+            return $user->hasRole('super admin') || $user->hasRole('admin') || $user->hasRole('manager') || $user->hasPermissionTo('view pos reports');
+        });
+
+        Gate::define('manage pos registers', function ($user) {
+            return $user->hasRole('super admin') || $user->hasRole('admin') || $user->hasRole('manager') || $user->hasPermissionTo('manage pos registers');
+        });
+
+        // Admin/super-admin only — tenant-wide POS settings.
+        Gate::define('manage pos settings', function ($user) {
+            return $user->hasRole('super admin') || $user->hasRole('admin') || $user->hasPermissionTo('manage pos settings');
+        });
+
         // Cache featured products (scoped per tenant so one tenant's featured
         // products/categories/testimonials never leak into another's storefront)
         if (! app()->runningInConsole() && Tenancy::check()) {

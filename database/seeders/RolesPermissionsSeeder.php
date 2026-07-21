@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use Illuminate\Database\Seeder;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
+use Spatie\Permission\PermissionRegistrar;
 
 class RolesPermissionsSeeder extends Seeder
 {
@@ -14,7 +15,7 @@ class RolesPermissionsSeeder extends Seeder
     public function run(): void
     {
         // Reset cached roles and permissions
-        app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
+        app()[PermissionRegistrar::class]->forgetCachedPermissions();
 
         // Create Permissions
         $permissions = [
@@ -101,6 +102,22 @@ class RolesPermissionsSeeder extends Seeder
             // Role & Permission permissions
             'manage roles',
             'manage permissions',
+
+            // POS permissions
+            'access pos',
+            'process pos sales',
+            'apply pos discounts',
+            'hold pos sales',
+            'void pos sale line',
+            'void pos sale',
+            'process pos refunds',
+            'open pos shift',
+            'close pos shift',
+            'force close pos shift',
+            'manage cash drawer',
+            'view pos reports',
+            'manage pos registers',
+            'manage pos settings',
         ];
 
         foreach ($permissions as $permission) {
@@ -132,14 +149,24 @@ class RolesPermissionsSeeder extends Seeder
             ['guard_name' => 'web']
         );
 
+        // Cashier: POS terminal operation only — no backoffice access, no
+        // refunds, no register/shift/report management (see the permission
+        // matrix in docs/pos-module/SPEC.md §4.2).
+        $cashierRole = Role::firstOrCreate(
+            ['name' => 'cashier'],
+            ['guard_name' => 'web']
+        );
+
         // Assign all permissions to super admin (always has everything)
         $superAdminRole->syncPermissions(Permission::all());
 
         // Assign all permissions to admin
         $adminRole->syncPermissions(Permission::all());
 
-        // Assign manager permissions (everything except roles/permissions management)
-        $managerPermissions = Permission::whereNotIn('name', ['manage roles', 'manage permissions'])->get();
+        // Assign manager permissions (everything except roles/permissions
+        // management and the tenant-wide POS settings screen, which is
+        // reserved for admin/super admin).
+        $managerPermissions = Permission::whereNotIn('name', ['manage roles', 'manage permissions', 'manage pos settings'])->get();
         $managerRole->syncPermissions($managerPermissions);
 
         // Assign editor permissions (view and edit, but no delete or create)
@@ -149,5 +176,17 @@ class RolesPermissionsSeeder extends Seeder
                 ->orWhere('name', '=', 'process orders');
         })->get();
         $editorRole->syncPermissions($editorPermissions);
+
+        $cashierPermissions = Permission::whereIn('name', [
+            'access pos',
+            'process pos sales',
+            'apply pos discounts',
+            'hold pos sales',
+            'void pos sale line',
+            'open pos shift',
+            'close pos shift',
+            'manage cash drawer',
+        ])->get();
+        $cashierRole->syncPermissions($cashierPermissions);
     }
 }

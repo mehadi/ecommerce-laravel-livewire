@@ -49,6 +49,24 @@
                     <flux:sidebar.item icon="rectangle-group" :href="route('admin.cart-checkout.index')" :current="request()->routeIs('admin.cart-checkout.*')" wire:navigate>{{ __('Cart & Checkout') }}</flux:sidebar.item>
                 </flux:sidebar.group>
 
+                @canany(['access pos', 'view pos reports', 'manage pos registers', 'process pos refunds'])
+                    <flux:sidebar.group expandable heading="{{ __('POS') }}" icon="calculator">
+                        @can('access pos')
+                            <flux:sidebar.item icon="calculator" :href="route('pos.terminal')" wire:navigate>{{ __('Open Till') }}</flux:sidebar.item>
+                        @endcan
+                        @can('view pos reports')
+                            <flux:sidebar.item icon="chart-bar" :href="route('admin.pos.dashboard')" :current="request()->routeIs('admin.pos.dashboard')" wire:navigate>{{ __('POS Dashboard') }}</flux:sidebar.item>
+                            <flux:sidebar.item icon="clock" :href="route('admin.pos.shifts.index')" :current="request()->routeIs('admin.pos.shifts.*')" wire:navigate>{{ __('Shifts') }}</flux:sidebar.item>
+                        @endcan
+                        @can('process pos refunds')
+                            <flux:sidebar.item icon="receipt-refund" :href="route('admin.pos.refunds.index')" :current="request()->routeIs('admin.pos.refunds.*')" wire:navigate>{{ __('Refunds') }}</flux:sidebar.item>
+                        @endcan
+                        @can('manage pos registers')
+                            <flux:sidebar.item icon="building-storefront" :href="route('admin.pos.registers.index')" :current="request()->routeIs('admin.pos.registers.*')" wire:navigate>{{ __('Registers') }}</flux:sidebar.item>
+                        @endcan
+                    </flux:sidebar.group>
+                @endcanany
+
                 <flux:sidebar.group expandable heading="{{ __('Storefront') }}" icon="swatch">
                     <flux:sidebar.item icon="squares-2x2" :href="route('admin.sections.index')" :current="request()->routeIs('admin.sections.*')" wire:navigate>{{ __('Sections') }}</flux:sidebar.item>
                     <flux:sidebar.item icon="chat-bubble-left-right" :href="route('admin.testimonials.index')" :current="request()->routeIs('admin.testimonials.*')" wire:navigate>{{ __('Testimonials') }}</flux:sidebar.item>

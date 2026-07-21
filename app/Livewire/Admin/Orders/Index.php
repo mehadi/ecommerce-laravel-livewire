@@ -2,15 +2,13 @@
 
 namespace App\Livewire\Admin\Orders;
 
-use App\Enums\StockMovementType;
 use App\Models\Order;
-use App\Models\OrderItem;
 use App\Models\Product;
 use App\Models\Warehouse;
-use App\Models\WarehouseStock;
-use App\Support\StockMovementContext;
+use App\Services\PosSaleService;
 use Livewire\Component;
 use Livewire\WithPagination;
+use RuntimeException;
 
 class Index extends Component
 {
@@ -299,54 +297,63 @@ class Index extends Component
 
         $warehouse = $this->selectedWarehouseId ? Warehouse::find($this->selectedWarehouseId) : Warehouse::default();
 
-        $order = Order::create([
-            'customer_name' => $this->customer_name,
-            'customer_email' => $this->customer_email,
-            'customer_phone' => $this->customer_phone,
-            'shipping_address' => $this->shipping_address,
-            'shipping_city' => $this->shipping_city,
-            'shipping_postal_code' => $this->shipping_postal_code,
-            'subtotal' => $this->subtotal,
-            'discount' => 0,
-            'shipping_cost' => 0, // Manual orders default to 0 shipping, can be updated later if needed
-            'total' => $this->total,
-            'advance_payment' => $this->advance_payment ?? 0,
-            'transaction_id' => $this->transaction_id ?: null,
-            'advance_payment_method' => $this->advance_payment_method ?: null,
-            'payment_method' => $this->payment_method,
-            'status' => $this->status,
-            'notes' => $this->notes,
-        ]);
-
+        $lines = [];
         foreach ($this->orderItems as $item) {
             $product = Product::find($item['product_id']);
+
             // This screen has no variant picker, so a product with variants can't be
-            // reliably decremented at the variant level — leave stock_deducted false
-            // (not tracked) rather than guessing which variant to touch.
-            $canDeductStock = $product && ! $product->hasAttributes();
-
-            OrderItem::create([
-                'order_id' => $order->id,
+            // reliably decremented at the variant level — skip_stock leaves the line
+            // untracked (not tracked) rather than guessing which variant to touch,
+            // exactly matching this screen's prior behavior.
+            $lines[] = [
                 'product_id' => $item['product_id'],
-                'warehouse_id' => $canDeductStock ? $warehouse->id : null,
+                'product_attribute_id' => null,
                 'product_name' => $item['product_name'],
-                'price' => $item['price'],
+                'attribute_data' => null,
                 'quantity' => $item['quantity'],
-                'subtotal' => $item['subtotal'],
-                'stock_deducted' => $canDeductStock,
+                'unit_price' => $item['price'],
+                'skip_stock' => ! $product || $product->hasAttributes(),
+            ];
+        }
+
+        $payments = [];
+        if ($this->advance_payment > 0) {
+            $payments[] = [
+                'method' => $this->advance_payment_method ?: $this->payment_method,
+                'amount' => (float) $this->advance_payment,
+                'reference' => $this->transaction_id ?: null,
+            ];
+        }
+
+        try {
+            app(PosSaleService::class)->checkout([
+                'order' => [
+                    'channel' => 'admin_manual',
+                    'customer_name' => $this->customer_name,
+                    'customer_email' => $this->customer_email,
+                    'customer_phone' => $this->customer_phone,
+                    'shipping_address' => $this->shipping_address,
+                    'shipping_city' => $this->shipping_city,
+                    'shipping_postal_code' => $this->shipping_postal_code,
+                    'subtotal' => $this->subtotal,
+                    'discount' => 0,
+                    'shipping_cost' => 0, // Manual orders default to 0 shipping, can be updated later if needed
+                    'total' => $this->total,
+                    'advance_payment' => $this->advance_payment ?? 0,
+                    'transaction_id' => $this->transaction_id ?: null,
+                    'advance_payment_method' => $this->advance_payment_method ?: null,
+                    'payment_method' => $this->payment_method,
+                    'status' => $this->status,
+                    'notes' => $this->notes,
+                ],
+                'lines' => $lines,
+                'payments' => $payments,
+                'warehouse' => $warehouse,
             ]);
+        } catch (RuntimeException $e) {
+            session()->flash('error', $e->getMessage());
 
-            if ($canDeductStock) {
-                $warehouseStock = WarehouseStock::findOrCreateFor($warehouse->id, $product->id, null);
-
-                StockMovementContext::run([
-                    'type' => StockMovementType::Sale,
-                    'reason' => "Order #{$order->order_number}",
-                    'changed_by' => auth()->id(),
-                ], function () use ($warehouseStock, $item) {
-                    $warehouseStock->decrement('stock', $item['quantity']);
-                });
-            }
+            return;
         }
 
         session()->flash('message', __('Order created successfully.'));

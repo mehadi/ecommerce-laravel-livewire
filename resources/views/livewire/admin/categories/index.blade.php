@@ -329,7 +329,7 @@
                         return this.draggedCategoryId === categoryId;
                     }
                 }">
-                <div class="flex items-center justify-between mb-4">
+                <div class="flex items-center justify-between mb-2">
                     <flux:heading size="md" level="3">{{ __('Hierarchical View') }}</flux:heading>
                     <span class="text-xs text-zinc-500 dark:text-zinc-400">
                         @php
@@ -339,11 +339,11 @@
                         {{ $mainCount }} {{ __('main') }}, {{ $subCount }} {{ __('sub') }}
                     </span>
                 </div>
-                <p class="text-xs text-zinc-500 dark:text-zinc-400 mb-4">{{ __('Drag categories to reorganize, or use the "Move to..." select on each row for a keyboard-friendly alternative.') }}</p>
+                <p class="text-xs text-zinc-500 dark:text-zinc-400 mb-3">{{ __('Drag categories to reorganize, or use the "Move to..." select on each row for a keyboard-friendly alternative.') }}</p>
 
                 <div class="flex-1 flex flex-col min-h-0">
-                    <div class="bg-white dark:bg-zinc-900 rounded-lg shadow p-6 flex-1 overflow-y-auto">
-                        <div class="space-y-2">
+                    <div class="bg-white dark:bg-zinc-900 rounded-lg shadow p-4 flex-1 overflow-y-auto">
+                        <div class="space-y-1">
                         @forelse($this->categoryTree as $parentCategory)
                             @include('livewire.admin.categories.partials.tree-item', ['category' => $parentCategory, 'depth' => 0, 'allCategories' => $this->flatCategories])
                         @empty
@@ -360,7 +360,7 @@
 
                         <!-- Drop zone for moving to no parent (main category) -->
                         <div
-                            class="mt-4 p-3 border-2 border-dashed border-zinc-300 dark:border-zinc-700 rounded-lg transition-colors text-center"
+                            class="mt-2 p-2 border-2 border-dashed border-zinc-300 dark:border-zinc-700 rounded-lg transition-colors text-center"
                             :class="{
                                 'border-blue-500 dark:border-blue-400 bg-blue-50 dark:bg-blue-900/20': isDraggedOver(null) && draggedCategoryId !== null && draggedCategoryParentId !== null
                             }"
@@ -370,7 +370,7 @@
                             x-show="draggedCategoryId !== null && draggedCategoryParentId !== null"
                             x-transition
                         >
-                            <span class="text-sm text-zinc-600 dark:text-zinc-400">
+                            <span class="text-xs text-zinc-600 dark:text-zinc-400">
                                 {{ __('Drop here to make it a main category') }}
                             </span>
                         </div>

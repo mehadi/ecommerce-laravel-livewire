@@ -20,6 +20,7 @@ class ProductAttribute extends Model
         'compare_at_price',
         'buying_price',
         'sku',
+        'barcode',
         'stock',
         'weight_kg',
         'is_active',

@@ -23,6 +23,7 @@ class Product extends Model
         'compare_at_price',
         'buying_price',
         'sku',
+        'barcode',
         'stock',
         'low_stock_threshold',
         'abc_class',
