@@ -6,23 +6,30 @@ use App\Models\Concerns\BelongsToTenant;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 
-class ProductVariation extends Model
+class StockTransferItem extends Model
 {
     use BelongsToTenant, HasFactory;
 
     protected $fillable = [
+        'stock_transfer_id',
         'product_id',
-        'name',
-        'order',
+        'product_attribute_id',
+        'quantity',
+        'quantity_received',
     ];
 
     protected function casts(): array
     {
         return [
-            'order' => 'integer',
+            'quantity' => 'integer',
+            'quantity_received' => 'integer',
         ];
+    }
+
+    public function transfer(): BelongsTo
+    {
+        return $this->belongsTo(StockTransfer::class, 'stock_transfer_id');
     }
 
     public function product(): BelongsTo
@@ -30,8 +37,8 @@ class ProductVariation extends Model
         return $this->belongsTo(Product::class);
     }
 
-    public function options(): HasMany
+    public function productAttribute(): BelongsTo
     {
-        return $this->hasMany(ProductVariationOption::class)->orderBy('order');
+        return $this->belongsTo(ProductAttribute::class);
     }
 }

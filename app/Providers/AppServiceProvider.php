@@ -5,12 +5,15 @@ namespace App\Providers;
 use App\Models\Category;
 use App\Models\Order;
 use App\Models\Product;
-use App\Models\ProductVariation;
-use App\Models\ProductVariationCombination;
+use App\Models\ProductAttribute;
+use App\Models\ProductBatch;
 use App\Models\Testimonial;
+use App\Models\WarehouseStock;
 use App\Observers\OrderObserver;
-use App\Observers\ProductVariationCombinationObserver;
-use App\Observers\ProductVariationObserver;
+use App\Observers\ProductAttributeObserver;
+use App\Observers\ProductBatchObserver;
+use App\Observers\ProductObserver;
+use App\Observers\WarehouseStockObserver;
 use App\Support\Tenancy;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Gate;
@@ -32,9 +35,11 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         // Register model observers
-        ProductVariationCombination::observe(ProductVariationCombinationObserver::class);
-        ProductVariation::observe(ProductVariationObserver::class);
         Order::observe(OrderObserver::class);
+        Product::observe(ProductObserver::class);
+        ProductAttribute::observe(ProductAttributeObserver::class);
+        WarehouseStock::observe(WarehouseStockObserver::class);
+        ProductBatch::observe(ProductBatchObserver::class);
 
         // Define admin gate (tenant-scoped: hasRole() is implicitly scoped to the
         // current tenant via spatie/laravel-permission teams mode)
@@ -69,6 +74,21 @@ class AppServiceProvider extends ServiceProvider
         // Define gate for managing users (super admin and admin can manage, others can view if they have permission)
         Gate::define('manage users', function ($user) {
             return $user->hasRole('super admin') || $user->hasRole('admin') || $user->hasPermissionTo('view users');
+        });
+
+        // Inventory gates (mirrors the 'manage users' shape so seeded manager/admin
+        // roles keep working even though tests' actingAsAdmin() helper never runs
+        // RolesPermissionsSeeder)
+        Gate::define('view inventory', function ($user) {
+            return $user->hasRole('super admin') || $user->hasRole('admin') || $user->hasRole('manager') || $user->hasPermissionTo('view inventory');
+        });
+
+        Gate::define('adjust stock', function ($user) {
+            return $user->hasRole('super admin') || $user->hasRole('admin') || $user->hasRole('manager') || $user->hasPermissionTo('adjust stock');
+        });
+
+        Gate::define('manage inventory settings', function ($user) {
+            return $user->hasRole('super admin') || $user->hasRole('admin') || $user->hasRole('manager') || $user->hasPermissionTo('manage inventory settings');
         });
 
         // Cache featured products (scoped per tenant so one tenant's featured

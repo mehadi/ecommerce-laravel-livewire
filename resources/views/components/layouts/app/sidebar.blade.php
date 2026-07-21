@@ -26,21 +26,33 @@
                     <flux:sidebar.item icon="bars-3" :href="route('admin.navigation.index')" :current="request()->routeIs('admin.navigation.*')" wire:navigate>{{ __('Navigation Settings') }}</flux:sidebar.item>
                 </flux:sidebar.group>
 
-                <flux:sidebar.group expandable heading="{{ __('Ecommerce') }}" icon="shopping-cart">
+                <flux:sidebar.group expandable heading="{{ __('Catalog') }}" icon="cube">
                     <flux:sidebar.item icon="cube" :href="route('admin.products.index')" :current="request()->routeIs('admin.products.*')" wire:navigate>{{ __('Products') }}</flux:sidebar.item>
                     <flux:sidebar.item icon="tag" :href="route('admin.categories.index')" :current="request()->routeIs('admin.categories.*')" wire:navigate>{{ __('Categories') }}</flux:sidebar.item>
                     <flux:sidebar.item icon="view-columns" :href="route('admin.categories-display.index')" :current="request()->routeIs('admin.categories-display.*')" wire:navigate>{{ __('Categories Display') }}</flux:sidebar.item>
+                    <flux:sidebar.item icon="squares-2x2" :href="route('admin.attributes.index')" :current="request()->routeIs('admin.attributes.*')" wire:navigate>{{ __('Attributes') }}</flux:sidebar.item>
+                </flux:sidebar.group>
+
+                <flux:sidebar.group expandable heading="{{ __('Inventory') }}" icon="archive-box">
+                    <flux:sidebar.item icon="archive-box" :href="route('admin.inventory.index')" :current="request()->routeIs('admin.inventory.*')" wire:navigate>{{ __('Inventory') }}</flux:sidebar.item>
+                    <flux:sidebar.item icon="building-storefront" :href="route('admin.warehouses.index')" :current="request()->routeIs('admin.warehouses.*')" wire:navigate>{{ __('Warehouses') }}</flux:sidebar.item>
+                    <flux:sidebar.item icon="arrows-right-left" :href="route('admin.stock-transfers.index')" :current="request()->routeIs('admin.stock-transfers.*')" wire:navigate>{{ __('Stock Transfers') }}</flux:sidebar.item>
+                    <flux:sidebar.item icon="briefcase" :href="route('admin.suppliers.index')" :current="request()->routeIs('admin.suppliers.*')" wire:navigate>{{ __('Suppliers') }}</flux:sidebar.item>
+                    <flux:sidebar.item icon="clipboard-document-list" :href="route('admin.purchase-orders.index')" :current="request()->routeIs('admin.purchase-orders.*')" wire:navigate>{{ __('Purchase Orders') }}</flux:sidebar.item>
+                    <flux:sidebar.item icon="clipboard-document-check" :href="route('admin.cycle-counts.index')" :current="request()->routeIs('admin.cycle-counts.*')" wire:navigate>{{ __('Cycle Counts') }}</flux:sidebar.item>
+                </flux:sidebar.group>
+
+                <flux:sidebar.group expandable heading="{{ __('Sales') }}" icon="shopping-bag">
                     <flux:sidebar.item icon="shopping-bag" :href="route('admin.orders.index')" :current="request()->routeIs('admin.orders.*')" wire:navigate>{{ __('Orders') }}</flux:sidebar.item>
                     <flux:sidebar.item icon="ticket" :href="route('admin.coupons.index')" :current="request()->routeIs('admin.coupons.*')" wire:navigate>{{ __('Coupons') }}</flux:sidebar.item>
                     <flux:sidebar.item icon="truck" :href="route('admin.shipping.index')" :current="request()->routeIs('admin.shipping.*')" wire:navigate>{{ __('Shipping') }}</flux:sidebar.item>
                     <flux:sidebar.item icon="rectangle-group" :href="route('admin.cart-checkout.index')" :current="request()->routeIs('admin.cart-checkout.*')" wire:navigate>{{ __('Cart & Checkout') }}</flux:sidebar.item>
+                </flux:sidebar.group>
+
+                <flux:sidebar.group expandable heading="{{ __('Storefront') }}" icon="swatch">
                     <flux:sidebar.item icon="squares-2x2" :href="route('admin.sections.index')" :current="request()->routeIs('admin.sections.*')" wire:navigate>{{ __('Sections') }}</flux:sidebar.item>
                     <flux:sidebar.item icon="chat-bubble-left-right" :href="route('admin.testimonials.index')" :current="request()->routeIs('admin.testimonials.*')" wire:navigate>{{ __('Testimonials') }}</flux:sidebar.item>
                     <flux:sidebar.item icon="document-duplicate" :href="route('admin.landing-pages.index')" :current="request()->routeIs('admin.landing-pages.*')" wire:navigate>{{ __('Landing Pages') }}</flux:sidebar.item>
-                </flux:sidebar.group>
-
-                <flux:sidebar.group expandable heading="{{ __('Settings') }}" icon="cog-6-tooth">
-                    <flux:sidebar.item icon="tag" :href="route('admin.attributes.index')" :current="request()->routeIs('admin.attributes.*')" wire:navigate>{{ __('Attributes') }}</flux:sidebar.item>
                 </flux:sidebar.group>
 
                 @canany(['manage users', 'manage roles'])

@@ -42,7 +42,7 @@ class DefaultTenantSeeder extends Seeder
     protected function tenantOwnedTables(): array
     {
         return [
-            'products', 'product_variations', 'product_variation_options', 'product_variation_combinations',
+            'products',
             'product_attributes', 'attributes', 'attribute_values', 'categories', 'orders', 'order_items',
             'coupons', 'testimonials', 'navbar_components', 'navigation_items', 'navigation_categories',
             'landing_pages', 'landing_page_sections', 'user_dashboard_preferences', 'settings',

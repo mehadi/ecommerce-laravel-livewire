@@ -543,6 +543,18 @@
                     <div class="border-t pt-4">
                         <h3 class="font-semibold mb-4">{{ __('Order Items') }}</h3>
 
+                        @if($activeWarehouses->count() > 1)
+                            <flux:field class="mb-4">
+                                <flux:label>{{ __('Fulfilling Warehouse') }}</flux:label>
+                                <flux:select wire:model="selectedWarehouseId">
+                                    @foreach($activeWarehouses as $warehouse)
+                                        <option value="{{ $warehouse->id }}">{{ $warehouse->name }}</option>
+                                    @endforeach
+                                </flux:select>
+                                <flux:error name="selectedWarehouseId" />
+                            </flux:field>
+                        @endif
+
                         <div class="flex gap-2 mb-4">
                             <flux:field class="flex-1">
                                 <flux:select wire:model="selectedProductId">

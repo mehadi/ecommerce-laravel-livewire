@@ -169,6 +169,29 @@ Route::middleware(['tenant'])->group(function () {
         // Attributes
         Route::get('attributes', App\Livewire\Admin\Attributes\Index::class)->name('attributes.index');
 
+        // Inventory
+        Route::get('inventory', App\Livewire\Admin\Inventory\Index::class)->name('inventory.index');
+        Route::get('inventory/suggested-reorders', App\Livewire\Admin\Inventory\SuggestedReorders::class)->name('inventory.suggested-reorders');
+        Route::get('inventory/expiring-batches', App\Livewire\Admin\Inventory\ExpiringBatches::class)->name('inventory.expiring-batches');
+
+        // Warehouses
+        Route::get('warehouses', App\Livewire\Admin\Warehouses\Index::class)->name('warehouses.index');
+
+        // Stock Transfers
+        Route::get('stock-transfers', App\Livewire\Admin\StockTransfers\Index::class)->name('stock-transfers.index');
+        Route::get('stock-transfers/create', App\Livewire\Admin\StockTransfers\Create::class)->name('stock-transfers.create');
+
+        // Suppliers
+        Route::get('suppliers', App\Livewire\Admin\Suppliers\Index::class)->name('suppliers.index');
+
+        // Purchase Orders
+        Route::get('purchase-orders', App\Livewire\Admin\PurchaseOrders\Index::class)->name('purchase-orders.index');
+        Route::get('purchase-orders/create', App\Livewire\Admin\PurchaseOrders\Create::class)->name('purchase-orders.create');
+
+        // Cycle Counts
+        Route::get('cycle-counts', App\Livewire\Admin\CycleCounts\Index::class)->name('cycle-counts.index');
+        Route::get('cycle-counts/{cycleCount}/count', App\Livewire\Admin\CycleCounts\Count::class)->name('cycle-counts.count');
+
         // Categories
         Route::get('categories', App\Livewire\Admin\Categories\Index::class)->name('categories.index');
 

@@ -14,19 +14,19 @@ class Product extends Model
 
     protected $fillable = [
         'category_id',
+        'default_supplier_id',
         'name_en',
         'name_bn',
         'description_en',
         'description_bn',
-        'ingredients_en',
-        'ingredients_bn',
-        'benefits_en',
-        'benefits_bn',
         'price',
         'compare_at_price',
         'buying_price',
         'sku',
         'stock',
+        'low_stock_threshold',
+        'abc_class',
+        'tracks_batches',
         'weight_kg',
         'primary_image',
         'gallery_images',
@@ -42,6 +42,8 @@ class Product extends Model
             'compare_at_price' => 'decimal:2',
             'buying_price' => 'decimal:2',
             'stock' => 'integer',
+            'low_stock_threshold' => 'integer',
+            'tracks_batches' => 'boolean',
             'weight_kg' => 'decimal:2',
             'gallery_images' => 'array',
             'is_active' => 'boolean',
@@ -55,9 +57,49 @@ class Product extends Model
         return $this->belongsTo(Category::class);
     }
 
+    public function defaultSupplier(): BelongsTo
+    {
+        return $this->belongsTo(Supplier::class, 'default_supplier_id');
+    }
+
     public function productAttributes(): HasMany
     {
         return $this->hasMany(ProductAttribute::class);
+    }
+
+    public function stockMovements(): HasMany
+    {
+        return $this->hasMany(StockMovement::class);
+    }
+
+    public function batches(): HasMany
+    {
+        return $this->hasMany(ProductBatch::class);
+    }
+
+    /**
+     * FEFO (first-expired-first-out) pick suggestion: the batch at this
+     * warehouse that expires soonest (batches with no expiry date sort
+     * last, since there's no urgency to deplete them first).
+     */
+    public function nextBatchToPick(int $warehouseId): ?ProductBatch
+    {
+        return $this->batches()
+            ->where('warehouse_id', $warehouseId)
+            ->where('quantity', '>', 0)
+            ->orderByRaw('expires_at IS NULL, expires_at ASC')
+            ->first();
+    }
+
+    /**
+     * This product's own direct per-warehouse stock rows — only meaningful for
+     * products without attributes (attribute-tracked products have their stock
+     * rows scoped to each ProductAttribute instead, see
+     * ProductAttribute::warehouseStocks()).
+     */
+    public function warehouseStocks(): HasMany
+    {
+        return $this->hasMany(WarehouseStock::class)->whereNull('product_attribute_id');
     }
 
     public function hasAttributes(): bool
@@ -77,16 +119,6 @@ class Product extends Model
     public function getDescriptionAttribute(): ?string
     {
         return app()->getLocale() === 'bn' && $this->description_bn ? $this->description_bn : $this->description_en;
-    }
-
-    public function getIngredientsAttribute(): ?string
-    {
-        return app()->getLocale() === 'bn' && $this->ingredients_bn ? $this->ingredients_bn : $this->ingredients_en;
-    }
-
-    public function getBenefitsAttribute(): ?string
-    {
-        return app()->getLocale() === 'bn' && $this->benefits_bn ? $this->benefits_bn : $this->benefits_en;
     }
 
     public function hasDiscount(): bool
@@ -116,6 +148,22 @@ class Product extends Model
         }
 
         return $this->stock > 0;
+    }
+
+    /**
+     * This product's own override if set, otherwise the tenant's configured
+     * default (falling back to the historical hardcoded value of 10).
+     */
+    public function lowStockThreshold(): int
+    {
+        return $this->low_stock_threshold ?? (int) Setting::get('low_stock_threshold', '10');
+    }
+
+    public function isLowStock(): bool
+    {
+        $stock = $this->getSyncedStock();
+
+        return $stock > 0 && $stock <= $this->lowStockThreshold();
     }
 
     public function getSyncedPrice(): float
@@ -149,6 +197,35 @@ class Product extends Model
         }
 
         return (int) $this->stock;
+    }
+
+    /**
+     * Total reserved quantity across every warehouse (and, for attribute-
+     * tracked products, every variant) — there is no denormalized `reserved`
+     * column, so this reads WarehouseStock rows directly. Relies on the
+     * caller having eager-loaded `productAttributes.warehouseStocks` (or
+     * `warehouseStocks` for simple products) to avoid N+1 queries.
+     */
+    public function getSyncedReserved(): int
+    {
+        if ($this->hasAttributes()) {
+            if (! $this->relationLoaded('productAttributes')) {
+                return 0;
+            }
+
+            return $this->productAttributes->sum(fn (ProductAttribute $attribute) => $attribute->relationLoaded('warehouseStocks')
+                ? $attribute->warehouseStocks->sum('reserved')
+                : $attribute->warehouseStocks()->sum('reserved'));
+        }
+
+        return $this->relationLoaded('warehouseStocks')
+            ? $this->warehouseStocks->sum('reserved')
+            : $this->warehouseStocks()->sum('reserved');
+    }
+
+    public function getSyncedAvailable(): int
+    {
+        return $this->getSyncedStock() - $this->getSyncedReserved();
     }
 
     public function getSyncedCompareAtPrice(): ?float

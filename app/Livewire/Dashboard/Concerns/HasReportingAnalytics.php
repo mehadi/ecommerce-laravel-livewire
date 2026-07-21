@@ -121,7 +121,7 @@ trait HasReportingAnalytics
                     'value_at_cost' => round($valueAtCost, 2),
                     'value_at_retail' => round($valueAtRetail, 2),
                     'units_sold_in_period' => $unitsSold,
-                    'is_low_stock' => $stock > 0 && $stock <= 10,
+                    'is_low_stock' => $product->isLowStock(),
                     'is_out_of_stock' => $stock <= 0,
                     'is_dead_stock' => $stock > 0 && $unitsSold === 0,
                     'has_cost_data' => $hasCostData,

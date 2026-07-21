@@ -80,8 +80,8 @@
             </x-products.form-section>
 
             <x-products.form-section
-                :title="__('Story & Ingredients')"
-                :description="__('Use rich text to highlight value, routines, and ingredient transparency.')"
+                :title="__('Description')"
+                :description="__('Use rich text to highlight value, routines, and social proof.')"
                 icon="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
             >
                 <div x-data="{ lang: 'en' }" class="space-y-6">
@@ -105,7 +105,7 @@
                             class="relative cursor-pointer rounded-md px-3.5 py-1.5 text-sm font-medium transition-colors"
                         >
                             {{ __('Bangla') }}
-                            @if($errors->hasAny(['description_bn', 'ingredients_bn', 'benefits_bn']))
+                            @if($errors->hasAny(['description_bn']))
                                 <span class="absolute -right-0.5 -top-0.5 h-2 w-2 rounded-full bg-red-500"></span>
                             @endif
                         </button>
@@ -127,18 +127,6 @@
                             </div>
                             <flux:error name="description_en" />
                         </flux:field>
-
-                        <flux:field>
-                            <flux:label>{{ __('Ingredients (English)') }}</flux:label>
-                            <flux:textarea wire:model="ingredients_en" rows="4" :placeholder="__('List standout ingredients and sourcing details.')" />
-                            <flux:error name="ingredients_en" />
-                        </flux:field>
-
-                        <flux:field>
-                            <flux:label>{{ __('Benefits (English)') }}</flux:label>
-                            <flux:textarea wire:model="benefits_en" rows="4" :placeholder="__('Explain outcomes, routines, or usage tips.')" />
-                            <flux:error name="benefits_en" />
-                        </flux:field>
                     </div>
 
                     <div x-show="lang === 'bn'" class="space-y-6">
@@ -156,18 +144,6 @@
                                 <p class="text-xs text-zinc-500 dark:text-zinc-400">{{ __('Mirror key talking points for Bangla-speaking customers.') }}</p>
                             </div>
                             <flux:error name="description_bn" />
-                        </flux:field>
-
-                        <flux:field>
-                            <flux:label>{{ __('Ingredients (Bangla)') }}</flux:label>
-                            <flux:textarea wire:model="ingredients_bn" rows="4" :placeholder="__('Translate ingredient highlights to build trust.')" />
-                            <flux:error name="ingredients_bn" />
-                        </flux:field>
-
-                        <flux:field>
-                            <flux:label>{{ __('Benefits (Bangla)') }}</flux:label>
-                            <flux:textarea wire:model="benefits_bn" rows="4" :placeholder="__('Translate benefits to resonate with Bangla audiences.')" />
-                            <flux:error name="benefits_bn" />
                         </flux:field>
                     </div>
                 </div>
@@ -381,14 +357,32 @@
                     @if(empty($productAttributes))
                         <flux:field>
                             <flux:label>{{ __('Stock') }} *</flux:label>
-                            <flux:input type="number" wire:model="stock" min="0" :placeholder="__('Available units ready to sell')" />
+                            <flux:input type="number" wire:model="stock" min="0" :disabled="$tracks_batches" :placeholder="__('Available units ready to sell')" />
+                            @if($tracks_batches)
+                                <p class="text-xs text-zinc-500 dark:text-zinc-400">{{ __('Batch-tracked — add stock via batches in Inventory once this product is saved.') }}</p>
+                            @endif
                             <flux:error name="stock" />
                         </flux:field>
+
+                        <div class="flex items-center justify-between rounded-lg border border-zinc-200 p-3 dark:border-zinc-700">
+                            <div>
+                                <p class="text-sm font-medium text-zinc-900 dark:text-white">{{ __('Track Batches / Lots') }}</p>
+                                <p class="text-xs text-zinc-500 dark:text-zinc-400">{{ __('Enable for products with expiry dates or lot numbers you need to trace.') }}</p>
+                            </div>
+                            <flux:switch wire:model.live="tracks_batches" />
+                        </div>
                     @else
                         <div class="flex items-end pb-1">
                             <p class="text-xs text-zinc-500 dark:text-zinc-400">{{ __('Stock is tracked per variation above.') }}</p>
                         </div>
                     @endif
+
+                    <flux:field>
+                        <flux:label>{{ __('Low Stock Alert Threshold') }}</flux:label>
+                        <flux:input type="number" wire:model="low_stock_threshold" min="1" :placeholder="__('Store default (:threshold)', ['threshold' => \App\Models\Setting::get('low_stock_threshold', '10')])" />
+                        <p class="text-xs text-zinc-500 dark:text-zinc-400">{{ __('Leave blank to use the store-wide default set in Inventory.') }}</p>
+                        <flux:error name="low_stock_threshold" />
+                    </flux:field>
                 </div>
 
                 @if(empty($productAttributes))
@@ -522,6 +516,18 @@
                         </flux:select>
                         <p class="text-xs text-zinc-500 dark:text-zinc-400">{{ __('Optional. Helps customers browse by collection.') }}</p>
                         <flux:error name="category_id" />
+                    </flux:field>
+
+                    <flux:field>
+                        <flux:label>{{ __('Default Supplier') }}</flux:label>
+                        <flux:select wire:model="default_supplier_id">
+                            <option value="">{{ __('No Default Supplier') }}</option>
+                            @foreach($suppliers as $supplier)
+                                <option value="{{ $supplier->id }}">{{ $supplier->name }}</option>
+                            @endforeach
+                        </flux:select>
+                        <p class="text-xs text-zinc-500 dark:text-zinc-400">{{ __('Optional. Used to group this product under Inventory > Suggested Reorders.') }}</p>
+                        <flux:error name="default_supplier_id" />
                     </flux:field>
 
                     <flux:field>

@@ -10,3 +10,4 @@ Artisan::command('inspire', function () {
 
 Schedule::command('tenants:verify-domains')->everyFiveMinutes();
 Schedule::command('platform:notify-trial-ending')->daily();
+Schedule::command('inventory:recompute-abc')->daily();

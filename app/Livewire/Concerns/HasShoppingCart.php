@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Concerns;
 
+use App\Enums\StockMovementType;
 use App\Models\City;
 use App\Models\Coupon;
 use App\Models\Order;
@@ -11,8 +12,12 @@ use App\Models\ProductAttribute;
 use App\Models\Setting;
 use App\Models\ShippingCityRate;
 use App\Models\ShippingSetting;
+use App\Models\Warehouse;
+use App\Models\WarehouseStock;
 use App\Services\ShippingService;
 use App\Support\PhoneFormats;
+use App\Support\StockMovementContext;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\Computed;
@@ -375,7 +380,6 @@ trait HasShoppingCart
 
         session()->put('cart', $cart);
         $this->cart = $cart;
-        $this->showCart = true;
         $this->dispatch('cart-updated');
 
         $this->dispatch('fbq:track', 'AddToCart', [
@@ -581,16 +585,24 @@ trait HasShoppingCart
 
         try {
             $order = DB::transaction(function () use ($lines, $subtotal, $discount, $shippingCost, $total, $city, $appliedCoupon) {
+                $warehouse = Warehouse::default();
+
                 // Re-check stock under a row lock inside the transaction, so two
-                // concurrent checkouts for the last unit can't both succeed.
+                // concurrent checkouts for the last unit can't both succeed. This
+                // locks the WarehouseStock row (the real source of truth) rather
+                // than the Product/ProductAttribute row, since those now only hold
+                // a denormalized total.
+                $warehouseStocks = [];
+
                 foreach ($lines as $line) {
-                    $locked = $line['attribute']
-                        ? ProductAttribute::whereKey($line['attribute']->id)->lockForUpdate()->first()
-                        : Product::whereKey($line['product']->id)->lockForUpdate()->first();
+                    $warehouseStock = WarehouseStock::findOrCreateFor($warehouse->id, $line['product']->id, $line['attribute']?->id);
+                    $locked = WarehouseStock::whereKey($warehouseStock->id)->lockForUpdate()->first();
 
                     if (! $locked || $locked->stock < $line['quantity']) {
                         throw new \RuntimeException(__('Sorry, ":name" just sold out. Please update your cart and try again.', ['name' => $line['name']]));
                     }
+
+                    $warehouseStocks[] = $locked;
                 }
 
                 $order = Order::create([
@@ -609,22 +621,27 @@ trait HasShoppingCart
                     'notes' => $this->notes,
                 ]);
 
-                foreach ($lines as $line) {
+                foreach ($lines as $index => $line) {
                     OrderItem::create([
                         'order_id' => $order->id,
                         'product_id' => $line['product']->id,
+                        'product_attribute_id' => $line['attribute']?->id,
+                        'warehouse_id' => $warehouse->id,
                         'product_name' => $line['name'],
                         'attribute_data' => $line['attribute_data'],
                         'price' => $line['price'],
                         'quantity' => $line['quantity'],
                         'subtotal' => $line['price'] * $line['quantity'],
+                        'stock_deducted' => true,
                     ]);
 
-                    if ($line['attribute']) {
-                        $line['attribute']->decrement('stock', $line['quantity']);
-                    } else {
-                        $line['product']->decrement('stock', $line['quantity']);
-                    }
+                    StockMovementContext::run([
+                        'type' => StockMovementType::Sale,
+                        'reason' => "Order #{$order->order_number}",
+                        'changed_by' => Auth::id(),
+                    ], function () use ($warehouseStocks, $index, $line) {
+                        $warehouseStocks[$index]->decrement('stock', $line['quantity']);
+                    });
                 }
 
                 $appliedCoupon?->incrementUsage();

@@ -2,9 +2,13 @@
 
 namespace App\Livewire\Admin\Orders;
 
+use App\Enums\StockMovementType;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Product;
+use App\Models\Warehouse;
+use App\Models\WarehouseStock;
+use App\Support\StockMovementContext;
 use Livewire\Component;
 use Livewire\WithPagination;
 
@@ -67,6 +71,8 @@ class Index extends Component
     public $selectedProductId = null;
 
     public $selectedProductQuantity = 1;
+
+    public $selectedWarehouseId = null;
 
     public $editingAdvancePayment = false;
 
@@ -204,6 +210,7 @@ class Index extends Component
     public function openCreateOrderModal(): void
     {
         $this->reset(['customer_name', 'customer_email', 'customer_phone', 'shipping_address', 'shipping_city', 'shipping_postal_code', 'payment_method', 'status', 'notes', 'advance_payment', 'transaction_id', 'advance_payment_method', 'orderItems', 'selectedProductId', 'selectedProductQuantity']);
+        $this->selectedWarehouseId = Warehouse::default()->id;
         $this->showCreateOrderModal = true;
     }
 
@@ -287,7 +294,10 @@ class Index extends Component
             'advance_payment' => 'nullable|numeric|min:0|max:'.$this->total,
             'transaction_id' => 'nullable|string|max:255',
             'advance_payment_method' => 'nullable|string|in:cash,bank_transfer,mobile_banking,bkash,nagad,rocket',
+            'selectedWarehouseId' => 'nullable|exists:warehouses,id',
         ]);
+
+        $warehouse = $this->selectedWarehouseId ? Warehouse::find($this->selectedWarehouseId) : Warehouse::default();
 
         $order = Order::create([
             'customer_name' => $this->customer_name,
@@ -309,14 +319,34 @@ class Index extends Component
         ]);
 
         foreach ($this->orderItems as $item) {
+            $product = Product::find($item['product_id']);
+            // This screen has no variant picker, so a product with variants can't be
+            // reliably decremented at the variant level — leave stock_deducted false
+            // (not tracked) rather than guessing which variant to touch.
+            $canDeductStock = $product && ! $product->hasAttributes();
+
             OrderItem::create([
                 'order_id' => $order->id,
                 'product_id' => $item['product_id'],
+                'warehouse_id' => $canDeductStock ? $warehouse->id : null,
                 'product_name' => $item['product_name'],
                 'price' => $item['price'],
                 'quantity' => $item['quantity'],
                 'subtotal' => $item['subtotal'],
+                'stock_deducted' => $canDeductStock,
             ]);
+
+            if ($canDeductStock) {
+                $warehouseStock = WarehouseStock::findOrCreateFor($warehouse->id, $product->id, null);
+
+                StockMovementContext::run([
+                    'type' => StockMovementType::Sale,
+                    'reason' => "Order #{$order->order_number}",
+                    'changed_by' => auth()->id(),
+                ], function () use ($warehouseStock, $item) {
+                    $warehouseStock->decrement('stock', $item['quantity']);
+                });
+            }
         }
 
         session()->flash('message', __('Order created successfully.'));
@@ -387,6 +417,7 @@ class Index extends Component
             'orders' => $orders,
             'products' => Product::with('productAttributes')->where('is_active', true)->orderBy('name_en')->get(),
             'stats' => $stats,
+            'activeWarehouses' => Warehouse::where('is_active', true)->orderBy('name')->get(),
         ])->layout('components.layouts.app', [
             'title' => __('Manage Orders'),
         ]);

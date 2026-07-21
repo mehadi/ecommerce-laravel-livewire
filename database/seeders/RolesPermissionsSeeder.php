@@ -58,6 +58,40 @@ class RolesPermissionsSeeder extends Seeder
             'view settings',
             'edit settings',
 
+            // Inventory permissions
+            'view inventory',
+            'adjust stock',
+            'manage inventory settings',
+
+            // Warehouse permissions
+            'view warehouses',
+            'create warehouses',
+            'edit warehouses',
+            'delete warehouses',
+
+            // Stock transfer permissions
+            'view transfers',
+            'create transfers',
+            'receive transfers',
+            'cancel transfers',
+
+            // Supplier permissions
+            'view suppliers',
+            'create suppliers',
+            'edit suppliers',
+            'delete suppliers',
+
+            // Purchase order permissions
+            'view purchase orders',
+            'create purchase orders',
+            'receive purchase orders',
+            'cancel purchase orders',
+
+            // Cycle count permissions
+            'view cycle counts',
+            'create cycle counts',
+            'complete cycle counts',
+
             // User permissions
             'view users',
             'create users',

@@ -5,6 +5,7 @@ namespace App\Livewire\Admin\Products;
 use App\Models\Attribute;
 use App\Models\Category;
 use App\Models\Product;
+use App\Models\Supplier;
 use App\Support\Tenancy;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Storage;
@@ -19,6 +20,8 @@ class Create extends Component
 
     public $category_id;
 
+    public $default_supplier_id;
+
     public $name_en = '';
 
     public $name_bn = '';
@@ -26,14 +29,6 @@ class Create extends Component
     public $description_en = '';
 
     public $description_bn = '';
-
-    public $ingredients_en = '';
-
-    public $ingredients_bn = '';
-
-    public $benefits_en = '';
-
-    public $benefits_bn = '';
 
     public $price = 0;
 
@@ -44,6 +39,10 @@ class Create extends Component
     public $sku;
 
     public $stock = 0;
+
+    public $low_stock_threshold;
+
+    public $tracks_batches = false;
 
     public $primary_image;
 
@@ -69,19 +68,18 @@ class Create extends Component
         if ($product) {
             $this->product = $product;
             $this->category_id = $product->category_id;
+            $this->default_supplier_id = $product->default_supplier_id;
             $this->name_en = $product->name_en;
             $this->name_bn = $product->name_bn;
             $this->description_en = $product->description_en;
             $this->description_bn = $product->description_bn;
-            $this->ingredients_en = $product->ingredients_en;
-            $this->ingredients_bn = $product->ingredients_bn;
-            $this->benefits_en = $product->benefits_en;
-            $this->benefits_bn = $product->benefits_bn;
             $this->price = $product->price;
             $this->compare_at_price = $product->compare_at_price;
             $this->buying_price = $product->buying_price;
             $this->sku = $product->sku;
             $this->stock = $product->stock;
+            $this->low_stock_threshold = $product->low_stock_threshold;
+            $this->tracks_batches = $product->tracks_batches;
             $this->existing_gallery = $product->gallery_images ?? [];
             $this->is_active = $product->is_active;
             $this->is_featured = $product->is_featured;
@@ -169,14 +167,11 @@ class Create extends Component
     {
         return [
             'category_id' => 'nullable|exists:categories,id',
+            'default_supplier_id' => 'nullable|exists:suppliers,id',
             'name_en' => 'required|string|max:255',
             'name_bn' => 'nullable|string|max:255',
             'description_en' => 'nullable|string',
             'description_bn' => 'nullable|string',
-            'ingredients_en' => 'nullable|string',
-            'ingredients_bn' => 'nullable|string',
-            'benefits_en' => 'nullable|string',
-            'benefits_bn' => 'nullable|string',
             'price' => [function ($attribute, $value, $fail) {
                 if (empty($this->productAttributes) && (empty($value) || $value < 0)) {
                     $fail(__('Price is required when no attributes are set.'));
@@ -194,6 +189,8 @@ class Create extends Component
                     $fail(__('Stock is required when no attributes are set.'));
                 }
             }, 'nullable', 'integer', 'min:0'],
+            'low_stock_threshold' => 'nullable|integer|min:1',
+            'tracks_batches' => 'boolean',
             'primary_image' => 'nullable|image|max:2048',
             'gallery_images.*' => 'nullable|image|max:2048',
             'is_active' => 'boolean',
@@ -275,19 +272,21 @@ class Create extends Component
 
         $data = [
             'category_id' => $this->category_id ?: null,
+            'default_supplier_id' => $this->default_supplier_id ?: null,
             'name_en' => $this->name_en,
             'name_bn' => $this->name_bn ?: null,
             'description_en' => $this->normalizeRichText($this->description_en),
             'description_bn' => $this->normalizeRichText($this->description_bn),
-            'ingredients_en' => $this->ingredients_en ?: null,
-            'ingredients_bn' => $this->ingredients_bn ?: null,
-            'benefits_en' => $this->benefits_en ?: null,
-            'benefits_bn' => $this->benefits_bn ?: null,
             'price' => $hasAttributes ? 0 : $this->price,
             'compare_at_price' => $hasAttributes ? null : ($this->compare_at_price ?: null),
             'buying_price' => $this->buying_price ?: null,
             'sku' => $this->sku ?: null,
-            'stock' => $hasAttributes ? 0 : $this->stock,
+            // A tracks_batches product's stock is derived entirely from its
+            // batches (see ProductBatchObserver) — the manual Stock field is
+            // ignored for it, matching the "add a batch to add stock" flow.
+            'stock' => ($hasAttributes || $this->tracks_batches) ? 0 : $this->stock,
+            'low_stock_threshold' => $this->low_stock_threshold ?: null,
+            'tracks_batches' => ! $hasAttributes && $this->tracks_batches,
             'is_active' => $this->is_active,
             'is_featured' => $this->is_featured,
             'order' => $this->order,
@@ -323,6 +322,12 @@ class Create extends Component
         // Save product attributes if any
         if (! empty($this->productAttributes)) {
             $this->saveProductAttributes($product);
+
+            // The base product was saved with price/stock forced to 0 above (they're
+            // tracked per-variant instead) — resync the denormalized cache now that
+            // the variants exist, so Products/Inventory show the real totals
+            // immediately instead of 0 until some later event happens to touch a variant.
+            $product->syncPriceAndStock();
         }
 
         Cache::forget(Tenancy::cacheKey('products.featured'));
@@ -551,6 +556,7 @@ class Create extends Component
 
         return view('livewire.admin.products.create', [
             'categories' => Category::with('parent')->orderBy('order')->orderBy('name_en')->get(),
+            'suppliers' => Supplier::where('is_active', true)->orderBy('name')->get(),
             'availableAttributes' => $availableAttributes,
             'isEdit' => $isEdit,
         ])->layout('components.layouts.app', [

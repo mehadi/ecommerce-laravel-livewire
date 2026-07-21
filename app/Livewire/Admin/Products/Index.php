@@ -247,17 +247,16 @@ class Index extends Component
                         });
                     });
                 } elseif ($this->filterStock === 'low_stock') {
-                    $query->where(function ($q) {
-                        $q->whereHas('productAttributes', function ($subQ) {
-                            $subQ->selectRaw('product_id, SUM(stock) as total_stock')
-                                ->groupBy('product_id')
-                                ->havingRaw('SUM(stock) > 0 AND SUM(stock) <= 10');
-                        })->orWhere(function ($subQ) {
-                            $subQ->whereDoesntHave('productAttributes')
-                                ->where('stock', '>', 0)
-                                ->where('stock', '<=', 10);
-                        });
-                    });
+                    // Threshold is per-product (override) or per-tenant (default), so it
+                    // can't be expressed as a single SQL constant like the in/out-of-stock
+                    // branches below. render() already loads every product into PHP for
+                    // stats on each request, so reuse that same approach here.
+                    $lowStockIds = Product::with('productAttributes')
+                        ->get()
+                        ->filter(fn ($product) => $product->isLowStock())
+                        ->pluck('id');
+
+                    $query->whereIn('id', $lowStockIds);
                 } elseif ($this->filterStock === 'out_of_stock') {
                     $query->where(function ($q) {
                         $q->whereHas('productAttributes', function ($subQ) {
@@ -297,7 +296,7 @@ class Index extends Component
             $stock = $product->getSyncedStock();
             if ($stock <= 0) {
                 $outOfStockCount++;
-            } elseif ($stock <= 10) {
+            } elseif ($product->isLowStock()) {
                 $lowStockCount++;
             }
             $totalValue += $product->getSyncedPrice();

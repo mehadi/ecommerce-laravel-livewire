@@ -620,7 +620,7 @@ trait HasDashboardAnalytics
             ->where('is_active', true)
             ->get()
             ->filter(function ($product) {
-                return $product->getSyncedStock() <= 10 && $product->getSyncedStock() > 0;
+                return $product->isLowStock();
             })
             ->sortBy(fn ($product) => $product->getSyncedStock())
             ->take(10)

@@ -14,11 +14,14 @@ class OrderItem extends Model
     protected $fillable = [
         'order_id',
         'product_id',
+        'product_attribute_id',
+        'warehouse_id',
         'product_name',
         'attribute_data',
         'price',
         'quantity',
         'subtotal',
+        'stock_deducted',
     ];
 
     protected function casts(): array
@@ -28,6 +31,7 @@ class OrderItem extends Model
             'price' => 'decimal:2',
             'quantity' => 'integer',
             'subtotal' => 'decimal:2',
+            'stock_deducted' => 'boolean',
         ];
     }
 
@@ -39,5 +43,15 @@ class OrderItem extends Model
     public function product(): BelongsTo
     {
         return $this->belongsTo(Product::class);
+    }
+
+    public function productAttribute(): BelongsTo
+    {
+        return $this->belongsTo(ProductAttribute::class);
+    }
+
+    public function warehouse(): BelongsTo
+    {
+        return $this->belongsTo(Warehouse::class);
     }
 }
