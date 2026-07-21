@@ -20,6 +20,6 @@
 
         @include('components.public.product-details._quantity-stepper', ['product' => $product, 'style' => 'plain'])
         @include('components.public.product-details._actions', ['product' => $product, 'style' => 'compact'])
-        @include('components.public.product-details._description-benefits', ['product' => $product, 'style' => 'plain'])
+        @include('components.public.product-details._description', ['product' => $product, 'style' => 'plain'])
     </div>
 </div>

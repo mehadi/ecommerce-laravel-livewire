@@ -422,7 +422,6 @@ class LandingPage extends Component
 
         session()->put('cart', $cart);
         $this->cart = $cart;
-        $this->showCart = true;
         $this->dispatch('cart-updated');
 
         $this->dispatch('fbq:track', 'AddToCart', [

@@ -24,5 +24,5 @@
 </div>
 
 <div class="mt-8 md:mt-10 max-w-3xl">
-    @include('components.public.product-details._description-benefits', ['product' => $product, 'style' => 'default'])
+    @include('components.public.product-details._description', ['product' => $product, 'style' => 'default'])
 </div>

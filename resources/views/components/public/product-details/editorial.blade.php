@@ -38,7 +38,7 @@
 
         <div class="pt-6 max-w-2xl mx-auto">
             <div x-show="tab === 'description'">
-                @include('components.public.product-details._description-benefits', ['product' => $product, 'style' => 'plain'])
+                @include('components.public.product-details._description', ['product' => $product, 'style' => 'plain'])
             </div>
             <div x-show="tab === 'details'" style="display: none;">
                 <dl class="divide-y divide-zinc-200 dark:divide-zinc-800 text-sm">

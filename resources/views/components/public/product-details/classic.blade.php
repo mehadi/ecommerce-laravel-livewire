@@ -18,7 +18,7 @@
             @include('components.public.product-details._simple-price', ['product' => $product, 'style' => 'default'])
         @endif
 
-        @include('components.public.product-details._description-benefits', ['product' => $product, 'style' => 'default'])
+        @include('components.public.product-details._description', ['product' => $product, 'style' => 'default'])
         @include('components.public.product-details._quantity-stepper', ['product' => $product, 'style' => 'default'])
         @include('components.public.product-details._actions', ['product' => $product, 'style' => 'default'])
     </div>
