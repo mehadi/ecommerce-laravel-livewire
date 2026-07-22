@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Livewire\Admin\Roles\Index;
 use App\Models\User;
+use App\Support\Tenancy;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
 use Spatie\Permission\Models\Permission;
@@ -33,7 +34,7 @@ test('non-admin cannot view roles index page', function () {
 
 test('admin can create a role', function () {
     // Ensure admin role exists
-    Role::firstOrCreate(['name' => 'admin', 'guard_name' => 'web']);
+    Role::firstOrCreate(['name' => 'admin', 'guard_name' => 'web', 'tenant_id' => Tenancy::id()]);
 
     $admin = User::factory()->create();
     $admin->assignRole('admin');
@@ -56,7 +57,7 @@ test('admin can create a role', function () {
 
 test('admin can edit a role', function () {
     // Ensure admin role exists
-    Role::firstOrCreate(['name' => 'admin', 'guard_name' => 'web']);
+    Role::firstOrCreate(['name' => 'admin', 'guard_name' => 'web', 'tenant_id' => Tenancy::id()]);
 
     $admin = User::factory()->create();
     $admin->assignRole('admin');
@@ -87,7 +88,7 @@ test('admin can edit a role', function () {
 
 test('admin can delete a role', function () {
     // Ensure admin role exists
-    Role::firstOrCreate(['name' => 'admin', 'guard_name' => 'web']);
+    Role::firstOrCreate(['name' => 'admin', 'guard_name' => 'web', 'tenant_id' => Tenancy::id()]);
 
     $admin = User::factory()->create();
     $admin->assignRole('admin');
@@ -104,7 +105,7 @@ test('admin can delete a role', function () {
 
 test('role name is required', function () {
     // Ensure admin role exists
-    Role::firstOrCreate(['name' => 'admin', 'guard_name' => 'web']);
+    Role::firstOrCreate(['name' => 'admin', 'guard_name' => 'web', 'tenant_id' => Tenancy::id()]);
 
     $admin = User::factory()->create();
     $admin->assignRole('admin');
@@ -132,8 +133,8 @@ test('role name must be unique', function () {
 });
 
 test('admin cannot rename the super admin role', function () {
-    Role::firstOrCreate(['name' => 'admin', 'guard_name' => 'web']);
-    $superAdmin = Role::firstOrCreate(['name' => 'super admin', 'guard_name' => 'web']);
+    Role::firstOrCreate(['name' => 'admin', 'guard_name' => 'web', 'tenant_id' => Tenancy::id()]);
+    $superAdmin = Role::firstOrCreate(['name' => 'super admin', 'guard_name' => 'web', 'tenant_id' => Tenancy::id()]);
 
     $admin = User::factory()->create();
     $admin->assignRole('admin');
@@ -141,16 +142,81 @@ test('admin cannot rename the super admin role', function () {
     Livewire::actingAs($admin)
         ->test(Index::class)
         ->call('editRole', $superAdmin)
-        ->assertSet('editingIsSuperAdmin', true)
+        ->assertSet('editingIsProtectedRole', true)
         ->set('name', 'renamed-admin')
         ->call('saveRole');
 
     expect($superAdmin->refresh()->name)->toBe('super admin');
 });
 
+test('admin cannot rename roles hardcoded in AppServiceProvider gates', function (string $roleName) {
+    Role::firstOrCreate(['name' => 'admin', 'guard_name' => 'web', 'tenant_id' => Tenancy::id()]);
+    $protectedRole = Role::firstOrCreate(['name' => $roleName, 'guard_name' => 'web', 'tenant_id' => Tenancy::id()]);
+
+    $admin = User::factory()->create();
+    $admin->assignRole('admin');
+
+    Livewire::actingAs($admin)
+        ->test(Index::class)
+        ->call('editRole', $protectedRole)
+        ->assertSet('editingIsProtectedRole', true)
+        ->set('name', 'renamed-role')
+        ->call('saveRole');
+
+    expect($protectedRole->refresh()->name)->toBe($roleName);
+})->with(['admin', 'manager', 'cashier']);
+
+test('admin cannot delete roles hardcoded in AppServiceProvider gates', function (string $roleName) {
+    Role::firstOrCreate(['name' => 'admin', 'guard_name' => 'web', 'tenant_id' => Tenancy::id()]);
+    $protectedRole = Role::firstOrCreate(['name' => $roleName, 'guard_name' => 'web', 'tenant_id' => Tenancy::id()]);
+
+    $admin = User::factory()->create();
+    $admin->assignRole('admin');
+
+    Livewire::actingAs($admin)
+        ->test(Index::class)
+        ->call('deleteRole', $protectedRole->id);
+
+    expect(Role::where('id', $protectedRole->id)->exists())->toBeTrue();
+})->with(['manager', 'cashier']);
+
+test('role name uniqueness is scoped to the current tenant', function () {
+    Role::firstOrCreate(['name' => 'admin', 'guard_name' => 'web', 'tenant_id' => Tenancy::id()]);
+
+    $admin = User::factory()->create();
+    $admin->assignRole('admin');
+
+    // A role with the same name but belonging to a different tenant must not
+    // block creating a role with that name for the current tenant.
+    Role::create(['name' => 'editor', 'guard_name' => 'web', 'tenant_id' => 999999]);
+
+    Livewire::actingAs($admin)
+        ->test(Index::class)
+        ->call('createRole')
+        ->set('name', 'editor')
+        ->call('saveRole')
+        ->assertHasNoErrors();
+
+    expect(Role::where('name', 'editor')->where('tenant_id', Tenancy::id())->exists())->toBeTrue();
+});
+
+test('a role belonging to an unrelated tenant cannot be edited or deleted', function () {
+    Role::firstOrCreate(['name' => 'admin', 'guard_name' => 'web', 'tenant_id' => Tenancy::id()]);
+
+    $admin = User::factory()->create();
+    $admin->assignRole('admin');
+
+    $otherTenantRole = Role::create(['name' => 'editor', 'guard_name' => 'web', 'tenant_id' => 999999]);
+
+    Livewire::actingAs($admin)
+        ->test(Index::class)
+        ->call('editRole', $otherTenantRole)
+        ->assertStatus(404);
+});
+
 test('roles index shows search functionality', function () {
     // Ensure admin role exists
-    Role::firstOrCreate(['name' => 'admin', 'guard_name' => 'web']);
+    Role::firstOrCreate(['name' => 'admin', 'guard_name' => 'web', 'tenant_id' => Tenancy::id()]);
 
     $admin = User::factory()->create();
     $admin->assignRole('admin');
@@ -168,7 +234,7 @@ test('roles index shows search functionality', function () {
 
 test('roles index shows permission and user counts', function () {
     // Ensure admin role exists
-    Role::firstOrCreate(['name' => 'admin', 'guard_name' => 'web']);
+    Role::firstOrCreate(['name' => 'admin', 'guard_name' => 'web', 'tenant_id' => Tenancy::id()]);
 
     $admin = User::factory()->create();
     $admin->assignRole('admin');

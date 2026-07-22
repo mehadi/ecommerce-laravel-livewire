@@ -84,13 +84,13 @@
             <tbody class="bg-white dark:bg-zinc-900 divide-y divide-zinc-200 dark:divide-zinc-700">
                 @forelse($roles as $role)
                     @php
-                        $isSuperAdmin = $role->name === 'super admin';
+                        $isProtectedRole = in_array($role->name, \App\Livewire\Admin\Roles\Index::PROTECTED_ROLE_NAMES, true);
                     @endphp
                     <tr class="hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors">
                         <td class="px-6 py-4 whitespace-nowrap">
                             <div class="flex items-center gap-2">
                                 <span class="font-medium text-zinc-900 dark:text-white">{{ ucfirst($role->name) }}</span>
-                                @if($isSuperAdmin)
+                                @if($isProtectedRole)
                                     <flux:badge variant="warning" size="sm">{{ __('Protected') }}</flux:badge>
                                 @endif
                             </div>
@@ -112,7 +112,7 @@
                                         <span>{{ __('Edit') }}</span>
                                     </span>
                                 </flux:button>
-                                @if(!$isSuperAdmin)
+                                @if(!$isProtectedRole)
                                     <x-admin.confirm-delete-button
                                         :message="__('Are you sure you want to delete this role?')"
                                         wire:click="deleteRole({{ $role->id }})"
@@ -168,9 +168,9 @@
 
                 <flux:field>
                     <flux:label>{{ __('Role Name') }} *</flux:label>
-                    <flux:input wire:model="name" placeholder="{{ __('e.g., editor, moderator') }}" :disabled="$editingIsSuperAdmin" />
-                    @if($editingIsSuperAdmin)
-                        <p class="mt-1 text-xs text-zinc-500 dark:text-zinc-400">{{ __('The Super Admin role name is protected and cannot be changed.') }}</p>
+                    <flux:input wire:model="name" placeholder="{{ __('e.g., editor, moderator') }}" :disabled="$editingIsProtectedRole" />
+                    @if($editingIsProtectedRole)
+                        <p class="mt-1 text-xs text-zinc-500 dark:text-zinc-400">{{ __('This role name is used by the application and is protected from changes.') }}</p>
                     @else
                         <p class="mt-1 text-xs text-zinc-500 dark:text-zinc-400">{{ __('Unique name for this role') }}</p>
                     @endif

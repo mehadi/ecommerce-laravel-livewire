@@ -12,6 +12,16 @@ class Index extends Component
 {
     use WithPagination;
 
+    /**
+     * Role names that back a hardcoded Gate::define() check in
+     * AppServiceProvider (hasRole('super admin'|'admin'|'manager'|'cashier')).
+     * Renaming or deleting any of them would silently break those gates, so
+     * they're protected here from both mutations regardless of tenant.
+     *
+     * @var array<int, string>
+     */
+    public const PROTECTED_ROLE_NAMES = ['super admin', 'admin', 'manager', 'cashier'];
+
     public function mount(): void
     {
         Gate::authorize('manage roles');
@@ -31,7 +41,7 @@ class Index extends Component
 
     public $name = '';
 
-    public $editingIsSuperAdmin = false;
+    public $editingIsProtectedRole = false;
 
     /**
      * @var array<int, string>
@@ -58,11 +68,12 @@ class Index extends Component
     public function deleteRole($roleId): void
     {
         $role = Role::findOrFail($roleId);
-        abort_unless($role->tenant_id === null || $role->tenant_id === Tenancy::id(), 404);
+        abort_unless($role->tenant_id === Tenancy::id(), 404);
 
-        // Prevent deleting super admin role
-        if ($role->name === 'super admin') {
-            session()->flash('error', __('Super Admin role cannot be deleted.'));
+        // Prevent deleting roles that a Gate::define() check in
+        // AppServiceProvider matches by name.
+        if (in_array($role->name, self::PROTECTED_ROLE_NAMES, true)) {
+            session()->flash('error', __(':role role cannot be deleted.', ['role' => ucfirst($role->name)]));
 
             return;
         }
@@ -78,17 +89,17 @@ class Index extends Component
 
     public function createRole(): void
     {
-        $this->reset(['editingId', 'name', 'selectedPermissions', 'editingIsSuperAdmin']);
+        $this->reset(['editingId', 'name', 'selectedPermissions', 'editingIsProtectedRole']);
         $this->showModal = true;
     }
 
     public function editRole(Role $role): void
     {
-        abort_unless($role->tenant_id === null || $role->tenant_id === Tenancy::id(), 404);
+        abort_unless($role->tenant_id === Tenancy::id(), 404);
 
         $this->editingId = $role->id;
         $this->name = $role->name;
-        $this->editingIsSuperAdmin = $role->name === 'super admin';
+        $this->editingIsProtectedRole = in_array($role->name, self::PROTECTED_ROLE_NAMES, true);
         $this->selectedPermissions = $role->permissions
             ->pluck('id')
             ->map(fn ($id) => (string) $id)
@@ -99,7 +110,7 @@ class Index extends Component
     public function closeModal(): void
     {
         $this->showModal = false;
-        $this->reset(['editingId', 'name', 'selectedPermissions', 'editingIsSuperAdmin']);
+        $this->reset(['editingId', 'name', 'selectedPermissions', 'editingIsProtectedRole']);
     }
 
     public function selectAllPermissions(): void
@@ -129,12 +140,18 @@ class Index extends Component
 
     protected function rules(): array
     {
+        $tenantId = Tenancy::id();
+
         return [
             'name' => [
                 'required',
                 'string',
                 'max:255',
-                \Illuminate\Validation\Rule::unique('roles', 'name')->ignore($this->editingId),
+                \Illuminate\Validation\Rule::unique('roles', 'name')
+                    ->where(fn ($query) => $tenantId === null
+                        ? $query->whereNull('tenant_id')
+                        : $query->where('tenant_id', $tenantId))
+                    ->ignore($this->editingId),
             ],
             'selectedPermissions' => ['array'],
         ];
@@ -146,13 +163,13 @@ class Index extends Component
 
         if ($this->editingId) {
             $role = Role::findOrFail($this->editingId);
-            abort_unless($role->tenant_id === null || $role->tenant_id === Tenancy::id(), 404);
+            abort_unless($role->tenant_id === Tenancy::id(), 404);
 
-            // Prevent renaming the super admin role — Spatie matches it by name
-            // (hasRole('super admin')), so renaming it would silently break every
-            // super-admin check in the app.
-            if ($role->name === 'super admin' && $this->name !== 'super admin') {
-                session()->flash('error', __('The Super Admin role name is protected and cannot be changed.'));
+            // Prevent renaming roles that a Gate::define() check in
+            // AppServiceProvider matches by name (e.g. hasRole('super admin')) —
+            // renaming one would silently break that gate everywhere.
+            if (in_array($role->name, self::PROTECTED_ROLE_NAMES, true) && $this->name !== $role->name) {
+                session()->flash('error', __(':role role name is protected and cannot be changed.', ['role' => ucfirst($role->name)]));
 
                 return;
             }
