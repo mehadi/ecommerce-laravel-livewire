@@ -2,7 +2,14 @@
 
 namespace App\Livewire\Admin\Warehouses;
 
+use App\Models\CycleCount;
+use App\Models\PosRegister;
+use App\Models\ProductBatch;
+use App\Models\PurchaseOrder;
+use App\Models\StockTransfer;
 use App\Models\Warehouse;
+use App\Support\Tenancy;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\Rule;
 use Livewire\Component;
 use Livewire\WithPagination;
@@ -41,9 +48,15 @@ class Index extends Component
 
     protected function rules(): array
     {
+        $tenantId = Tenancy::id();
+
         return [
             'name' => 'required|string|max:255',
-            'code' => ['required', 'string', 'max:50', Rule::unique('warehouses', 'code')->ignore($this->editingId)],
+            'code' => ['required', 'string', 'max:50',
+                Rule::unique('warehouses', 'code')
+                    ->where(fn ($query) => $query->where('tenant_id', $tenantId))
+                    ->ignore($this->editingId),
+            ],
             'address' => 'nullable|string|max:1000',
             'city' => 'nullable|string|max:255',
             'phone' => 'nullable|string|max:50',
@@ -73,6 +86,8 @@ class Index extends Component
 
     public function createWarehouse(): void
     {
+        Gate::authorize('create warehouses');
+
         $this->reset(['editingId', 'name', 'code', 'address', 'city', 'phone', 'is_active']);
         $this->showModal = true;
     }
@@ -96,6 +111,8 @@ class Index extends Component
 
     public function storeWarehouse(): void
     {
+        Gate::authorize('create warehouses');
+
         $this->validate();
 
         Warehouse::create([
@@ -113,6 +130,8 @@ class Index extends Component
 
     public function updateWarehouse(): void
     {
+        Gate::authorize('edit warehouses');
+
         $this->validate();
 
         Warehouse::findOrFail($this->editingId)->update([
@@ -130,6 +149,8 @@ class Index extends Component
 
     public function setDefault($warehouseId): void
     {
+        Gate::authorize('edit warehouses');
+
         $warehouse = Warehouse::findOrFail($warehouseId);
 
         Warehouse::where('is_default', true)->update(['is_default' => false]);
@@ -140,6 +161,8 @@ class Index extends Component
 
     public function deleteWarehouse($warehouseId): void
     {
+        Gate::authorize('delete warehouses');
+
         $warehouse = Warehouse::findOrFail($warehouseId);
 
         if ($warehouse->is_default) {
@@ -154,8 +177,49 @@ class Index extends Component
             return;
         }
 
+        if ($blocker = $this->warehouseDeletionBlocker($warehouse)) {
+            session()->flash('error', $blocker);
+
+            return;
+        }
+
         $warehouse->delete();
         session()->flash('message', __('Warehouse deleted successfully.'));
+    }
+
+    /**
+     * Every stock-related module keeps a plain (non-cascading) FK to
+     * warehouses, so deleting one while it's still referenced would raise a
+     * raw RESTRICT QueryException — except pos_registers, which cascades
+     * and would silently wipe out its registers instead. Checking each table
+     * up front turns both failure modes into a friendly, specific message.
+     */
+    protected function warehouseDeletionBlocker(Warehouse $warehouse): ?string
+    {
+        if (StockTransfer::where(function ($query) use ($warehouse) {
+            $query->where('from_warehouse_id', $warehouse->id)
+                ->orWhere('to_warehouse_id', $warehouse->id);
+        })->exists()) {
+            return __('Cannot delete :name — it is still referenced by stock transfers.', ['name' => $warehouse->name]);
+        }
+
+        if (PurchaseOrder::where('warehouse_id', $warehouse->id)->exists()) {
+            return __('Cannot delete :name — it is still referenced by purchase orders.', ['name' => $warehouse->name]);
+        }
+
+        if (CycleCount::where('warehouse_id', $warehouse->id)->exists()) {
+            return __('Cannot delete :name — it is still referenced by cycle counts.', ['name' => $warehouse->name]);
+        }
+
+        if (ProductBatch::where('warehouse_id', $warehouse->id)->exists()) {
+            return __('Cannot delete :name — it is still referenced by product batches.', ['name' => $warehouse->name]);
+        }
+
+        if (PosRegister::where('warehouse_id', $warehouse->id)->exists()) {
+            return __('Cannot delete :name — it still has POS registers assigned to it. Reassign or remove them first.', ['name' => $warehouse->name]);
+        }
+
+        return null;
     }
 
     protected function getWarehousesQuery()

@@ -91,6 +91,26 @@ class AppServiceProvider extends ServiceProvider
             return $user->hasRole('super admin') || $user->hasRole('admin') || $user->hasRole('manager') || $user->hasPermissionTo('manage inventory settings');
         });
 
+        // Warehouse gates (same shape as the inventory gates above).
+        // Warehouses is the foundational table every stock-related module
+        // (inventory, transfers, purchase orders, cycle counts, POS) reads
+        // from, so its own CRUD needs the same enforcement.
+        Gate::define('view warehouses', function ($user) {
+            return $user->hasRole('super admin') || $user->hasRole('admin') || $user->hasRole('manager') || $user->checkPermissionTo('view warehouses') === true;
+        });
+
+        Gate::define('create warehouses', function ($user) {
+            return $user->hasRole('super admin') || $user->hasRole('admin') || $user->hasRole('manager') || $user->checkPermissionTo('create warehouses') === true;
+        });
+
+        Gate::define('edit warehouses', function ($user) {
+            return $user->hasRole('super admin') || $user->hasRole('admin') || $user->hasRole('manager') || $user->checkPermissionTo('edit warehouses') === true;
+        });
+
+        Gate::define('delete warehouses', function ($user) {
+            return $user->hasRole('super admin') || $user->hasRole('admin') || $user->hasRole('manager') || $user->checkPermissionTo('delete warehouses') === true;
+        });
+
         // POS gates. 'access pos' (and the cashier-tier actions below it) include
         // the 'cashier' role explicitly, since a cashier account intentionally
         // cannot reach 'access admin' — POS routes are gated separately from the
