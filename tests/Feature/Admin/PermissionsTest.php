@@ -34,14 +34,11 @@ test('non-admin cannot view permissions index page', function () {
         ->assertForbidden();
 });
 
-test('admin can create a permission', function () {
-    // Ensure admin role exists
-    Role::firstOrCreate(['name' => 'admin', 'guard_name' => 'web']);
+test('super admin can create a permission', function () {
+    $superAdmin = User::factory()->create();
+    $superAdmin->assignRole(Role::firstOrCreate(['name' => 'super admin', 'guard_name' => 'web']));
 
-    $admin = User::factory()->create();
-    $admin->assignRole('admin');
-
-    Livewire::actingAs($admin)
+    Livewire::actingAs($superAdmin)
         ->test(Index::class)
         ->call('createPermission')
         ->assertSet('showModal', true)
@@ -53,13 +50,13 @@ test('admin can create a permission', function () {
     expect(Permission::where('name', 'create.products')->exists())->toBeTrue();
 });
 
-test('admin can edit a permission', function () {
-    $admin = User::factory()->create();
-    $admin->assignRole('admin');
+test('super admin can edit a permission', function () {
+    $superAdmin = User::factory()->create();
+    $superAdmin->assignRole(Role::firstOrCreate(['name' => 'super admin', 'guard_name' => 'web']));
 
     $permission = Permission::create(['name' => 'create.products', 'guard_name' => 'web']);
 
-    Livewire::actingAs($admin)
+    Livewire::actingAs($superAdmin)
         ->test(Index::class)
         ->call('editPermission', $permission)
         ->assertSet('name', 'create.products')
@@ -72,13 +69,13 @@ test('admin can edit a permission', function () {
     expect($permission->name)->toBe('edit.products');
 });
 
-test('admin can delete a permission', function () {
-    $admin = User::factory()->create();
-    $admin->assignRole('admin');
+test('super admin can delete a permission', function () {
+    $superAdmin = User::factory()->create();
+    $superAdmin->assignRole(Role::firstOrCreate(['name' => 'super admin', 'guard_name' => 'web']));
 
     $permission = Permission::create(['name' => 'test.permission', 'guard_name' => 'web']);
 
-    Livewire::actingAs($admin)
+    Livewire::actingAs($superAdmin)
         ->test(Index::class)
         ->call('deletePermission', $permission->id)
         ->assertHasNoErrors();
@@ -87,10 +84,10 @@ test('admin can delete a permission', function () {
 });
 
 test('permission name is required', function () {
-    $admin = User::factory()->create();
-    $admin->assignRole('admin');
+    $superAdmin = User::factory()->create();
+    $superAdmin->assignRole(Role::firstOrCreate(['name' => 'super admin', 'guard_name' => 'web']));
 
-    Livewire::actingAs($admin)
+    Livewire::actingAs($superAdmin)
         ->test(Index::class)
         ->call('createPermission')
         ->set('name', '')
@@ -99,17 +96,108 @@ test('permission name is required', function () {
 });
 
 test('permission name must be unique', function () {
-    $admin = User::factory()->create();
-    $admin->assignRole('admin');
+    $superAdmin = User::factory()->create();
+    $superAdmin->assignRole(Role::firstOrCreate(['name' => 'super admin', 'guard_name' => 'web']));
 
     Permission::create(['name' => 'create.products', 'guard_name' => 'web']);
 
-    Livewire::actingAs($admin)
+    Livewire::actingAs($superAdmin)
         ->test(Index::class)
         ->call('createPermission')
         ->set('name', 'create.products')
         ->call('savePermission')
         ->assertHasErrors(['name']);
+});
+
+test('tenant admin cannot create a permission', function () {
+    Role::firstOrCreate(['name' => 'admin', 'guard_name' => 'web']);
+
+    $admin = User::factory()->create();
+    $admin->assignRole('admin');
+
+    Livewire::actingAs($admin)
+        ->test(Index::class)
+        ->set('name', 'create.products')
+        ->call('savePermission')
+        ->assertForbidden();
+
+    expect(Permission::where('name', 'create.products')->exists())->toBeFalse();
+});
+
+test('tenant admin cannot rename a permission', function () {
+    Role::firstOrCreate(['name' => 'admin', 'guard_name' => 'web']);
+
+    $admin = User::factory()->create();
+    $admin->assignRole('admin');
+
+    $permission = Permission::create(['name' => 'create.products', 'guard_name' => 'web']);
+
+    Livewire::actingAs($admin)
+        ->test(Index::class)
+        ->call('editPermission', $permission)
+        ->set('name', 'edit.products')
+        ->call('savePermission')
+        ->assertForbidden();
+
+    expect($permission->refresh()->name)->toBe('create.products');
+});
+
+test('tenant admin cannot delete a permission', function () {
+    Role::firstOrCreate(['name' => 'admin', 'guard_name' => 'web']);
+
+    $admin = User::factory()->create();
+    $admin->assignRole('admin');
+
+    $permission = Permission::create(['name' => 'test.permission', 'guard_name' => 'web']);
+
+    Livewire::actingAs($admin)
+        ->test(Index::class)
+        ->call('deletePermission', $permission->id)
+        ->assertForbidden();
+
+    expect(Permission::where('id', $permission->id)->exists())->toBeTrue();
+});
+
+test('tenant admin does not see mutation controls on the permissions index', function () {
+    Role::firstOrCreate(['name' => 'admin', 'guard_name' => 'web']);
+
+    $admin = User::factory()->create();
+    $admin->assignRole('admin');
+
+    Permission::create(['name' => 'test.permission', 'guard_name' => 'web']);
+
+    Livewire::actingAs($admin)
+        ->test(Index::class)
+        ->assertDontSee(__('Add New Permission'))
+        ->assertDontSeeHtml('wire:click="editPermission(');
+});
+
+test('super admin cannot rename a permission that is hardcoded into a Gate closure', function () {
+    $superAdmin = User::factory()->create();
+    $superAdmin->assignRole(Role::firstOrCreate(['name' => 'super admin', 'guard_name' => 'web']));
+
+    $permission = Permission::firstOrCreate(['name' => 'view products', 'guard_name' => 'web']);
+
+    Livewire::actingAs($superAdmin)
+        ->test(Index::class)
+        ->call('editPermission', $permission)
+        ->set('name', 'view catalog')
+        ->call('savePermission');
+
+    expect($permission->refresh()->name)->toBe('view products');
+});
+
+test('super admin cannot delete a permission that is hardcoded into a Gate closure', function () {
+    $superAdmin = User::factory()->create();
+    $superAdmin->assignRole(Role::firstOrCreate(['name' => 'super admin', 'guard_name' => 'web']));
+
+    $permission = Permission::firstOrCreate(['name' => 'manage pos settings', 'guard_name' => 'web']);
+
+    Livewire::actingAs($superAdmin)
+        ->test(Index::class)
+        ->call('deletePermission', $permission->id);
+
+    expect(Permission::where('id', $permission->id)->exists())->toBeTrue();
 });
 
 test('permissions index shows search functionality', function () {

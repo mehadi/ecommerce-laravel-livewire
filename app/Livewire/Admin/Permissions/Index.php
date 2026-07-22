@@ -12,6 +12,40 @@ class Index extends Component
 {
     use WithPagination;
 
+    /**
+     * Permission names checked via hasPermissionTo()/checkPermissionTo() inside
+     * Gate::define() closures in AppServiceProvider::boot(). Spatie resolves
+     * those checks by name against the shared `permissions` table, so renaming
+     * or deleting one of these rows would silently break the corresponding
+     * gate for every tenant. Keep this list in sync with AppServiceProvider.
+     *
+     * @var array<int, string>
+     */
+    private const RESERVED_PERMISSION_NAMES = [
+        'view products',
+        'create products',
+        'edit products',
+        'delete products',
+        'view inventory',
+        'adjust stock',
+        'manage inventory settings',
+        'view users',
+        'access pos',
+        'process pos sales',
+        'apply pos discounts',
+        'hold pos sales',
+        'void pos sale line',
+        'open pos shift',
+        'close pos shift',
+        'manage cash drawer',
+        'void pos sale',
+        'process pos refunds',
+        'force close pos shift',
+        'view pos reports',
+        'manage pos registers',
+        'manage pos settings',
+    ];
+
     public function mount(): void
     {
         Gate::authorize('manage permissions');
@@ -50,7 +84,20 @@ class Index extends Component
 
     public function deletePermission($permissionId): void
     {
+        // The Permission catalog is shared across every tenant (no tenant_id
+        // column), so only a true super admin may mutate it — a tenant-level
+        // 'admin' deleting a row here would silently break authorization for
+        // every other tenant that relies on it.
+        abort_unless(auth()->user()->hasRole('super admin'), 403);
+
         $permission = Permission::findOrFail($permissionId);
+
+        if (in_array($permission->name, self::RESERVED_PERMISSION_NAMES, true)) {
+            session()->flash('error', __('This permission is used directly by the application code and cannot be deleted.'));
+
+            return;
+        }
+
         $permission->delete();
         session()->flash('message', __('Permission deleted successfully.'));
     }
@@ -93,10 +140,21 @@ class Index extends Component
 
     public function savePermission(): void
     {
+        // Only a true super admin may mutate the globally-shared Permission
+        // catalog (see deletePermission() for why).
+        abort_unless(auth()->user()->hasRole('super admin'), 403);
+
         $this->validate();
 
         if ($this->editingId) {
             $permission = Permission::findOrFail($this->editingId);
+
+            if (in_array($permission->name, self::RESERVED_PERMISSION_NAMES, true) && $permission->name !== $this->name) {
+                session()->flash('error', __('This permission is used directly by the application code and its name cannot be changed.'));
+
+                return;
+            }
+
             $permission->update([
                 'name' => $this->name,
             ]);
@@ -132,6 +190,7 @@ class Index extends Component
         return view('livewire.admin.permissions.index', [
             'permissions' => $permissions,
             'stats' => $stats,
+            'isSuperAdmin' => auth()->user()->hasRole('super admin'),
         ])->layout('components.layouts.app', [
             'title' => __('Manage Permissions'),
         ]);

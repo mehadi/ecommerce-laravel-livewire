@@ -1,18 +1,28 @@
 <div class="space-y-6">
     <x-admin.page-header :heading="__('Permissions')" :description="__('Manage system permissions and access controls')">
-        <flux:button wire:click="createPermission" variant="primary">
-            <span class="inline-flex items-center gap-1.5">
-                <svg class="h-4 w-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
-                </svg>
-                <span>{{ __('Add New Permission') }}</span>
-            </span>
-        </flux:button>
+        @if($isSuperAdmin)
+            <flux:button wire:click="createPermission" variant="primary">
+                <span class="inline-flex items-center gap-1.5">
+                    <svg class="h-4 w-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                    </svg>
+                    <span>{{ __('Add New Permission') }}</span>
+                </span>
+            </flux:button>
+        @endif
     </x-admin.page-header>
 
     @if (session()->has('message'))
         <flux:callout variant="success">{{ session('message') }}</flux:callout>
     @endif
+
+    @if (session()->has('error'))
+        <flux:callout variant="danger">{{ session('error') }}</flux:callout>
+    @endif
+
+    @unless($isSuperAdmin)
+        <flux:callout variant="warning">{{ __('The permission catalog is shared across the whole platform. Only a Super Admin can create, rename, or delete permissions here.') }}</flux:callout>
+    @endunless
 
     {{-- Statistics Cards --}}
     <div class="grid gap-4 md:grid-cols-4">
@@ -102,28 +112,32 @@
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-zinc-500 dark:text-zinc-400 text-sm">{{ $permission->created_at->format('M d, Y') }}</td>
                         <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="flex gap-2">
-                                <flux:button wire:click="editPermission({{ $permission->id }})" size="sm" variant="ghost">
-                                    <span class="inline-flex items-center gap-1.5">
-                                        <svg class="h-3 w-3 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
-                                        </svg>
-                                        <span>{{ __('Edit') }}</span>
-                                    </span>
-                                </flux:button>
-                                <x-admin.confirm-delete-button
-                                    :message="__('Are you sure you want to delete this permission? This may affect roles that use it.')"
-                                    wire:click="deletePermission({{ $permission->id }})"
-                                    size="sm"
-                                >
-                                    <span class="inline-flex items-center gap-1.5">
-                                        <svg class="h-3 w-3 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
-                                        </svg>
-                                        <span>{{ __('Delete') }}</span>
-                                    </span>
-                                </x-admin.confirm-delete-button>
-                            </div>
+                            @if($isSuperAdmin)
+                                <div class="flex gap-2">
+                                    <flux:button wire:click="editPermission({{ $permission->id }})" size="sm" variant="ghost">
+                                        <span class="inline-flex items-center gap-1.5">
+                                            <svg class="h-3 w-3 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                                            </svg>
+                                            <span>{{ __('Edit') }}</span>
+                                        </span>
+                                    </flux:button>
+                                    <x-admin.confirm-delete-button
+                                        :message="__('Are you sure you want to delete this permission? This may affect roles that use it.')"
+                                        wire:click="deletePermission({{ $permission->id }})"
+                                        size="sm"
+                                    >
+                                        <span class="inline-flex items-center gap-1.5">
+                                            <svg class="h-3 w-3 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                            </svg>
+                                            <span>{{ __('Delete') }}</span>
+                                        </span>
+                                    </x-admin.confirm-delete-button>
+                                </div>
+                            @else
+                                <span class="text-zinc-400 dark:text-zinc-600">&mdash;</span>
+                            @endif
                         </td>
                     </tr>
                 @empty
@@ -133,9 +147,11 @@
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
                             </svg>
                         </x-slot:icon>
-                        <flux:button wire:click="createPermission" variant="primary" size="sm">
-                            {{ __('Add New Permission') }}
-                        </flux:button>
+                        @if($isSuperAdmin)
+                            <flux:button wire:click="createPermission" variant="primary" size="sm">
+                                {{ __('Add New Permission') }}
+                            </flux:button>
+                        @endif
                     </x-admin.table-empty-state>
                 @endforelse
             </tbody>
