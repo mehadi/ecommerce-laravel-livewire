@@ -5,7 +5,10 @@ declare(strict_types=1);
 use App\Livewire\Admin\Suppliers\Index;
 use App\Models\Category;
 use App\Models\Product;
+use App\Models\PurchaseOrder;
 use App\Models\Supplier;
+use App\Models\User;
+use App\Models\Warehouse;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
 
@@ -57,4 +60,30 @@ test('an unused supplier can be deleted', function () {
     Livewire::actingAs($admin)->test(Index::class)->call('deleteSupplier', $supplier->id);
 
     expect(Supplier::find($supplier->id))->toBeNull();
+});
+
+test('a supplier with purchase orders cannot be deleted', function () {
+    $admin = actingAsAdmin();
+    $warehouse = Warehouse::default();
+    $supplier = Supplier::create(['name' => 'Ordered Supplier', 'is_active' => true]);
+    PurchaseOrder::create([
+        'supplier_id' => $supplier->id,
+        'warehouse_id' => $warehouse->id,
+        'order_number' => 'PO-0001',
+    ]);
+
+    Livewire::actingAs($admin)->test(Index::class)->call('deleteSupplier', $supplier->id);
+
+    expect(Supplier::find($supplier->id))->not->toBeNull();
+});
+
+test('a user without supplier permissions cannot create, edit, or delete a supplier', function () {
+    $user = User::factory()->create();
+    $supplier = Supplier::create(['name' => 'Protected Supplier', 'is_active' => true]);
+
+    Livewire::actingAs($user)->test(Index::class)->call('createSupplier')->assertForbidden();
+    Livewire::actingAs($user)->test(Index::class)->call('updateSupplier')->assertForbidden();
+    Livewire::actingAs($user)->test(Index::class)->call('deleteSupplier', $supplier->id)->assertForbidden();
+
+    expect(Supplier::find($supplier->id))->not->toBeNull();
 });

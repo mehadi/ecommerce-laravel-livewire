@@ -3,6 +3,7 @@
 namespace App\Livewire\Admin\Suppliers;
 
 use App\Models\Supplier;
+use Illuminate\Support\Facades\Gate;
 use Livewire\Component;
 use Livewire\WithPagination;
 
@@ -75,6 +76,8 @@ class Index extends Component
 
     public function createSupplier(): void
     {
+        Gate::authorize('create suppliers');
+
         $this->reset(['editingId', 'name', 'contact_name', 'email', 'phone', 'address', 'lead_time_days', 'is_active']);
         $this->is_active = true;
         $this->showModal = true;
@@ -100,6 +103,8 @@ class Index extends Component
 
     public function storeSupplier(): void
     {
+        Gate::authorize('create suppliers');
+
         $this->validate();
 
         Supplier::create([
@@ -118,6 +123,8 @@ class Index extends Component
 
     public function updateSupplier(): void
     {
+        Gate::authorize('edit suppliers');
+
         $this->validate();
 
         Supplier::findOrFail($this->editingId)->update([
@@ -136,10 +143,18 @@ class Index extends Component
 
     public function deleteSupplier($supplierId): void
     {
+        Gate::authorize('delete suppliers');
+
         $supplier = Supplier::findOrFail($supplierId);
 
         if ($supplier->products()->exists()) {
             session()->flash('error', __('Cannot delete a supplier that is set as the default supplier for one or more products.'));
+
+            return;
+        }
+
+        if ($supplier->purchaseOrders()->exists()) {
+            session()->flash('error', __('Cannot delete a supplier that has purchase orders on record.'));
 
             return;
         }

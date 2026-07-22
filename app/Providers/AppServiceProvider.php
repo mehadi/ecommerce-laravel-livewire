@@ -111,6 +111,24 @@ class AppServiceProvider extends ServiceProvider
             return $user->hasRole('super admin') || $user->hasRole('admin') || $user->hasRole('manager') || $user->checkPermissionTo('delete warehouses') === true;
         });
 
+        // Supplier gates (same shape as the warehouse gates above). Backs the
+        // seeded 'view/create/edit/delete suppliers' permissions.
+        Gate::define('view suppliers', function ($user) {
+            return $user->hasRole('super admin') || $user->hasRole('admin') || $user->hasRole('manager') || $user->checkPermissionTo('view suppliers') === true;
+        });
+
+        Gate::define('create suppliers', function ($user) {
+            return $user->hasRole('super admin') || $user->hasRole('admin') || $user->hasRole('manager') || $user->checkPermissionTo('create suppliers') === true;
+        });
+
+        Gate::define('edit suppliers', function ($user) {
+            return $user->hasRole('super admin') || $user->hasRole('admin') || $user->hasRole('manager') || $user->checkPermissionTo('edit suppliers') === true;
+        });
+
+        Gate::define('delete suppliers', function ($user) {
+            return $user->hasRole('super admin') || $user->hasRole('admin') || $user->hasRole('manager') || $user->checkPermissionTo('delete suppliers') === true;
+        });
+
         // POS gates. 'access pos' (and the cashier-tier actions below it) include
         // the 'cashier' role explicitly, since a cashier account intentionally
         // cannot reach 'access admin' — POS routes are gated separately from the
