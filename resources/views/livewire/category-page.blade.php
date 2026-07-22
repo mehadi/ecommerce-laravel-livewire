@@ -51,13 +51,19 @@
             ];
         }
     @endphp
+    {{--
+        Category/parent names are admin-controlled but rendered here for every storefront
+        visitor, unescaped, inside a <script> tag. JSON_HEX_TAG escapes < and > (e.g. in a
+        name like </script><script>...) so a stored value can never break out of the JSON-LD
+        script context and execute as HTML/JS.
+    --}}
     <!-- JSON-LD Structured Data -->
     <script type="application/ld+json">
-    {!! json_encode($breadcrumbSchema, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) !!}
+    {!! json_encode($breadcrumbSchema, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_HEX_TAG) !!}
     </script>
     @if(isset($itemListSchema))
         <script type="application/ld+json">
-        {!! json_encode($itemListSchema, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) !!}
+        {!! json_encode($itemListSchema, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_HEX_TAG) !!}
         </script>
     @endif
 @endpush

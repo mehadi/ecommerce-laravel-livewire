@@ -5,6 +5,8 @@ namespace App\Livewire\Admin\Categories;
 use App\Models\Category;
 use App\Support\Tenancy;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Gate;
+use Illuminate\Validation\Rule;
 use Livewire\Component;
 use Livewire\WithFileUploads;
 use Livewire\WithPagination;
@@ -47,6 +49,9 @@ class Index extends Component
 
     public $current_image;
 
+    /** True once the admin clicks "remove image" in the modal; the file itself isn't deleted until save(). */
+    public $imageRemoved = false;
+
     public $is_active = true;
 
     public $order = 0;
@@ -73,7 +78,7 @@ class Index extends Component
 
     public function openModal($id = null): void
     {
-        $this->reset(['editingId', 'parent_id', 'name_en', 'name_bn', 'slug', 'description_en', 'description_bn', 'image', 'current_image', 'is_active', 'order', 'slugAvailable']);
+        $this->reset(['editingId', 'parent_id', 'name_en', 'name_bn', 'slug', 'description_en', 'description_bn', 'image', 'current_image', 'imageRemoved', 'is_active', 'order', 'slugAvailable']);
         if ($id) {
             $category = Category::find($id);
             $this->editingId = $id;
@@ -96,14 +101,15 @@ class Index extends Component
         $this->showModal = false;
     }
 
+    /**
+     * Mark the current image for removal without touching storage yet — the file is only
+     * deleted once save() actually persists the change, so cancelling the modal (or the
+     * request failing) never leaves the database pointing at a file that's already gone.
+     */
     public function removeImage(): void
     {
-        if ($this->current_image) {
-            \Illuminate\Support\Facades\Storage::disk('public')->delete($this->current_image);
-        }
-
+        $this->imageRemoved = true;
         $this->image = null;
-        $this->current_image = null;
     }
 
     public function updatedNameEn(): void
@@ -165,15 +171,19 @@ class Index extends Component
 
     public function toggleStatus($categoryId): void
     {
+        Gate::authorize('edit categories');
+
         $category = Category::findOrFail($categoryId);
         $category->update(['is_active' => ! $category->is_active]);
-        Cache::forget(Tenancy::cacheKey('categories.all'));
+        $this->invalidateCategoryCaches();
         session()->flash('message', __('Category status updated successfully.'));
         $this->selectedItems = array_diff($this->selectedItems, [$categoryId]);
     }
 
     public function bulkToggleStatus(): void
     {
+        Gate::authorize('edit categories');
+
         if (empty($this->selectedItems)) {
             session()->flash('error', __('Please select at least one category.'));
 
@@ -181,13 +191,14 @@ class Index extends Component
         }
 
         $categories = Category::whereIn('id', $this->selectedItems)->get();
-        $newStatus = $categories->first()->is_active ? false : true;
 
+        // Flip each category's own status rather than forcing every selected
+        // row to whatever the first one happened to be.
         foreach ($categories as $category) {
-            $category->update(['is_active' => $newStatus]);
+            $category->update(['is_active' => ! $category->is_active]);
         }
 
-        Cache::forget(Tenancy::cacheKey('categories.all'));
+        $this->invalidateCategoryCaches();
         session()->flash('message', __(':count category(s) status updated successfully.', ['count' => count($this->selectedItems)]));
         $this->selectedItems = [];
         $this->selectAll = false;
@@ -195,15 +206,18 @@ class Index extends Component
 
     public function bulkDelete(): void
     {
+        Gate::authorize('delete categories');
+
         if (empty($this->selectedItems)) {
             session()->flash('error', __('Please select at least one category.'));
 
             return;
         }
 
-        $categories = Category::whereIn('id', $this->selectedItems)->get();
+        $categories = Category::withCount('products')->whereIn('id', $this->selectedItems)->get();
         $deletedCount = 0;
         $errorCount = 0;
+        $uncategorizedProducts = 0;
 
         foreach ($categories as $category) {
             if ($category->children()->count() > 0) {
@@ -211,14 +225,19 @@ class Index extends Component
 
                 continue;
             }
+            $uncategorizedProducts += $category->products_count;
             $category->delete();
             $deletedCount++;
         }
 
-        Cache::forget(Tenancy::cacheKey('categories.all'));
+        $this->invalidateCategoryCaches();
 
         if ($deletedCount > 0) {
-            session()->flash('message', __(':count category(s) deleted successfully.', ['count' => $deletedCount]));
+            $message = __(':count category(s) deleted successfully.', ['count' => $deletedCount]);
+            if ($uncategorizedProducts > 0) {
+                $message .= ' '.__(':count product(s) are now uncategorized.', ['count' => $uncategorizedProducts]);
+            }
+            session()->flash('message', $message);
         }
 
         if ($errorCount > 0) {
@@ -231,6 +250,8 @@ class Index extends Component
 
     public function duplicate($categoryId): void
     {
+        Gate::authorize('create categories');
+
         $original = Category::findOrFail($categoryId);
 
         $newCategory = $original->replicate();
@@ -240,8 +261,21 @@ class Index extends Component
         $newCategory->is_active = false;
         $newCategory->save();
 
-        Cache::forget(Tenancy::cacheKey('categories.all'));
+        $this->invalidateCategoryCaches();
         session()->flash('message', __('Category duplicated successfully.'));
+    }
+
+    /**
+     * Number of products across the currently-selected categories, so the bulk-delete
+     * confirmation can warn the admin before products.category_id silently nulls out.
+     */
+    public function getSelectedProductsCountProperty(): int
+    {
+        if (empty($this->selectedItems)) {
+            return 0;
+        }
+
+        return (int) Category::whereIn('id', $this->selectedItems)->withCount('products')->get()->sum('products_count');
     }
 
     protected function generateUniqueSlug(string $baseSlug): string
@@ -316,12 +350,23 @@ class Index extends Component
 
     public function save(): void
     {
+        Gate::authorize($this->editingId ? 'edit categories' : 'create categories');
+
+        // unique:/exists: rules query the raw table and ignore Category's TenantScope,
+        // so tenant_id has to be constrained explicitly here to avoid cross-tenant
+        // false positives (slug taken by another tenant) and cross-tenant parent_id refs.
+        $tenantId = Tenancy::id();
+
+        $slugRule = Rule::unique('categories', 'slug')->where(fn ($query) => $query->where('tenant_id', $tenantId));
+        $parentIdRules = ['nullable', Rule::exists('categories', 'id')->where(fn ($query) => $query->where('tenant_id', $tenantId))];
+
         if ($this->editingId) {
-            $this->rules['slug'] = 'required|string|unique:categories,slug,'.$this->editingId;
-            $this->rules['parent_id'] = 'nullable|exists:categories,id|not_in:'.$this->editingId;
-        } else {
-            $this->rules['slug'] = 'required|string|unique:categories,slug';
+            $slugRule->ignore($this->editingId);
+            $parentIdRules[] = 'not_in:'.$this->editingId;
         }
+
+        $this->rules['slug'] = ['required', 'string', $slugRule];
+        $this->rules['parent_id'] = $parentIdRules;
 
         $this->validate();
 
@@ -348,10 +393,19 @@ class Index extends Component
         ];
 
         if ($this->image) {
+            // Replacing an image: the old file (if any) is only removed once the new
+            // one is confirmed stored, i.e. at the moment the change actually persists.
             if ($this->current_image) {
                 \Illuminate\Support\Facades\Storage::disk('public')->delete($this->current_image);
             }
             $data['image'] = $this->image->store(Tenancy::storagePath('categories'), 'public');
+        } elseif ($this->imageRemoved) {
+            // removeImage() only marked this for deletion; the file is deleted now,
+            // at save time, so cancelling the modal never orphans the DB reference.
+            if ($this->current_image) {
+                \Illuminate\Support\Facades\Storage::disk('public')->delete($this->current_image);
+            }
+            $data['image'] = null;
         } elseif ($this->editingId) {
             $data['image'] = $this->current_image;
         }
@@ -364,21 +418,33 @@ class Index extends Component
             session()->flash('message', 'Category created successfully.');
         }
 
-        Cache::forget(Tenancy::cacheKey('categories.all'));
+        $this->invalidateCategoryCaches();
         $this->closeModal();
     }
 
     public function delete($id): void
     {
-        $category = Category::find($id);
+        Gate::authorize('delete categories');
+
+        $category = Category::withCount('products')->find($id);
+
+        if (! $category) {
+            return;
+        }
+
         if ($category->children()->count() > 0) {
             session()->flash('error', 'Cannot delete category with subcategories. Please delete subcategories first.');
 
             return;
         }
+
+        $productCount = $category->products_count;
         $category->delete();
-        Cache::forget(Tenancy::cacheKey('categories.all'));
-        session()->flash('message', 'Category deleted successfully.');
+        $this->invalidateCategoryCaches();
+
+        session()->flash('message', $productCount > 0
+            ? __('Category deleted successfully. :count product(s) are now uncategorized.', ['count' => $productCount])
+            : __('Category deleted successfully.'));
     }
 
     public function getParentCategoriesProperty()
@@ -449,6 +515,8 @@ class Index extends Component
 
     public function updateCategoryParent(int $categoryId, ?int $newParentId): void
     {
+        Gate::authorize('edit categories');
+
         $category = Category::findOrFail($categoryId);
 
         if ($newParentId === $category->parent_id) {
@@ -473,9 +541,30 @@ class Index extends Component
 
         $category->update(['parent_id' => $newParentId]);
 
-        Cache::forget(Tenancy::cacheKey('categories.all'));
+        $this->invalidateCategoryCaches();
 
         session()->flash('message', 'Category moved successfully.');
+    }
+
+    /**
+     * Clear every storefront cache derived from category data, not just the admin's
+     * own "categories.all" key. Category mutations (create/edit/delete/reparent/status)
+     * can change parent/child/sibling relationships that CategoryPage, CategoriesPage,
+     * HomePage, and ShopPage each cache independently, so all of them are invalidated
+     * here rather than leaving those pages to serve stale data until their TTL expires.
+     */
+    protected function invalidateCategoryCaches(): void
+    {
+        Cache::forget(Tenancy::cacheKey('categories.all'));
+        Cache::forget(Tenancy::cacheKey('categories.index.cards'));
+        Cache::forget(Tenancy::cacheKey('landing.featured_categories'));
+        Cache::forget(Tenancy::cacheKey('shop.categories'));
+
+        foreach (Category::pluck('id') as $categoryId) {
+            Cache::forget(Tenancy::cacheKey("category.{$categoryId}.subtree_ids"));
+            Cache::forget(Tenancy::cacheKey("category.{$categoryId}.subcategories"));
+            Cache::forget(Tenancy::cacheKey("category.{$categoryId}.siblings"));
+        }
     }
 
     private function wouldCreateCircularReference(Category $category, Category $newParent): bool

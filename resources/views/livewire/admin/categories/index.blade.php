@@ -100,7 +100,9 @@
                 {{ __('Toggle Status') }}
             </flux:button>
             <flux:button wire:click="bulkDelete"
-                wire:confirm="{{ __('Are you sure you want to delete the selected categories?') }}"
+                wire:confirm="{{ $this->selectedProductsCount > 0
+                    ? __('Delete the selected categories? :count product(s) will lose their category assignment.', ['count' => $this->selectedProductsCount])
+                    : __('Are you sure you want to delete the selected categories?') }}"
                 size="sm" variant="danger" wire:loading.attr="disabled" wire:target="bulkDelete">
                 {{ __('Delete Selected') }}
             </flux:button>
@@ -231,7 +233,9 @@
                                                     </span>
                                                 </flux:button>
                                                 <x-admin.confirm-delete-button
-                                                    message="{{ __('Are you sure you want to delete this category?') }}"
+                                                    message="{{ ($category->products_count ?? 0) > 0
+                                                        ? __('Delete :name? :count product(s) will lose this category assignment.', ['name' => $category->name_en, 'count' => $category->products_count])
+                                                        : __('Are you sure you want to delete this category?') }}"
                                                     wire:click="delete({{ $category->id }})" size="sm">
                                                     <span class="inline-flex items-center gap-1.5">
                                                         <svg class="h-3 w-3 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -488,7 +492,7 @@
 
                         <flux:field>
                             <flux:label>{{ __('Category Image') }}</flux:label>
-                            @if($current_image || $image)
+                            @if(($current_image && !$imageRemoved) || $image)
                                 <div class="flex items-center gap-4 rounded-lg border border-zinc-200 p-3 dark:border-zinc-700">
                                     <img src="{{ $image ? $image->temporaryUrl() : asset('storage/'.$current_image) }}"
                                         class="h-16 w-16 shrink-0 rounded-lg object-cover" alt="{{ __('Category image preview') }}">

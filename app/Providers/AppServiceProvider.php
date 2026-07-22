@@ -91,7 +91,47 @@ class AppServiceProvider extends ServiceProvider
             return $user->hasRole('super admin') || $user->hasRole('admin') || $user->hasRole('manager') || $user->hasPermissionTo('manage inventory settings');
         });
 
-        // Warehouse gates (same shape as the inventory gates above).
+        // Product catalog gates (same shape as the inventory gates above).
+        // These back the seeded 'view/create/edit/delete products' permissions,
+        // which the Roles UI exposes but nothing enforced until now.
+        // checkPermissionTo (not hasPermissionTo) so an unseeded permission
+        // reads as "denied" instead of throwing PermissionDoesNotExist.
+        Gate::define('view products', function ($user) {
+            return $user->hasRole('super admin') || $user->hasRole('admin') || $user->hasRole('manager') || $user->checkPermissionTo('view products') === true;
+        });
+
+        Gate::define('create products', function ($user) {
+            return $user->hasRole('super admin') || $user->hasRole('admin') || $user->hasRole('manager') || $user->checkPermissionTo('create products') === true;
+        });
+
+        Gate::define('edit products', function ($user) {
+            return $user->hasRole('super admin') || $user->hasRole('admin') || $user->hasRole('manager') || $user->checkPermissionTo('edit products') === true;
+        });
+
+        Gate::define('delete products', function ($user) {
+            return $user->hasRole('super admin') || $user->hasRole('admin') || $user->hasRole('manager') || $user->checkPermissionTo('delete products') === true;
+        });
+
+        // Category gates (same shape as the product catalog gates above).
+        // Categories underpins Products, Navigation, LandingPages, and Sections,
+        // so its own mutating actions need the same enforcement.
+        Gate::define('view categories', function ($user) {
+            return $user->hasRole('super admin') || $user->hasRole('admin') || $user->hasRole('manager') || $user->checkPermissionTo('view categories') === true;
+        });
+
+        Gate::define('create categories', function ($user) {
+            return $user->hasRole('super admin') || $user->hasRole('admin') || $user->hasRole('manager') || $user->checkPermissionTo('create categories') === true;
+        });
+
+        Gate::define('edit categories', function ($user) {
+            return $user->hasRole('super admin') || $user->hasRole('admin') || $user->hasRole('manager') || $user->checkPermissionTo('edit categories') === true;
+        });
+
+        Gate::define('delete categories', function ($user) {
+            return $user->hasRole('super admin') || $user->hasRole('admin') || $user->hasRole('manager') || $user->checkPermissionTo('delete categories') === true;
+        });
+
+        // Warehouse gates (same shape as the product catalog gates above).
         // Warehouses is the foundational table every stock-related module
         // (inventory, transfers, purchase orders, cycle counts, POS) reads
         // from, so its own CRUD needs the same enforcement.
