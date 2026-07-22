@@ -6,6 +6,7 @@ use App\Enums\StockMovementType;
 use App\Models\CycleCount;
 use App\Models\WarehouseStock;
 use App\Support\StockMovementContext;
+use Illuminate\Support\Facades\Gate;
 use Livewire\Component;
 
 class Count extends Component
@@ -17,6 +18,8 @@ class Count extends Component
 
     public function mount(CycleCount $cycleCount): void
     {
+        Gate::authorize('view cycle counts');
+
         $this->cycleCount = $cycleCount->load(['items.product', 'items.productAttribute', 'warehouse']);
         $this->countedQuantities = $this->cycleCount->items
             ->mapWithKeys(fn ($item) => [$item->id => $item->counted_quantity])
@@ -25,6 +28,14 @@ class Count extends Component
 
     public function saveProgress(): void
     {
+        Gate::authorize('complete cycle counts');
+
+        if (! $this->cycleCount->canBeCounted()) {
+            session()->flash('error', __('This cycle count has already been completed and can no longer be edited.'));
+
+            return;
+        }
+
         $this->validate([
             'countedQuantities.*' => 'nullable|integer|min:0',
         ]);
@@ -52,6 +63,14 @@ class Count extends Component
 
     public function completeCount(): void
     {
+        Gate::authorize('complete cycle counts');
+
+        if (! $this->cycleCount->canBeCounted()) {
+            session()->flash('error', __('This cycle count has already been completed.'));
+
+            return;
+        }
+
         $this->validate([
             'countedQuantities.*' => 'nullable|integer|min:0',
         ]);

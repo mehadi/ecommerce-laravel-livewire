@@ -169,6 +169,22 @@ class AppServiceProvider extends ServiceProvider
             return $user->hasRole('super admin') || $user->hasRole('admin') || $user->hasRole('manager') || $user->checkPermissionTo('delete suppliers') === true;
         });
 
+        // Cycle count gates (same shape as the warehouse/supplier gates above).
+        // Backs the seeded 'view/create/complete cycle counts' permissions —
+        // 'complete cycle counts' also covers saving in-progress counts, since
+        // that's the only mutating permission the counting screen has.
+        Gate::define('view cycle counts', function ($user) {
+            return $user->hasRole('super admin') || $user->hasRole('admin') || $user->hasRole('manager') || $user->checkPermissionTo('view cycle counts') === true;
+        });
+
+        Gate::define('create cycle counts', function ($user) {
+            return $user->hasRole('super admin') || $user->hasRole('admin') || $user->hasRole('manager') || $user->checkPermissionTo('create cycle counts') === true;
+        });
+
+        Gate::define('complete cycle counts', function ($user) {
+            return $user->hasRole('super admin') || $user->hasRole('admin') || $user->hasRole('manager') || $user->checkPermissionTo('complete cycle counts') === true;
+        });
+
         // POS gates. 'access pos' (and the cashier-tier actions below it) include
         // the 'cashier' role explicitly, since a cashier account intentionally
         // cannot reach 'access admin' — POS routes are gated separately from the

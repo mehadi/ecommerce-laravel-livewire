@@ -7,6 +7,7 @@ use App\Models\CycleCount;
 use App\Models\Product;
 use App\Models\Warehouse;
 use App\Models\WarehouseStock;
+use Illuminate\Support\Facades\Gate;
 use Livewire\Component;
 use Livewire\WithPagination;
 
@@ -44,6 +45,11 @@ class Index extends Component
         ];
     }
 
+    public function mount(): void
+    {
+        Gate::authorize('view cycle counts');
+    }
+
     public function updatingFilterStatus(): void
     {
         $this->resetPage();
@@ -51,6 +57,8 @@ class Index extends Component
 
     public function openCreateModal(): void
     {
+        Gate::authorize('create cycle counts');
+
         $this->reset(['warehouse_id', 'scope', 'filterCategoryId', 'filterAbcClass', 'notes']);
         $this->scope = 'all';
         $this->warehouse_id = Warehouse::default()->id;
@@ -64,6 +72,8 @@ class Index extends Component
 
     public function createCycleCount(): void
     {
+        Gate::authorize('create cycle counts');
+
         $this->validate();
 
         $productIds = Product::query()
