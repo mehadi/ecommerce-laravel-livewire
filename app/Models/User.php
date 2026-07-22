@@ -77,4 +77,23 @@ class User extends Authenticatable
     {
         return $this->belongsTo(Tenant::class);
     }
+
+    /**
+     * POS shifts this user opened. The FK (pos_shifts.opened_by) cascades on
+     * delete, so this is used to block hard-deleting users who would take
+     * shift/cash-movement audit history down with them (see Users\Index::delete()).
+     */
+    public function posShiftsOpened(): HasMany
+    {
+        return $this->hasMany(PosShift::class, 'opened_by');
+    }
+
+    /**
+     * POS sales this user held. The FK (pos_held_sales.held_by) also cascades
+     * on delete, same rationale as posShiftsOpened().
+     */
+    public function posHeldSales(): HasMany
+    {
+        return $this->hasMany(PosHeldSale::class, 'held_by');
+    }
 }

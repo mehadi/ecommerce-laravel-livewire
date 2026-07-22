@@ -141,6 +141,17 @@ class Index extends Component
 
         $this->validate();
 
+        // Resolve the requested roles and authorize privileged ones up front,
+        // before any user record is written — otherwise a forbidden role
+        // assignment would still leave behind a freshly created/updated user.
+        $roles = collect();
+        if (! empty($this->selectedRoles)) {
+            $roleIds = array_map('intval', $this->selectedRoles);
+            $roles = Tenancy::roleQuery()->whereIn('id', $roleIds)->get();
+
+            $this->authorizePrivilegedRoles($roles);
+        }
+
         $data = [
             'name' => $this->name,
             'email' => $this->email,
@@ -167,10 +178,7 @@ class Index extends Component
             $user->update($data);
 
             // Sync roles
-            if (! empty($this->selectedRoles)) {
-                $roleIds = array_map('intval', $this->selectedRoles);
-                $roles = Tenancy::roleQuery()->whereIn('id', $roleIds)->get();
-
+            if ($roles->isNotEmpty()) {
                 // Prevent removing super admin role from super admin users
                 if ($user->hasRole('super admin') && ! in_array('super admin', $roles->pluck('name')->toArray())) {
                     session()->flash('error', __('Cannot remove super admin role from super admin user.'));
@@ -195,9 +203,7 @@ class Index extends Component
             $user = User::create($data);
 
             // Assign roles
-            if (! empty($this->selectedRoles)) {
-                $roleIds = array_map('intval', $this->selectedRoles);
-                $roles = Tenancy::roleQuery()->whereIn('id', $roleIds)->get();
+            if ($roles->isNotEmpty()) {
                 $user->assignRole($roles);
             }
 
@@ -205,6 +211,25 @@ class Index extends Component
         }
 
         $this->closeModal();
+    }
+
+    /**
+     * Only super admin/admin (per the 'manage roles' gate) may hand out the
+     * super-admin or admin role via this modal. Without this, any role that
+     * carries 'create users'/'edit users' (e.g. the seeded manager role, or
+     * a custom role granted just those two permissions) could assign the
+     * super-admin/admin role to itself or another user and escalate
+     * privileges, since selectedRoles otherwise accepts any role id.
+     *
+     * @param  \Illuminate\Support\Collection<int, \Spatie\Permission\Models\Role>  $roles
+     */
+    protected function authorizePrivilegedRoles($roles): void
+    {
+        $privilegedRoles = ['super admin', 'admin'];
+
+        if ($roles->pluck('name')->intersect($privilegedRoles)->isNotEmpty()) {
+            Gate::authorize('manage roles');
+        }
     }
 
     public function delete($userId): void
@@ -223,6 +248,15 @@ class Index extends Component
         // Prevent users from deleting themselves
         if ($user->id === auth()->id()) {
             session()->flash('error', __('You cannot delete your own account.'));
+
+            return;
+        }
+
+        // Prevent hard-deleting a user with transactional POS history: pos_shifts
+        // (opened_by) and pos_held_sales (held_by) both cascade on delete, so
+        // removing the user would silently wipe shift/cash-movement audit trails.
+        if ($user->posShiftsOpened()->exists() || $user->posHeldSales()->exists()) {
+            session()->flash('error', __('This user has POS shift or held-sale history and cannot be deleted. Reassign or archive that history first.'));
 
             return;
         }
