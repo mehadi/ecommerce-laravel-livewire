@@ -7,8 +7,11 @@ use App\Livewire\Admin\PurchaseOrders\Create;
 use App\Models\Category;
 use App\Models\Product;
 use App\Models\Supplier;
+use App\Models\User;
+use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
+use Spatie\Permission\Models\Permission;
 
 uses(RefreshDatabase::class);
 
@@ -71,4 +74,22 @@ test('creating a purchase order from suggested reorders prefills the supplier an
         ->assertSet('supplier_id', $supplier->id)
         ->assertSet('items.0.product_id', $product->id)
         ->assertSet('items.0.quantity_ordered', 18); // (10 * 2) - 2
+});
+
+test('createPurchaseOrder authorizes independently of mount, since Livewire actions do not re-run mount()', function () {
+    // Spatie's hasPermissionTo() throws PermissionDoesNotExist if the permission
+    // row itself isn't registered yet — seed it as RolesPermissionsSeeder does.
+    Permission::firstOrCreate(['name' => 'view inventory', 'guard_name' => 'web']);
+
+    $user = User::factory()->create();
+    $this->actingAs($user);
+
+    // Calling the action directly on a fresh instance (bypassing mount()
+    // entirely) simulates a Livewire action request against a component that
+    // was never legitimately mounted for this user — createPurchaseOrder must
+    // guard itself rather than relying solely on mount()'s authorization.
+    $component = new SuggestedReorders;
+
+    expect(fn () => $component->createPurchaseOrder(1))
+        ->toThrow(AuthorizationException::class);
 });

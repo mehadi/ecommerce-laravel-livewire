@@ -135,10 +135,13 @@
                 </tr>
             </thead>
             <tbody class="bg-white dark:bg-zinc-900 divide-y divide-zinc-200 dark:divide-zinc-700">
+                @php
+                    $filterWarehouseId = $filterWarehouse !== '' ? (int) $filterWarehouse : null;
+                @endphp
                 @forelse($products as $product)
                     @php
-                        $syncedStock = $product->getSyncedStock();
-                        $syncedAvailable = $product->getSyncedAvailable();
+                        $syncedStock = $filterWarehouseId ? $product->getStockForWarehouse($filterWarehouseId) : $product->getSyncedStock();
+                        $syncedAvailable = $filterWarehouseId ? $product->getAvailableForWarehouse($filterWarehouseId) : $product->getSyncedAvailable();
                     @endphp
                     <tr class="hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors">
                         <td class="px-4 py-4">
@@ -207,6 +210,10 @@
                     </tr>
                     @if($product->hasAttributes() && $expandedProductId === $product->id)
                         @foreach($product->productAttributes as $variant)
+                            @php
+                                $variantStock = $filterWarehouseId ? $variant->warehouseStocks->where('warehouse_id', $filterWarehouseId)->sum('stock') : $variant->stock;
+                                $variantReserved = $filterWarehouseId ? $variant->warehouseStocks->where('warehouse_id', $filterWarehouseId)->sum('reserved') : $variant->warehouseStocks->sum('reserved');
+                            @endphp
                             <tr class="bg-zinc-50/60 dark:bg-zinc-800/40">
                                 <td class="px-4 py-3"></td>
                                 <td class="px-6 py-3 pl-4 text-sm text-zinc-700 dark:text-zinc-300">
@@ -220,17 +227,17 @@
                                     <td class="px-6 py-3"></td>
                                 @endif
                                 <td class="px-6 py-3 whitespace-nowrap text-sm text-zinc-700 dark:text-zinc-300">
-                                    {{ $variant->stock }} <span class="text-xs text-zinc-400">{{ __('units') }}</span>
+                                    {{ $variantStock }} <span class="text-xs text-zinc-400">{{ __('units') }}</span>
                                 </td>
                                 @if($hasAnyReservation)
                                     <td class="px-6 py-3 whitespace-nowrap text-sm text-zinc-700 dark:text-zinc-300">
-                                        {{ $variant->stock - $variant->warehouseStocks->sum('reserved') }} <span class="text-xs text-zinc-400">{{ __('units') }}</span>
+                                        {{ $variantStock - $variantReserved }} <span class="text-xs text-zinc-400">{{ __('units') }}</span>
                                     </td>
                                 @endif
                                 <td class="px-6 py-3 whitespace-nowrap">
-                                    @if($variant->stock <= 0)
+                                    @if($variantStock <= 0)
                                         <flux:badge variant="danger" size="sm">{{ __('Out of Stock') }}</flux:badge>
-                                    @elseif($variant->stock > 0 && $variant->stock <= $product->lowStockThreshold())
+                                    @elseif($variantStock > 0 && $variantStock <= $product->lowStockThreshold())
                                         <flux:badge variant="warning" size="sm">{{ __('Low Stock') }}</flux:badge>
                                     @else
                                         <flux:badge variant="success" size="sm">{{ __('In Stock') }}</flux:badge>
@@ -299,7 +306,7 @@
                             <div class="flex items-center justify-between gap-4 rounded-lg border border-zinc-200 p-3 dark:border-zinc-700">
                                 <div>
                                     <div class="text-sm font-medium text-zinc-900 dark:text-white">{{ $variant->attribute_label }}</div>
-                                    <div class="text-xs text-zinc-500 dark:text-zinc-400">{{ __('Current stock: :stock', ['stock' => $variant->stock]) }}</div>
+                                    <div class="text-xs text-zinc-500 dark:text-zinc-400">{{ __('Current stock: :stock', ['stock' => $variantCurrentStocks[$variant->id] ?? 0]) }}</div>
                                 </div>
                                 <flux:input type="number" min="0" wire:model="variantQuantities.{{ $variant->id }}" class="w-28" />
                             </div>
@@ -342,7 +349,7 @@
                         <flux:label>{{ in_array($adjustMode, ['reserve', 'release']) ? __('Reserved quantity') : __('Quantity') }}</flux:label>
                         <flux:input type="number" min="0" wire:model="adjustQuantity" />
                     </flux:field>
-                    <flux:text size="sm" variant="subtle">{{ __('Current stock: :stock', ['stock' => $adjustingProduct->stock]) }}</flux:text>
+                    <flux:text size="sm" variant="subtle">{{ __('Current stock: :stock', ['stock' => $adjustCurrentStock]) }}</flux:text>
                 @endif
 
                 <flux:field>

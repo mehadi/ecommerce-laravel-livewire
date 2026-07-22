@@ -3,10 +3,14 @@
 namespace App\Models;
 
 use App\Models\Concerns\BelongsToTenant;
+use App\Support\Tenancy;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class Product extends Model
 {
@@ -229,6 +233,56 @@ class Product extends Model
         return $this->getSyncedStock() - $this->getSyncedReserved();
     }
 
+    /**
+     * Stock held at a single warehouse only (as opposed to getSyncedStock()'s
+     * tenant-wide total across every warehouse) — relies on the same eager-loaded
+     * `productAttributes.warehouseStocks` / `warehouseStocks` relations.
+     */
+    public function getStockForWarehouse(int $warehouseId): int
+    {
+        if ($this->hasAttributes()) {
+            if (! $this->relationLoaded('productAttributes')) {
+                return 0;
+            }
+
+            return $this->productAttributes->sum(fn (ProductAttribute $attribute) => $attribute->relationLoaded('warehouseStocks')
+                ? $attribute->warehouseStocks->where('warehouse_id', $warehouseId)->sum('stock')
+                : $attribute->warehouseStocks()->where('warehouse_id', $warehouseId)->sum('stock'));
+        }
+
+        return $this->relationLoaded('warehouseStocks')
+            ? $this->warehouseStocks->where('warehouse_id', $warehouseId)->sum('stock')
+            : $this->warehouseStocks()->where('warehouse_id', $warehouseId)->sum('stock');
+    }
+
+    /**
+     * Reserved quantity at a single warehouse only. See getStockForWarehouse().
+     */
+    public function getReservedForWarehouse(int $warehouseId): int
+    {
+        if ($this->hasAttributes()) {
+            if (! $this->relationLoaded('productAttributes')) {
+                return 0;
+            }
+
+            return $this->productAttributes->sum(fn (ProductAttribute $attribute) => $attribute->relationLoaded('warehouseStocks')
+                ? $attribute->warehouseStocks->where('warehouse_id', $warehouseId)->sum('reserved')
+                : $attribute->warehouseStocks()->where('warehouse_id', $warehouseId)->sum('reserved'));
+        }
+
+        return $this->relationLoaded('warehouseStocks')
+            ? $this->warehouseStocks->where('warehouse_id', $warehouseId)->sum('reserved')
+            : $this->warehouseStocks()->where('warehouse_id', $warehouseId)->sum('reserved');
+    }
+
+    /**
+     * Available (stock - reserved) at a single warehouse only.
+     */
+    public function getAvailableForWarehouse(int $warehouseId): int
+    {
+        return $this->getStockForWarehouse($warehouseId) - $this->getReservedForWarehouse($warehouseId);
+    }
+
     public function getSyncedCompareAtPrice(): ?float
     {
         if ($this->hasAttributes() && $this->relationLoaded('productAttributes')) {
@@ -266,6 +320,66 @@ class Product extends Model
 
             $this->saveQuietly();
         }
+    }
+
+    /**
+     * Clone this product (and its variants) as an inactive draft. SKUs and
+     * barcodes are unique per tenant so they are never copied; stock starts
+     * at 0 so the copy doesn't fabricate inventory (warehouse allocations
+     * belong to the original). Image files are physically copied so the two
+     * products never share storage paths (deleting one would otherwise break
+     * the other's images).
+     */
+    public function duplicate(): self
+    {
+        return DB::transaction(function () {
+            $copy = $this->replicate(['sku', 'barcode']);
+            $copy->name_en = $this->name_en.' (Copy)';
+            $copy->name_bn = $this->name_bn ? $this->name_bn.' (Copy)' : null;
+            $copy->is_active = false;
+            $copy->is_featured = false;
+            $copy->sku = null;
+            $copy->barcode = null;
+            $copy->stock = 0;
+            $copy->order = ((int) static::max('order')) + 1;
+            $copy->primary_image = $this->copyStoredImage($this->primary_image);
+            $copy->gallery_images = collect($this->gallery_images ?? [])
+                ->map(fn ($path) => $this->copyStoredImage($path))
+                ->filter()
+                ->values()
+                ->all();
+            $copy->save();
+
+            foreach ($this->productAttributes()->get() as $variant) {
+                $copy->productAttributes()->create([
+                    'attribute_data' => $variant->attribute_data,
+                    'price' => $variant->price,
+                    'compare_at_price' => $variant->compare_at_price,
+                    'buying_price' => $variant->buying_price,
+                    'sku' => null,
+                    'barcode' => null,
+                    'stock' => 0,
+                    'weight_kg' => $variant->weight_kg,
+                    'is_active' => $variant->is_active,
+                ]);
+            }
+
+            return $copy;
+        });
+    }
+
+    private function copyStoredImage(?string $path): ?string
+    {
+        if (! $path || ! Storage::disk('public')->exists($path)) {
+            return null;
+        }
+
+        $extension = pathinfo($path, PATHINFO_EXTENSION);
+        $newPath = Tenancy::storagePath('products').'/'.Str::uuid().($extension ? '.'.$extension : '');
+
+        Storage::disk('public')->copy($path, $newPath);
+
+        return $newPath;
     }
 
     public function profit(): float

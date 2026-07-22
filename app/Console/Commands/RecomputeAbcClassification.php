@@ -17,12 +17,27 @@ use Illuminate\Console\Command;
  */
 class RecomputeAbcClassification extends Command
 {
-    protected $signature = 'inventory:recompute-abc';
+    protected $signature = 'inventory:recompute-abc {--tenant= : Only recompute this tenant ID, instead of every tenant on the platform}';
 
     protected $description = "Recompute each tenant's product ABC classification from total revenue contribution.";
 
     public function handle(): int
     {
+        if ($tenantId = $this->option('tenant')) {
+            $tenant = Tenant::find($tenantId);
+
+            if (! $tenant) {
+                $this->error("Tenant #{$tenantId} not found.");
+
+                return self::FAILURE;
+            }
+
+            $this->recomputeForTenant($tenant);
+            $this->info("Recomputed ABC classes for tenant #{$tenant->id} ({$tenant->name}).");
+
+            return self::SUCCESS;
+        }
+
         $tenants = Tenant::all();
 
         if ($tenants->isEmpty()) {
@@ -32,14 +47,34 @@ class RecomputeAbcClassification extends Command
         }
 
         foreach ($tenants as $tenant) {
-            app()->instance('currentTenant', $tenant);
-            $this->recomputeForCurrentTenant();
+            $this->recomputeForTenant($tenant);
             $this->info("Recomputed ABC classes for tenant #{$tenant->id} ({$tenant->name}).");
         }
 
-        app()->forgetInstance('currentTenant');
-
         return self::SUCCESS;
+    }
+
+    /**
+     * Swaps the bound tenant only for the duration of the recompute, restoring
+     * whatever was bound before (rather than unconditionally forgetting it) so
+     * this is safe to call for a single tenant from inside an already-tenant-
+     * scoped web request, not just from the console's all-tenants loop.
+     */
+    private function recomputeForTenant(Tenant $tenant): void
+    {
+        $previousTenant = app()->bound('currentTenant') ? app('currentTenant') : null;
+
+        app()->instance('currentTenant', $tenant);
+
+        try {
+            $this->recomputeForCurrentTenant();
+        } finally {
+            if ($previousTenant !== null) {
+                app()->instance('currentTenant', $previousTenant);
+            } else {
+                app()->forgetInstance('currentTenant');
+            }
+        }
     }
 
     private function recomputeForCurrentTenant(): void

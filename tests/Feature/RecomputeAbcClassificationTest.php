@@ -6,6 +6,7 @@ use App\Models\Category;
 use App\Models\Order;
 use App\Models\Product;
 use App\Models\Tenant;
+use App\Support\Tenancy;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
 use function Pest\Laravel\artisan;
@@ -69,4 +70,33 @@ test('the command is a no-op when a tenant has no revenue at all', function () {
     artisan('inventory:recompute-abc')->assertSuccessful();
 
     expect($product->fresh()->abc_class)->toBe('C');
+});
+
+test('the --tenant option only recomputes that single tenant, leaving others untouched', function () {
+    $tenant1 = Tenant::firstOrCreate(['slug' => 'default'], ['name' => 'Default Store', 'status' => 'active']);
+    app()->instance('currentTenant', $tenant1);
+    $category1 = Category::factory()->create();
+    $tenant1Product = Product::factory()->create(['category_id' => $category1->id]);
+
+    $tenant2 = Tenant::create(['slug' => 'second-store', 'name' => 'Second Store', 'status' => 'active']);
+    app()->instance('currentTenant', $tenant2);
+    $category2 = Category::factory()->create();
+    $tenant2Product = Product::factory()->create(['category_id' => $category2->id]);
+
+    // Back to tenant1 as "current" (as a real web request would have it bound)
+    // before invoking the command scoped to tenant1 only.
+    app()->instance('currentTenant', $tenant1);
+
+    artisan('inventory:recompute-abc', ['--tenant' => $tenant1->id])->assertSuccessful();
+
+    expect($tenant1Product->fresh()->abc_class)->toBe('C');
+    expect($tenant2Product->fresh()->abc_class)->toBeNull();
+
+    // The previously-bound tenant must still be resolvable afterwards — the
+    // command must not have clobbered it while running scoped for tenant1.
+    expect(Tenancy::id())->toBe($tenant1->id);
+});
+
+test('the --tenant option fails for an unknown tenant id', function () {
+    artisan('inventory:recompute-abc', ['--tenant' => 999999])->assertFailed();
 });

@@ -5,13 +5,16 @@ namespace App\Livewire\Admin\Inventory;
 use App\Enums\StockMovementType;
 use App\Models\Category;
 use App\Models\Product;
+use App\Models\ProductAttribute;
 use App\Models\ProductBatch;
 use App\Models\Setting;
 use App\Models\Warehouse;
 use App\Models\WarehouseStock;
 use App\Support\StockMovementContext;
+use App\Support\Tenancy;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Validation\Rule;
 use Livewire\Component;
 use Livewire\WithPagination;
 
@@ -65,6 +68,14 @@ class Index extends Component
     public $showThresholdModal = false;
 
     public $lowStockThresholdSetting = '10';
+
+    // Adjust Stock modal: current per-warehouse figure(s) being edited, shown
+    // as a caption alongside the input(s) — distinct from $adjustQuantity /
+    // $variantQuantities, which are seeded to 0 for every mode except 'set'.
+    public int $adjustCurrentStock = 0;
+
+    /** @var array<int, int> product_attribute_id => current per-warehouse quantity */
+    public array $variantCurrentStocks = [];
 
     public function mount(): void
     {
@@ -139,7 +150,17 @@ class Index extends Component
     {
         Gate::authorize('manage inventory settings');
 
-        Artisan::call('inventory:recompute-abc');
+        $tenantId = Tenancy::id();
+
+        if (! $tenantId) {
+            session()->flash('error', __('Unable to determine the current store.'));
+
+            return;
+        }
+
+        // Scoped to this tenant only — recomputing every tenant on the
+        // platform synchronously inline in a single request doesn't scale.
+        Artisan::call('inventory:recompute-abc', ['--tenant' => $tenantId]);
 
         session()->flash('message', __('ABC classification recalculated.'));
     }
@@ -164,6 +185,8 @@ class Index extends Component
         $this->showAdjustModal = false;
         $this->adjustingProduct = null;
         $this->variantQuantities = [];
+        $this->variantCurrentStocks = [];
+        $this->adjustCurrentStock = 0;
         $this->batchRows = [];
     }
 
@@ -204,19 +227,27 @@ class Index extends Component
         $seedCurrent = $this->adjustMode === 'set';
 
         if ($product->hasAttributes()) {
-            $this->variantQuantities = $product->productAttributes->mapWithKeys(function ($variant) use ($column, $seedCurrent) {
+            $currentStocks = [];
+            $quantities = [];
+
+            foreach ($product->productAttributes as $variant) {
                 $current = (int) (WarehouseStock::where('warehouse_id', $this->adjustWarehouseId)
                     ->where('product_attribute_id', $variant->id)
                     ->value($column) ?? 0);
 
-                return [$variant->id => $seedCurrent ? $current : 0];
-            })->all();
+                $currentStocks[$variant->id] = $current;
+                $quantities[$variant->id] = $seedCurrent ? $current : 0;
+            }
+
+            $this->variantCurrentStocks = $currentStocks;
+            $this->variantQuantities = $quantities;
         } else {
             $current = (int) (WarehouseStock::where('warehouse_id', $this->adjustWarehouseId)
                 ->where('product_id', $product->id)
                 ->whereNull('product_attribute_id')
                 ->value($column) ?? 0);
 
+            $this->adjustCurrentStock = $current;
             $this->adjustQuantity = $seedCurrent ? $current : 0;
         }
     }
@@ -285,7 +316,7 @@ class Index extends Component
 
         $this->validate([
             'adjustReason' => 'required|string|max:255',
-            'adjustWarehouseId' => 'required|exists:warehouses,id',
+            'adjustWarehouseId' => ['required', Rule::exists('warehouses', 'id')->where(fn ($query) => $query->where('tenant_id', Tenancy::id()))],
             'adjustQuantity' => 'nullable|integer|min:0',
             'variantQuantities.*' => 'nullable|integer|min:0',
         ]);
@@ -346,7 +377,7 @@ class Index extends Component
     {
         $this->validate([
             'adjustReason' => 'required|string|max:255',
-            'adjustWarehouseId' => 'required|exists:warehouses,id',
+            'adjustWarehouseId' => ['required', Rule::exists('warehouses', 'id')->where(fn ($query) => $query->where('tenant_id', Tenancy::id()))],
             'batchRows.*.batch_number' => 'nullable|string|max:255',
             'batchRows.*.quantity' => 'nullable|integer|min:0',
             'batchRows.*.expires_at' => 'nullable|date',
@@ -398,8 +429,17 @@ class Index extends Component
         $this->historyProductId = null;
     }
 
+    /**
+     * `products.stock` is kept in sync with the sum of its warehouse/variant
+     * stock by Product::syncPriceAndStock() (called from the WarehouseStock
+     * and ProductAttribute observers on every write), so SQL filters/aggregates
+     * against this column are equivalent to the per-product getSyncedStock()
+     * used elsewhere, without loading every product into memory to compute it.
+     */
     protected function getProductsQuery()
     {
+        $defaultThreshold = (int) Setting::get('low_stock_threshold', '10');
+
         return Product::query()
             ->with(['category', 'productAttributes.warehouseStocks', 'warehouseStocks'])
             ->when($this->search, function ($query) {
@@ -417,51 +457,56 @@ class Index extends Component
                     $q->whereHas('warehouseStocks', fn ($wq) => $wq->where('warehouse_id', $this->filterWarehouse))
                         ->orWhereHas('productAttributes.warehouseStocks', fn ($wq) => $wq->where('warehouse_id', $this->filterWarehouse));
                 });
+            })
+            ->when($this->filterStock !== '', function ($query) use ($defaultThreshold) {
+                match ($this->filterStock) {
+                    'in_stock' => $query->where('stock', '>', 0),
+                    'out_of_stock' => $query->where('stock', '<=', 0),
+                    'low_stock' => $query->where('stock', '>', 0)
+                        ->whereRaw('stock <= COALESCE(low_stock_threshold, ?)', [$defaultThreshold]),
+                    default => null,
+                };
             });
+    }
+
+    /**
+     * Tenant-wide stock stats via aggregate SQL rather than loading every
+     * product (and every variant/warehouse-stock row) into memory each render.
+     * Buying-price value is split base-product vs. variant because only
+     * price/compare_at_price/stock are synced onto the parent product by
+     * syncPriceAndStock() — buying_price is not, so a variant-tracked
+     * product's own buying_price column can't be trusted for its value.
+     */
+    protected function computeStats(): array
+    {
+        $defaultThreshold = (int) Setting::get('low_stock_threshold', '10');
+
+        $baseValue = (float) Product::doesntHave('productAttributes')
+            ->selectRaw('COALESCE(SUM(COALESCE(buying_price, 0) * COALESCE(stock, 0)), 0) as value')
+            ->value('value');
+
+        $variantValue = (float) ProductAttribute::query()
+            ->selectRaw('COALESCE(SUM(COALESCE(buying_price, 0) * COALESCE(stock, 0)), 0) as value')
+            ->value('value');
+
+        return [
+            'total_skus' => Product::count(),
+            'total_units' => (int) Product::sum('stock'),
+            'low_stock' => Product::where('stock', '>', 0)
+                ->whereRaw('stock <= COALESCE(low_stock_threshold, ?)', [$defaultThreshold])
+                ->count(),
+            'out_of_stock' => Product::where('stock', '<=', 0)->count(),
+            'total_value' => $baseValue + $variantValue,
+        ];
     }
 
     public function render()
     {
-        $query = $this->getProductsQuery();
+        $products = $this->getProductsQuery()
+            ->orderBy($this->sortField, $this->sortDirection)
+            ->paginate($this->perPage);
 
-        if ($this->filterStock !== '') {
-            $matchingIds = Product::with('productAttributes')
-                ->get()
-                ->filter(function (Product $product) {
-                    return match ($this->filterStock) {
-                        'in_stock' => $product->getSyncedStock() > 0,
-                        'low_stock' => $product->isLowStock(),
-                        'out_of_stock' => $product->getSyncedStock() <= 0,
-                        default => true,
-                    };
-                })
-                ->pluck('id');
-
-            $query->whereIn('id', $matchingIds);
-        }
-
-        $products = $query->orderBy($this->sortField, $this->sortDirection)->paginate($this->perPage);
-
-        $allProducts = Product::with('productAttributes.warehouseStocks', 'warehouseStocks')->get();
-
-        $totalUnits = $allProducts->sum(fn (Product $product) => $product->getSyncedStock());
-        $lowStockCount = $allProducts->filter(fn (Product $product) => $product->isLowStock())->count();
-        $outOfStockCount = $allProducts->filter(fn (Product $product) => $product->getSyncedStock() <= 0)->count();
-        $totalValue = $allProducts->sum(function (Product $product) {
-            if ($product->hasAttributes()) {
-                return $product->productAttributes->sum(fn ($variant) => (float) ($variant->buying_price ?? 0) * (int) $variant->stock);
-            }
-
-            return (float) ($product->buying_price ?? 0) * (int) $product->stock;
-        });
-
-        $stats = [
-            'total_skus' => $allProducts->count(),
-            'total_units' => $totalUnits,
-            'low_stock' => $lowStockCount,
-            'out_of_stock' => $outOfStockCount,
-            'total_value' => $totalValue,
-        ];
+        $stats = $this->computeStats();
 
         $historyProduct = null;
         $historyMovements = collect();
