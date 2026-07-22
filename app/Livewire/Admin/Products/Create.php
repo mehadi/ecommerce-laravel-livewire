@@ -5,10 +5,19 @@ namespace App\Livewire\Admin\Products;
 use App\Models\Attribute;
 use App\Models\Category;
 use App\Models\Product;
+use App\Models\ProductAttribute;
 use App\Models\Supplier;
 use App\Support\Tenancy;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
+use Livewire\Attributes\Computed;
+use Livewire\Attributes\Locked;
 use Livewire\Component;
 use Livewire\WithFileUploads;
 
@@ -16,6 +25,7 @@ class Create extends Component
 {
     use WithFileUploads;
 
+    #[Locked]
     public ?Product $product = null;
 
     public $category_id;
@@ -38,6 +48,8 @@ class Create extends Component
 
     public $sku;
 
+    public $barcode;
+
     public $stock = 0;
 
     public $low_stock_threshold;
@@ -48,6 +60,7 @@ class Create extends Component
 
     public $gallery_images = [];
 
+    #[Locked]
     public $existing_gallery = [];
 
     public array $pendingAttachments = [];
@@ -63,10 +76,23 @@ class Create extends Component
 
     public array $productAttributes = []; // Generated combinations with pricing
 
+    // Bulk-edit helpers for the variant table
+    public $bulkVariantPrice;
+
+    public $bulkVariantStock;
+
+    /**
+     * Per-request cache of the tenant's attribute catalog (with values) so the
+     * combination helpers below never query inside loops.
+     */
+    private ?Collection $attributeCatalog = null;
+
     public function mount(?Product $product = null): void
     {
+        $this->product = $product;
+        $this->authorizeForm();
+
         if ($product) {
-            $this->product = $product;
             $this->category_id = $product->category_id;
             $this->default_supplier_id = $product->default_supplier_id;
             $this->name_en = $product->name_en;
@@ -77,9 +103,10 @@ class Create extends Component
             $this->compare_at_price = $product->compare_at_price;
             $this->buying_price = $product->buying_price;
             $this->sku = $product->sku;
+            $this->barcode = $product->barcode;
             $this->stock = $product->stock;
             $this->low_stock_threshold = $product->low_stock_threshold;
-            $this->tracks_batches = $product->tracks_batches;
+            $this->tracks_batches = (bool) $product->tracks_batches;
             $this->existing_gallery = $product->gallery_images ?? [];
             $this->is_active = $product->is_active;
             $this->is_featured = $product->is_featured;
@@ -106,6 +133,7 @@ class Create extends Component
                 'compare_at_price' => $productAttribute->compare_at_price,
                 'buying_price' => $productAttribute->buying_price,
                 'sku' => $productAttribute->sku,
+                'barcode' => $productAttribute->barcode,
                 'stock' => $productAttribute->stock,
                 'weight_kg' => $productAttribute->weight_kg,
                 'is_active' => $productAttribute->is_active,
@@ -114,6 +142,37 @@ class Create extends Component
 
         // Reconstruct selectedAttributes from product attributes
         $this->reconstructSelectedAttributes();
+    }
+
+    /**
+     * The tenant's active attribute catalog, memoized per request so the
+     * combination helpers can resolve names/values in memory instead of
+     * re-querying inside loops.
+     */
+    private function attributeCatalog(): Collection
+    {
+        return $this->attributeCatalog ??= Attribute::with(['values', 'activeValues'])
+            ->orderBy('order')
+            ->orderBy('name')
+            ->get();
+    }
+
+    private function catalogAttributeByKey(string $key): ?Attribute
+    {
+        return $this->attributeCatalog()->first(
+            fn (Attribute $attribute) => $attribute->name === $key || $attribute->slug === strtolower($key)
+        );
+    }
+
+    /**
+     * Canonical identity of a variant combination, independent of key order,
+     * used to match form rows against stored ProductAttribute rows.
+     */
+    private function combinationKey(array $attributeData): string
+    {
+        ksort($attributeData);
+
+        return json_encode($attributeData);
     }
 
     private function reconstructSelectedAttributes(): void
@@ -134,20 +193,15 @@ class Create extends Component
             }
 
             foreach ($attributeData as $attributeName => $attributeValue) {
-                // Find the attribute by name
-                $attribute = Attribute::where('name', $attributeName)
-                    ->orWhere('slug', strtolower($attributeName))
-                    ->first();
+                $attribute = $this->catalogAttributeByKey($attributeName);
 
                 if (! $attribute) {
                     continue;
                 }
 
-                // Find the attribute value
-                $value = $attribute->values()
-                    ->where('value', $attributeValue)
-                    ->orWhere('display_value', $attributeValue)
-                    ->first();
+                $value = $attribute->values->first(
+                    fn ($candidate) => $candidate->value === $attributeValue || $candidate->display_value === $attributeValue
+                );
 
                 if ($value) {
                     if (! isset($attributeValueMap[$attribute->id])) {
@@ -165,15 +219,22 @@ class Create extends Component
 
     protected function rules(): array
     {
+        $tenantId = Tenancy::id();
+
         return [
-            'category_id' => 'nullable|exists:categories,id',
-            'default_supplier_id' => 'nullable|exists:suppliers,id',
+            // Plain 'exists:table,column' runs against the raw DB table and ignores
+            // Eloquent's TenantScope global scope, so without scoping this by
+            // tenant_id a user could reference another tenant's category/supplier
+            // ID here (IDOR) and have it silently attached to their own product.
+            'category_id' => ['nullable', Rule::exists('categories', 'id')->where(fn ($query) => $query->where('tenant_id', $tenantId))],
+            'default_supplier_id' => ['nullable', Rule::exists('suppliers', 'id')->where(fn ($query) => $query->where('tenant_id', $tenantId))],
             'name_en' => 'required|string|max:255',
             'name_bn' => 'nullable|string|max:255',
             'description_en' => 'nullable|string',
             'description_bn' => 'nullable|string',
             'price' => [function ($attribute, $value, $fail) {
-                if (empty($this->productAttributes) && (empty($value) || $value < 0)) {
+                // Explicit blank check — empty() would wrongly reject a price of 0.
+                if (empty($this->productAttributes) && ($value === null || $value === '')) {
                     $fail(__('Price is required when no attributes are set.'));
                 }
             }, 'nullable', 'numeric', 'min:0'],
@@ -183,9 +244,20 @@ class Create extends Component
                 }
             }],
             'buying_price' => 'nullable|numeric|min:0',
-            'sku' => 'nullable|string|unique:products,sku,'.($this->product?->id ?? 'NULL'),
+            'sku' => ['nullable', 'string', 'max:255',
+                Rule::unique('products', 'sku')
+                    ->where(fn ($query) => $query->where('tenant_id', $tenantId))
+                    ->ignore($this->product?->id),
+            ],
+            'barcode' => ['nullable', 'string', 'max:255',
+                Rule::unique('products', 'barcode')
+                    ->where(fn ($query) => $query->where('tenant_id', $tenantId))
+                    ->ignore($this->product?->id),
+            ],
             'stock' => [function ($attribute, $value, $fail) {
-                if (empty($this->productAttributes) && (empty($value) || $value < 0)) {
+                // Batch-tracked stock is derived from batches, so the disabled
+                // input legitimately stays blank/0; 0 itself is a valid level.
+                if (empty($this->productAttributes) && ! $this->tracks_batches && ($value === null || $value === '')) {
                     $fail(__('Stock is required when no attributes are set.'));
                 }
             }, 'nullable', 'integer', 'min:0'],
@@ -196,6 +268,26 @@ class Create extends Component
             'is_active' => 'boolean',
             'is_featured' => 'boolean',
             'order' => 'integer|min:0',
+            'productAttributes.*.price' => 'required|numeric|min:0',
+            'productAttributes.*.compare_at_price' => 'nullable|numeric|min:0',
+            'productAttributes.*.buying_price' => 'nullable|numeric|min:0',
+            'productAttributes.*.stock' => 'required|integer|min:0',
+            'productAttributes.*.sku' => 'nullable|string|max:255|distinct:ignore_case',
+            'productAttributes.*.barcode' => 'nullable|string|max:255|distinct:ignore_case',
+            'productAttributes.*.weight_kg' => 'nullable|numeric|min:0',
+        ];
+    }
+
+    protected function validationAttributes(): array
+    {
+        return [
+            'productAttributes.*.price' => __('variant price'),
+            'productAttributes.*.compare_at_price' => __('variant compare at price'),
+            'productAttributes.*.buying_price' => __('variant buying price'),
+            'productAttributes.*.stock' => __('variant stock'),
+            'productAttributes.*.sku' => __('variant SKU'),
+            'productAttributes.*.barcode' => __('variant barcode'),
+            'productAttributes.*.weight_kg' => __('variant weight'),
         ];
     }
 
@@ -249,14 +341,84 @@ class Create extends Component
         $this->validateOnly('sku');
     }
 
+    /**
+     * Fill empty variant SKUs from the base SKU plus a slug of the
+     * combination (e.g. TSHIRT-00001-RED-XL). Never overwrites a SKU the
+     * user already typed.
+     */
+    public function generateVariantSkus(): void
+    {
+        if (! $this->sku) {
+            $this->generateSku();
+        }
+
+        if (! $this->sku) {
+            return;
+        }
+
+        foreach ($this->productAttributes as $index => $row) {
+            if (! empty($row['sku'])) {
+                continue;
+            }
+
+            $suffix = collect($row['attribute_data'] ?? [])
+                ->map(fn ($value) => strtoupper(Str::slug((string) $value, '')))
+                ->filter()
+                ->join('-');
+
+            $this->productAttributes[$index]['sku'] = $suffix ? $this->sku.'-'.$suffix : null;
+        }
+    }
+
+    public function applyBulkVariantPrice(): void
+    {
+        if ($this->bulkVariantPrice === null || $this->bulkVariantPrice === '' || $this->bulkVariantPrice < 0) {
+            return;
+        }
+
+        foreach ($this->productAttributes as $index => $row) {
+            $this->productAttributes[$index]['price'] = $this->bulkVariantPrice;
+        }
+    }
+
+    public function applyBulkVariantStock(): void
+    {
+        if ($this->bulkVariantStock === null || $this->bulkVariantStock === '' || $this->bulkVariantStock < 0) {
+            return;
+        }
+
+        foreach ($this->productAttributes as $index => $row) {
+            $this->productAttributes[$index]['stock'] = (int) $this->bulkVariantStock;
+        }
+    }
+
+    /**
+     * mount() only runs on the initial load in Livewire 3, so every mutating
+     * action re-checks the gate itself (covers mid-session permission revocation).
+     */
+    private function authorizeForm(): void
+    {
+        Gate::authorize($this->product ? 'edit products' : 'create products');
+    }
+
     public function save(): void
     {
-        $this->validate();
+        $this->authorizeForm();
+
+        try {
+            $this->validate();
+        } catch (ValidationException $exception) {
+            // Lets the view reset its "saving" guard and scroll to the error summary.
+            $this->dispatch('product-form-invalid');
+
+            throw $exception;
+        }
 
         $isEdit = $this->product !== null;
 
         if (! $isEdit && ! Tenancy::current()?->canAddProduct()) {
             session()->flash('error', __('Your plan\'s product limit has been reached. Upgrade your plan to add more products.'));
+            $this->dispatch('product-form-invalid');
 
             return;
         }
@@ -281,6 +443,7 @@ class Create extends Component
             'compare_at_price' => $hasAttributes ? null : ($this->compare_at_price ?: null),
             'buying_price' => $this->buying_price ?: null,
             'sku' => $this->sku ?: null,
+            'barcode' => $this->barcode ?: null,
             // A tracks_batches product's stock is derived entirely from its
             // batches (see ProductBatchObserver) — the manual Stock field is
             // ignored for it, matching the "add a batch to add stock" flow.
@@ -292,10 +455,11 @@ class Create extends Component
             'order' => $this->order,
         ];
 
+        // File storage isn't transactional, so store uploads up front and only
+        // delete the replaced primary image after the DB work commits.
+        $replacedPrimaryImage = null;
         if ($this->primary_image) {
-            if ($isEdit && $this->product->primary_image) {
-                Storage::disk('public')->delete($this->product->primary_image);
-            }
+            $replacedPrimaryImage = $isEdit ? $this->product->primary_image : null;
             $data['primary_image'] = $this->primary_image->store(Tenancy::storagePath('products'), 'public');
         }
 
@@ -309,25 +473,29 @@ class Create extends Component
         }
         $data['gallery_images'] = $galleryPaths;
 
-        if ($isEdit) {
-            $this->product->update($data);
-            $product = $this->product;
+        $product = DB::transaction(function () use ($data, $isEdit) {
+            if ($isEdit) {
+                $this->product->update($data);
+                $product = $this->product;
+            } else {
+                $product = Product::create($data);
+            }
 
-            // Delete existing attributes
-            $this->product->productAttributes()->delete();
-        } else {
-            $product = Product::create($data);
-        }
+            $this->syncProductAttributes($product);
 
-        // Save product attributes if any
-        if (! empty($this->productAttributes)) {
-            $this->saveProductAttributes($product);
+            if (! empty($this->productAttributes)) {
+                // The base product was saved with price/stock forced to 0 above
+                // (they're tracked per-variant instead) — resync the denormalized
+                // cache now that the variants exist, so Products/Inventory show
+                // the real totals immediately.
+                $product->syncPriceAndStock();
+            }
 
-            // The base product was saved with price/stock forced to 0 above (they're
-            // tracked per-variant instead) — resync the denormalized cache now that
-            // the variants exist, so Products/Inventory show the real totals
-            // immediately instead of 0 until some later event happens to touch a variant.
-            $product->syncPriceAndStock();
+            return $product;
+        });
+
+        if ($replacedPrimaryImage) {
+            Storage::disk('public')->delete($replacedPrimaryImage);
         }
 
         Cache::forget(Tenancy::cacheKey('products.featured'));
@@ -335,6 +503,61 @@ class Create extends Component
         session()->flash('message', $isEdit ? __('Product updated successfully.') : __('Product created successfully.'));
 
         $this->redirect(route('admin.products.index'));
+    }
+
+    /**
+     * Diff-and-upsert the variant rows instead of delete-all/recreate.
+     * Matching by combination keeps ProductAttribute IDs stable, which is
+     * what preserves warehouse stock allocations (cascadeOnDelete), the
+     * variant-level StockMovement audit trail (cascadeOnDelete), and
+     * order-item variant links (nullOnDelete) across edits.
+     */
+    private function syncProductAttributes(Product $product): void
+    {
+        $existing = $product->productAttributes()->get()
+            ->keyBy(fn (ProductAttribute $row) => $this->combinationKey($row->attribute_data ?? []));
+
+        $keptIds = [];
+
+        foreach ($this->productAttributes as $row) {
+            if (empty($row['attribute_data']) || ! isset($row['price'])) {
+                continue;
+            }
+
+            $payload = [
+                'attribute_data' => $row['attribute_data'],
+                'price' => $row['price'],
+                'compare_at_price' => $this->nullableNumber($row['compare_at_price'] ?? null),
+                'buying_price' => $this->nullableNumber($row['buying_price'] ?? null),
+                'sku' => ($row['sku'] ?? '') !== '' ? $row['sku'] : null,
+                'barcode' => ($row['barcode'] ?? '') !== '' ? $row['barcode'] : null,
+                'stock' => (int) ($row['stock'] ?? 0),
+                'weight_kg' => $this->nullableNumber($row['weight_kg'] ?? null),
+                'is_active' => $row['is_active'] ?? true,
+            ];
+
+            $current = $existing->get($this->combinationKey($row['attribute_data']));
+
+            if ($current) {
+                $current->update($payload);
+                $keptIds[] = $current->id;
+            } else {
+                $keptIds[] = $product->productAttributes()->create($payload)->id;
+            }
+        }
+
+        // Delete only combinations the user actually removed — one by one so
+        // model events still fire (a mass delete would skip observers).
+        $product->productAttributes()
+            ->whereNotIn('id', $keptIds)
+            ->get()
+            ->each
+            ->delete();
+    }
+
+    private function nullableNumber($value): mixed
+    {
+        return ($value === null || $value === '') ? null : $value;
     }
 
     public function toggleAttribute(int $attributeId): void
@@ -384,25 +607,30 @@ class Create extends Component
 
     public function generateProductAttributes(): void
     {
+        // Index the rows the user already configured so toggling one value
+        // never wipes pricing/stock/SKUs typed into the other combinations.
+        $previousRows = collect($this->productAttributes)
+            ->keyBy(fn (array $row) => $this->combinationKey($row['attribute_data'] ?? []));
+
         $this->productAttributes = [];
 
         if (empty($this->selectedAttributes)) {
             return;
         }
 
-        // Get attribute data with values
+        // Get attribute data with values (from the memoized catalog — no queries)
         $attributeData = [];
         foreach ($this->selectedAttributes as $attributeId => $valueIds) {
             if (empty($valueIds)) {
                 continue;
             }
 
-            $attribute = Attribute::with('values')->find($attributeId);
+            $attribute = $this->attributeCatalog()->firstWhere('id', $attributeId);
             if (! $attribute) {
                 continue;
             }
 
-            $values = $attribute->values()->whereIn('id', $valueIds)->get();
+            $values = $attribute->values->whereIn('id', $valueIds)->values();
             if ($values->isEmpty()) {
                 continue;
             }
@@ -420,14 +648,22 @@ class Create extends Component
         // Generate all combinations
         $combinations = $this->cartesianProductForAttributes($attributeData);
 
-        // Create product attribute entries with default pricing
         foreach ($combinations as $combination) {
+            $previous = $previousRows->get($this->combinationKey($combination));
+
+            if ($previous) {
+                $this->productAttributes[] = $previous;
+
+                continue;
+            }
+
             $this->productAttributes[] = [
                 'attribute_data' => $combination,
                 'price' => $this->price ?: 0,
                 'compare_at_price' => $this->compare_at_price,
                 'buying_price' => $this->buying_price,
                 'sku' => '',
+                'barcode' => '',
                 'stock' => 0,
                 'weight_kg' => $this->extractWeightFromCombination($combination),
                 'is_active' => true,
@@ -465,9 +701,7 @@ class Create extends Component
     {
         // Try to find weight attribute in the combination
         foreach ($combination as $key => $value) {
-            $attribute = Attribute::where('name', $key)
-                ->orWhere('slug', strtolower($key))
-                ->first();
+            $attribute = $this->catalogAttributeByKey($key);
 
             if ($attribute && $attribute->isWeight()) {
                 // Try to extract numeric value
@@ -481,29 +715,36 @@ class Create extends Component
         return null;
     }
 
-    private function saveProductAttributes(Product $product): void
+    /**
+     * Clone the product being edited as an inactive draft copy and jump to it.
+     */
+    public function duplicate(): void
     {
-        foreach ($this->productAttributes as $attributeData) {
-            if (empty($attributeData['attribute_data']) || ! isset($attributeData['price'])) {
-                continue;
-            }
+        Gate::authorize('create products');
 
-            \App\Models\ProductAttribute::create([
-                'product_id' => $product->id,
-                'attribute_data' => $attributeData['attribute_data'],
-                'price' => $attributeData['price'],
-                'compare_at_price' => $attributeData['compare_at_price'] ?? null,
-                'buying_price' => $attributeData['buying_price'] ?? null,
-                'sku' => $attributeData['sku'] ?? null,
-                'stock' => $attributeData['stock'] ?? 0,
-                'weight_kg' => $attributeData['weight_kg'] ?? null,
-                'is_active' => $attributeData['is_active'] ?? true,
-            ]);
+        if (! $this->product) {
+            return;
         }
+
+        if (! Tenancy::current()?->canAddProduct()) {
+            session()->flash('error', __('Your plan\'s product limit has been reached. Upgrade your plan to add more products.'));
+
+            return;
+        }
+
+        $copy = $this->product->duplicate();
+
+        Cache::forget(Tenancy::cacheKey('products.featured'));
+
+        session()->flash('message', __('Product duplicated as an inactive draft. You are now editing the copy.'));
+
+        $this->redirect(route('admin.products.edit', $copy));
     }
 
     public function removePrimaryImage(): void
     {
+        $this->authorizeForm();
+
         if ($this->product && $this->product->primary_image) {
             Storage::disk('public')->delete($this->product->primary_image);
             $this->product->update(['primary_image' => null]);
@@ -524,40 +765,96 @@ class Create extends Component
 
     public function removeExistingGalleryImage(int $index): void
     {
-        if (isset($this->existing_gallery[$index])) {
-            Storage::disk('public')->delete($this->existing_gallery[$index]);
-            unset($this->existing_gallery[$index]);
-            $this->existing_gallery = array_values($this->existing_gallery);
+        $this->authorizeForm();
+
+        if (! isset($this->existing_gallery[$index])) {
+            return;
         }
+
+        Storage::disk('public')->delete($this->existing_gallery[$index]);
+        unset($this->existing_gallery[$index]);
+        $this->existing_gallery = array_values($this->existing_gallery);
+
+        // The file is gone from disk immediately, so persist the reference
+        // removal now too — matching makeGalleryImagePrimary/moveExistingGalleryImage.
+        // Otherwise leaving without saving would orphan a dead path in the DB.
+        $this->product?->update(['gallery_images' => $this->existing_gallery]);
     }
 
-    public function getProfitProperty(): float
+    /**
+     * Promote an existing gallery image to primary, swapping the current
+     * primary (if any) back into the gallery. Persists immediately, matching
+     * removeExistingGalleryImage's storage semantics.
+     */
+    public function makeGalleryImagePrimary(int $index): void
     {
-        if (! $this->buying_price || $this->buying_price <= 0 || ! $this->price || $this->price <= 0) {
-            return 0;
+        $this->authorizeForm();
+
+        if (! $this->product || ! isset($this->existing_gallery[$index])) {
+            return;
         }
 
-        return round($this->price - $this->buying_price, 2);
+        $gallery = $this->existing_gallery;
+        $newPrimary = $gallery[$index];
+
+        if ($this->product->primary_image) {
+            $gallery[$index] = $this->product->primary_image;
+        } else {
+            unset($gallery[$index]);
+        }
+
+        $this->existing_gallery = array_values($gallery);
+
+        $this->product->update([
+            'primary_image' => $newPrimary,
+            'gallery_images' => $this->existing_gallery,
+        ]);
+
+        $this->reset('primary_image');
+
+        Cache::forget(Tenancy::cacheKey('products.featured'));
     }
 
-    public function getProfitPercentageProperty(): float
+    public function moveExistingGalleryImage(int $index, int $direction): void
     {
-        if (! $this->buying_price || $this->buying_price <= 0 || ! $this->price || $this->price <= 0) {
-            return 0;
+        $this->authorizeForm();
+
+        $target = $index + ($direction < 0 ? -1 : 1);
+
+        if (! isset($this->existing_gallery[$index], $this->existing_gallery[$target])) {
+            return;
         }
 
-        return round((($this->price - $this->buying_price) / $this->buying_price) * 100, 2);
+        $gallery = $this->existing_gallery;
+        [$gallery[$index], $gallery[$target]] = [$gallery[$target], $gallery[$index]];
+        $this->existing_gallery = $gallery;
+
+        $this->product?->update(['gallery_images' => $this->existing_gallery]);
+    }
+
+    #[Computed]
+    public function categories(): Collection
+    {
+        return Category::with('parent')->orderBy('order')->orderBy('name_en')->get();
+    }
+
+    #[Computed]
+    public function suppliers(): Collection
+    {
+        return Supplier::where('is_active', true)->orderBy('name')->get();
+    }
+
+    #[Computed]
+    public function availableAttributes(): Collection
+    {
+        return $this->attributeCatalog()->where('is_active', true)->values();
     }
 
     public function render()
     {
         $isEdit = $this->product !== null;
-        $availableAttributes = Attribute::where('is_active', true)->orderBy('order')->orderBy('name')->get();
 
         return view('livewire.admin.products.create', [
-            'categories' => Category::with('parent')->orderBy('order')->orderBy('name_en')->get(),
-            'suppliers' => Supplier::where('is_active', true)->orderBy('name')->get(),
-            'availableAttributes' => $availableAttributes,
             'isEdit' => $isEdit,
         ])->layout('components.layouts.app', [
             'title' => $isEdit ? __('Edit Product') : __('Create Product'),
@@ -566,8 +863,20 @@ class Create extends Component
 
     public function storePendingAttachment(): array
     {
+        $this->authorizeForm();
+
         if (empty($this->pendingAttachments)) {
             return [];
+        }
+
+        try {
+            // Same constraints as primary/gallery uploads — without this,
+            // arbitrary files (SVG/HTML payloads) could land on the public disk.
+            $this->validate(['pendingAttachments.*' => 'image|max:2048']);
+        } catch (ValidationException $exception) {
+            $this->pendingAttachments = [];
+
+            throw $exception;
         }
 
         $file = array_shift($this->pendingAttachments);

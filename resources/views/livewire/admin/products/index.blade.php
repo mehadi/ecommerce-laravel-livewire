@@ -236,7 +236,7 @@
                                     <div class="flex flex-col">
                                         @if($syncedStock <= 0)
                                             <flux:badge variant="danger" size="sm">{{ __('Out of Stock') }}</flux:badge>
-                                        @elseif($syncedStock <= 10)
+                                        @elseif($product->isLowStock())
                                             <flux:badge variant="warning" size="sm">{{ $syncedStock }} {{ __('left') }}</flux:badge>
                                         @else
                                             <span class="text-zinc-900 dark:text-white font-medium">{{ $syncedStock }}</span>
@@ -246,7 +246,7 @@
                                 @else
                                     @if($syncedStock <= 0)
                                         <flux:badge variant="danger" size="sm">{{ __('Out of Stock') }}</flux:badge>
-                                    @elseif($syncedStock <= 10)
+                                    @elseif($product->isLowStock())
                                         <flux:badge variant="warning" size="sm">{{ $syncedStock }} {{ __('left') }}</flux:badge>
                                     @else
                                         <span class="text-zinc-900 dark:text-white font-medium">{{ $syncedStock }}</span>
