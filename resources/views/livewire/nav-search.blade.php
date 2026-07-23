@@ -1,5 +1,6 @@
 <div
     x-data="{
+        open: false,
         moveHighlight(direction) {
             const items = Array.from(this.$refs.list?.querySelectorAll('[data-result]') || []);
             if (!items.length) return;
@@ -8,6 +9,8 @@
             items[idx].focus();
         },
     }"
+    @focusin="open = true"
+    @focusout="open = $el.contains($event.relatedTarget)"
     @keydown.down.prevent="moveHighlight(1)"
     @keydown.up.prevent="moveHighlight(-1)"
     @keydown.escape="$event.target.blur()"
@@ -25,6 +28,10 @@
             type="search"
             name="search"
             autocomplete="off"
+            role="combobox"
+            aria-autocomplete="list"
+            aria-controls="nav-search-{{ $variant }}-listbox"
+            :aria-expanded="open"
             wire:model.live.debounce.300ms="query"
             placeholder="{{ __('Search products...') }}"
             class="w-full {{ $variant === 'mobile' ? 'h-11' : 'h-10 lg:h-11' }} rounded-full bg-zinc-100 dark:bg-white/[0.07] border-0 pl-4 pr-12 text-sm font-medium text-zinc-900 dark:text-white placeholder:text-zinc-400 dark:placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-zinc-900/15 dark:focus:ring-white/25 transition-shadow duration-200"
@@ -60,12 +67,13 @@
             </div>
         @endif
 
-        <div x-ref="list" class="max-h-96 overflow-y-auto p-1.5">
+        <div x-ref="list" id="nav-search-{{ $variant }}-listbox" role="listbox" aria-label="{{ __('Search results') }}" class="max-h-96 overflow-y-auto p-1.5">
             @forelse($this->results as $product)
                 <a
                     href="{{ route('product.show', $product) }}"
                     wire:navigate
                     data-result
+                    role="option"
                     wire:key="nav-search-{{ $variant }}-result-{{ $product->id }}"
                     class="flex items-center gap-3 px-2.5 py-2 rounded-xl text-left transition-colors duration-150 hover:bg-zinc-100 dark:hover:bg-zinc-800 focus:bg-zinc-100 dark:focus:bg-zinc-800 focus:outline-none"
                 >

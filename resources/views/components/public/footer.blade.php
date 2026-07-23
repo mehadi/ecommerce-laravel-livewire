@@ -33,16 +33,16 @@
     }
     $socialLinks = array_filter($socialLinks, fn ($link) => !empty($link['url']));
 
+    // These link to sections on the homepage, so they always route home first —
+    // clicking "FAQ" from the Shop or Product page navigates home and lands on #faq.
     $footerCompanyLinks = [
-        ['url' => '#features', 'label' => __('About Us')],
-        ['url' => '#testimonials', 'label' => __('Testimonials')],
-        ['url' => '#faq', 'label' => __('FAQ')],
+        ['url' => route('home').'#features', 'label' => __('About Us')],
+        ['url' => route('home').'#testimonials', 'label' => __('Testimonials')],
+        ['url' => route('home').'#faq', 'label' => __('FAQ')],
     ];
-    $footerLegalLinks = [
-        ['url' => '#', 'label' => __('Privacy Policy')],
-        ['url' => '#', 'label' => __('Terms of Service')],
-        ['url' => '#', 'label' => __('Refund Policy')],
-    ];
+    // No Privacy/Terms/Refund routes exist yet — omit rather than ship dead "#" links
+    // next to the "Secure Checkout" trust badges. Populate once real policy pages exist.
+    $footerLegalLinks = [];
 @endphp
 
 @include('components.public.footers.'.$footerVariant)

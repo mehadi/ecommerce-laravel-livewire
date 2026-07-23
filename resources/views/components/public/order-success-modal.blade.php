@@ -7,7 +7,11 @@
         aria-modal="true"
         aria-label="{{ __('Order Confirmed!') }}"
     >
-        <div class="bg-white dark:bg-zinc-900 rounded-3xl max-w-2xl w-full max-h-[92vh] flex flex-col shadow-[0_24px_64px_-16px_rgb(16_24_40_/_0.25)] ring-1 ring-zinc-900/[0.04] dark:ring-white/[0.06] animate-zoom-in motion-reduce:animate-none overflow-hidden">
+        <div
+            x-data
+            x-trap.noscroll="true"
+            class="bg-white dark:bg-zinc-900 rounded-3xl max-w-2xl w-full max-h-[92vh] flex flex-col shadow-[0_24px_64px_-16px_rgb(16_24_40_/_0.25)] ring-1 ring-zinc-900/[0.04] dark:ring-white/[0.06] animate-zoom-in motion-reduce:animate-none overflow-hidden"
+        >
             <!-- Header -->
             <div class="sticky top-0 bg-white/95 dark:bg-zinc-900/95 backdrop-blur-xl border-b border-zinc-900/[0.06] dark:border-white/[0.08] px-6 sm:px-8 py-4 flex justify-between items-center z-20">
                 <h2 class="font-display text-xl sm:text-2xl font-bold tracking-tight text-zinc-900 dark:text-white flex items-center gap-3">

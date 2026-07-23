@@ -19,6 +19,33 @@
     $customHeaderCode = Setting::get('custom_header_code');
     $customFooterCode = Setting::get('custom_footer_code');
 
+    // Pages that carry meaningful querystring state (pagination, filters) pass their
+    // own $canonicalUrl; url()->current() (no query string) is the right default for
+    // everything else — it's the same URL a bare path canonical always resolved to.
+    $canonicalUrl = $canonicalUrl ?? url()->current();
+
+    $organizationSocialLinks = array_values(array_filter([
+        Setting::get('social_facebook', ''),
+        Setting::get('social_instagram', ''),
+        Setting::get('social_twitter', ''),
+        Setting::get('social_linkedin', ''),
+        Setting::get('social_youtube', ''),
+        Setting::get('social_tiktok', ''),
+        Setting::get('social_pinterest', ''),
+    ]));
+    $organizationLogo = Setting::get('site_logo');
+    $organizationSchema = array_filter([
+        '@context' => 'https://schema.org',
+        '@type' => 'Organization',
+        'name' => $siteName,
+        'url' => url('/'),
+        'logo' => $organizationLogo ? asset('storage/'.$organizationLogo) : null,
+        'description' => $siteDescription ?: null,
+        'email' => Setting::get('contact_email') ?: null,
+        'telephone' => Setting::get('contact_phone') ?: null,
+        'sameAs' => count($organizationSocialLinks) ? $organizationSocialLinks : null,
+    ]);
+
     $textSizePresets = ['xs' => 80, 'sm' => 90, 'medium' => 100, 'lg' => 112.5, 'xl' => 125, 'xxl' => 137.5];
     $textSize = Setting::get('frontend_text_size', 'medium');
     if ($textSize === 'custom') {
@@ -44,9 +71,14 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-    <!-- Font preconnect -->
+    <!-- Fonts: a real <link rel="stylesheet"> so the browser's preload scanner can find and
+         fetch these before app.css's @import (same fonts) would otherwise be discovered —
+         @import can't be found until the whole stylesheet is fetched and parsed, which
+         delays first paint. The @import stays in app.css as the fallback for non-storefront
+         layouts (admin/POS/platform) that don't render this head. -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700;800&family=Instrument+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap">
 
     <!-- Tenant brand color (set in Admin > Website Settings > Appearance) -->
     <style>
@@ -77,7 +109,7 @@
     
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="{{ $ogType }}" />
-    <meta property="og:url" content="{{ url()->current() }}" />
+    <meta property="og:url" content="{{ $canonicalUrl }}" />
     <meta property="og:title" content="{{ $title ?? $siteName }}" />
     @if($metaDescription)
         <meta property="og:description" content="{{ $metaDescription }}" />
@@ -98,8 +130,8 @@
     @endif
     
     <!-- Canonical URL -->
-    <link rel="canonical" href="{{ url()->current() }}" />
-    
+    <link rel="canonical" href="{{ $canonicalUrl }}" />
+
     <!-- Site Verification -->
     @if($googleVerificationCode)
         <meta name="google-site-verification" content="{{ $googleVerificationCode }}" />
@@ -107,8 +139,11 @@
     @if($bingVerificationCode)
         <meta name="msvalidate.01" content="{{ $bingVerificationCode }}" />
     @endif
-    
+
     @stack('meta')
+
+    <!-- Organization structured data (sitewide brand entity for search/AI answer engines) -->
+    <script type="application/ld+json">{!! json_encode($organizationSchema, JSON_HEX_TAG | JSON_UNESCAPED_SLASHES) !!}</script>
     
     <!-- Google Tag Manager -->
     @if($googleTagManagerId)

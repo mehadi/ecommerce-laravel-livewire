@@ -11,6 +11,8 @@
 
 <div class="grid {{ $gridColsClass }} gap-5 sm:gap-6">
     @foreach($items as $product)
-        <x-public.product-cards.grid :product="$product" wire:key="product-{{ $product->id }}" />
+        {{-- Eager-load the first row (the likely LCP element) instead of lazy-loading
+             every image sitewide, which was deprioritizing the largest above-the-fold image. --}}
+        <x-public.product-cards.grid :product="$product" :eager="$loop->index < $columns" wire:key="product-{{ $product->id }}" />
     @endforeach
 </div>

@@ -52,7 +52,7 @@ class ProductPage extends LandingPage
         return view('livewire.product-page')
             ->layout('components.layouts.public', [
                 'title' => $this->product->name.' - '.$this->siteName,
-                'metaDescription' => Str::limit($this->product->description ?? '', 160),
+                'metaDescription' => $this->product->description ? Str::limit($this->product->description, 160) : null,
                 'ogType' => 'product',
                 'ogImage' => $this->product->primary_image,
                 'showNavigation' => true,

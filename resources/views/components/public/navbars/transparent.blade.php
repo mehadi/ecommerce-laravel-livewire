@@ -10,7 +10,8 @@
      matter which hero variant is underneath; it fades out once the header
      switches to its own solid background on scroll. --}}
 <header
-    x-data="{ mobileMenuOpen: false, searchOpen: false, scrolled: false }"
+    x-data="{ mobileMenuOpen: false, searchOpen: false, scrolled: false, cartCount: {{ $cartItemCount }} }"
+    x-on:cart-updated.window="cartCount = $event.detail.count"
     x-init="window.addEventListener('scroll', () => { scrolled = window.scrollY > 40 }, { passive: true })"
     class="fixed top-0 left-0 right-0 z-50 transition-colors duration-300 border-b"
     :class="scrolled || mobileMenuOpen || searchOpen
@@ -149,11 +150,13 @@
                     <svg class="w-[19px] h-[19px]" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 10.5V6a3.75 3.75 0 1 0-7.5 0v4.5m11.356-1.993 1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 0 1-1.12-1.243l1.264-12A1.125 1.125 0 0 1 5.513 7.5h12.974c.576 0 1.059.435 1.119 1.007Z"></path>
                     </svg>
-                    @if($cartItemCount > 0)
-                        <span class="absolute top-0.5 right-0.5 flex items-center justify-center min-w-[16px] h-[16px] px-0.5 rounded-full bg-red-500 text-[9px] font-bold text-white tabular-nums ring-2 transition-colors duration-300" :class="scrolled || mobileMenuOpen ? 'ring-white dark:ring-zinc-950' : 'ring-transparent'">
-                            {{ $cartItemCount > 99 ? '99+' : $cartItemCount }}
-                        </span>
-                    @endif
+                    <span
+                        x-show="cartCount > 0"
+                        x-text="cartCount > 99 ? '99+' : cartCount"
+                        style="display: none"
+                        class="absolute top-0.5 right-0.5 flex items-center justify-center min-w-[16px] h-[16px] px-0.5 rounded-full bg-red-500 text-[9px] font-bold text-white tabular-nums ring-2 transition-colors duration-300"
+                        :class="scrolled || mobileMenuOpen ? 'ring-white dark:ring-zinc-950' : 'ring-transparent'"
+                    ></span>
                 </button>
 
                 <button

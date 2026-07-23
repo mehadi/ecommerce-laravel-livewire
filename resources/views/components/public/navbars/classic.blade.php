@@ -15,7 +15,8 @@
 @endphp
 
 <nav
-    x-data="{ mobileMenuOpen: false, scrolled: false }"
+    x-data="{ mobileMenuOpen: false, scrolled: false, cartCount: {{ $cartItemCount }} }"
+    x-on:cart-updated.window="cartCount = $event.detail.count"
     x-init="
         window.addEventListener('scroll', () => {
             scrolled = window.scrollY > 20;

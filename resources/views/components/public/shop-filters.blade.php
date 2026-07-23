@@ -1,14 +1,35 @@
-{{-- Shared filter controls, included by both the desktop sidebar and the mobile drawer. --}}
+{{-- Shared filter controls, included by both the desktop sidebar and the mobile drawer. Callers must pass a unique idPrefix (e.g. "desktop-" / "mobile-") since both are mounted in the DOM at once. --}}
 <div class="space-y-8">
+    {{-- Category --}}
+    @if($this->categories->isNotEmpty())
+        <div>
+            <h3 class="text-sm font-bold text-zinc-900 dark:text-white mb-4">{{ __('Category') }}</h3>
+            <div class="flex flex-wrap gap-2" role="group" aria-label="{{ __('Filter by category') }}">
+                @foreach($this->categories as $cat)
+                    @php $isSelected = $category === $cat->id; @endphp
+                    <button
+                        type="button"
+                        wire:key="filter-category-{{ $cat->id }}"
+                        wire:click="selectCategory({{ $isSelected ? 'null' : $cat->id }})"
+                        aria-pressed="{{ $isSelected ? 'true' : 'false' }}"
+                        class="min-h-9 px-4 py-1.5 rounded-full text-xs font-semibold transition-all duration-200 cursor-pointer touch-manipulation focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 {{ $isSelected ? 'bg-emerald-600 text-white shadow-sm shadow-emerald-600/20 ring-1 ring-emerald-600' : 'bg-white dark:bg-zinc-900 text-zinc-600 dark:text-zinc-300 ring-1 ring-zinc-900/[0.08] dark:ring-white/[0.1] hover:ring-emerald-500/60 dark:hover:ring-emerald-400/60' }}"
+                    >
+                        {{ $cat->name }}
+                    </button>
+                @endforeach
+            </div>
+        </div>
+    @endif
+
     {{-- Price range --}}
     <div>
         <h3 class="text-sm font-bold text-zinc-900 dark:text-white mb-4">{{ __('Price Range') }}</h3>
         <div class="flex items-center gap-3">
             <div class="relative flex-1 min-w-0">
                 <span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-sm text-zinc-400">{{ \App\Models\Setting::get('currency_symbol', '৳') }}</span>
-                <label for="shop-min-price" class="sr-only">{{ __('Minimum price') }}</label>
+                <label for="{{ $idPrefix }}shop-min-price" class="sr-only">{{ __('Minimum price') }}</label>
                 <input
-                    id="shop-min-price"
+                    id="{{ $idPrefix }}shop-min-price"
                     type="number"
                     inputmode="numeric"
                     min="0"
@@ -21,9 +42,9 @@
             <span class="text-zinc-300 dark:text-zinc-600 flex-shrink-0" aria-hidden="true">–</span>
             <div class="relative flex-1 min-w-0">
                 <span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-sm text-zinc-400">{{ \App\Models\Setting::get('currency_symbol', '৳') }}</span>
-                <label for="shop-max-price" class="sr-only">{{ __('Maximum price') }}</label>
+                <label for="{{ $idPrefix }}shop-max-price" class="sr-only">{{ __('Maximum price') }}</label>
                 <input
-                    id="shop-max-price"
+                    id="{{ $idPrefix }}shop-max-price"
                     type="number"
                     inputmode="numeric"
                     min="0"
@@ -49,7 +70,7 @@
                     <button
                         type="button"
                         wire:key="filter-value-{{ $attribute->id }}-{{ $value->id }}"
-                        wire:click="toggleAttributeValue({{ $attribute->id }}, '{{ $valueLabel }}')"
+                        wire:click="toggleAttributeValue({{ $attribute->id }}, @js($valueLabel))"
                         aria-pressed="{{ $isSelected ? 'true' : 'false' }}"
                         class="min-h-9 px-4 py-1.5 rounded-full text-xs font-semibold transition-all duration-200 cursor-pointer touch-manipulation focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 {{ $isSelected ? 'bg-emerald-600 text-white shadow-sm shadow-emerald-600/20 ring-1 ring-emerald-600' : 'bg-white dark:bg-zinc-900 text-zinc-600 dark:text-zinc-300 ring-1 ring-zinc-900/[0.08] dark:ring-white/[0.1] hover:ring-emerald-500/60 dark:hover:ring-emerald-400/60' }}"
                     >

@@ -25,6 +25,7 @@
         aria-label="{{ __('Your Shopping Cart') }}"
     >
         <div
+            x-trap.noscroll="show"
             x-transition:enter="transition ease-out duration-300"
             x-transition:enter-start="{{ $cartIsPanel ? 'translate-x-full' : 'opacity-0 scale-95' }}"
             x-transition:enter-end="{{ $cartIsPanel ? 'translate-x-0' : 'opacity-100 scale-100' }}"

@@ -37,21 +37,26 @@ class LandingPage extends Component
                     ->first();
             });
 
-            if ($this->landingPageConfig && $this->landingPageConfig->product_id) {
-                $this->productId = $this->landingPageConfig->product_id;
-            } else {
-                $product = Product::where('is_active', true)
-                    ->where('is_featured', true)
-                    ->first() ?? Product::where('is_active', true)->first();
-                $this->productId = $product?->id;
+            if (! $this->landingPageConfig) {
+                abort(404);
             }
-        } else {
-            $product = Product::where('is_active', true)
-                ->where('is_featured', true)
-                ->first() ?? Product::where('is_active', true)->first();
 
-            $this->productId = $product?->id;
+            $this->productId = $this->landingPageConfig->product_id
+                ?? $this->resolveFallbackProduct()?->id;
+        } else {
+            $this->productId = $this->resolveFallbackProduct()?->id;
         }
+    }
+
+    /**
+     * The generic product shown when a route has no specific product tied to
+     * it (home-fallback landing page, or a matched config without its own
+     * product_id) -- prefers a featured product, falling back to any active one.
+     */
+    private function resolveFallbackProduct(): ?Product
+    {
+        return Product::where('is_active', true)->where('is_featured', true)->first()
+            ?? Product::where('is_active', true)->first();
     }
 
     #[Computed]
@@ -70,6 +75,67 @@ class LandingPage extends Component
         $this->quantity = 1;
         $this->selectedAttributeValues = [];
         $this->selectedProductAttributeId = null;
+    }
+
+    /**
+     * Attribute names used by the current product's combinations, derived
+     * from already-loaded attribute_data (no query).
+     *
+     * @return array<int, string>
+     */
+    private function productAttributeNames(): array
+    {
+        if (! $this->product) {
+            return [];
+        }
+
+        return $this->product->productAttributes
+            ->pluck('attribute_data')
+            ->flatMap(fn ($data) => array_keys($data ?? []))
+            ->unique()
+            ->values()
+            ->toArray();
+    }
+
+    /**
+     * Active Attribute rows (with their active values eager-loaded) for the
+     * current product's combinations. Feeds the attribute picker partial so
+     * it doesn't run its own query on every attribute click / quantity change.
+     */
+    #[Computed]
+    public function getPickerAttributesProperty()
+    {
+        $attributeNames = $this->productAttributeNames();
+
+        if (empty($attributeNames)) {
+            return collect();
+        }
+
+        return \App\Models\Attribute::whereIn('name', $attributeNames)
+            ->where('is_active', true)
+            ->orderBy('order')
+            ->with('activeValues')
+            ->get();
+    }
+
+    /**
+     * Attribute rows (all values, not just active -- matches the un-scoped
+     * lookup selectAttributeValue() used to run per selection) keyed by
+     * name, loaded once per request instead of inside the matching loop.
+     */
+    #[Computed]
+    public function getAttributeLookupByNameProperty()
+    {
+        $attributeNames = $this->productAttributeNames();
+
+        if (empty($attributeNames)) {
+            return collect();
+        }
+
+        return \App\Models\Attribute::whereIn('name', $attributeNames)
+            ->with('values')
+            ->get()
+            ->keyBy('name');
     }
 
     public function selectAttributeValue(string $attributeName, string $value): void
@@ -120,12 +186,12 @@ class LandingPage extends Component
 
                         // Also check against display values from attribute values
                         if (! $valueMatches) {
-                            $attribute = \App\Models\Attribute::where('name', $key)->first();
+                            $attribute = $this->attributeLookupByName->get($key);
                             if ($attribute) {
-                                $attributeValue = $attribute->values()
-                                    ->where('value', $selectedValue)
-                                    ->orWhere('display_value', $selectedValue)
-                                    ->first();
+                                $attributeValue = $attribute->values->first(function ($candidate) use ($selectedValue) {
+                                    return $candidate->value === $selectedValue
+                                        || $candidate->getRawOriginal('display_value') === $selectedValue;
+                                });
 
                                 if ($attributeValue) {
                                     // Check if stored value matches the display value or value
@@ -177,6 +243,7 @@ class LandingPage extends Component
         ];
     }
 
+    #[Computed]
     public function getHeroSectionProperty(): ?LandingPageSection
     {
         // Always use the default hero section - the product will be displayed within it
@@ -188,30 +255,56 @@ class LandingPage extends Component
         });
     }
 
-    public function getFeaturesProperty()
+    /**
+     * The ordered, toggleable blocks that make up the page body (everything
+     * after the pinned hero). See LandingPageConfig::normalizedBlocks() for
+     * the legacy-config fallback that keeps pre-builder pages unchanged.
+     */
+    #[Computed]
+    public function getPageBlocksProperty(): array
     {
-        if ($this->landingPageConfig && isset($this->landingPageConfig->config['features_section_ids']) && ! empty($this->landingPageConfig->config['features_section_ids'])) {
-            return Cache::remember(Tenancy::cacheKey('landing.sections.features.'.md5(implode(',', $this->landingPageConfig->config['features_section_ids']))), 3600, function () {
-                return LandingPageSection::whereIn('id', $this->landingPageConfig->config['features_section_ids'])
+        return $this->landingPageConfig
+            ? $this->landingPageConfig->normalizedBlocks()
+            : LandingPageConfig::defaultBlocks();
+    }
+
+    /**
+     * LandingPageSection rows for a content-backed block (features, faq,
+     * about, benefits, contact, products). Uses the block's own
+     * `section_ids` when set, otherwise falls back to all active sections
+     * of that type — same pattern the old per-type getters used.
+     */
+    public function sectionsForBlock(array $block)
+    {
+        $type = $block['type'];
+        $sectionIds = $block['section_ids'] ?? [];
+
+        if (! empty($sectionIds)) {
+            return Cache::remember(Tenancy::cacheKey('landing.sections.'.$type.'.'.md5(implode(',', $sectionIds))), 3600, function () use ($sectionIds) {
+                return LandingPageSection::whereIn('id', $sectionIds)
                     ->where('is_active', true)
                     ->orderBy('order')
                     ->get();
             });
         }
 
-        return Cache::remember(Tenancy::cacheKey('landing.sections.features'), 3600, function () {
-            return LandingPageSection::where('type', 'features')
+        return Cache::remember(Tenancy::cacheKey('landing.sections.'.$type), 3600, function () use ($type) {
+            return LandingPageSection::where('type', $type)
                 ->where('is_active', true)
                 ->orderBy('order')
                 ->get();
         });
     }
 
+    #[Computed]
     public function getTestimonialsProperty()
     {
-        if ($this->landingPageConfig && isset($this->landingPageConfig->config['testimonial_ids']) && ! empty($this->landingPageConfig->config['testimonial_ids'])) {
-            return Cache::remember(Tenancy::cacheKey('testimonials.custom.'.md5(implode(',', $this->landingPageConfig->config['testimonial_ids']))), 3600, function () {
-                return Testimonial::whereIn('id', $this->landingPageConfig->config['testimonial_ids'])
+        $testimonialsBlock = collect($this->pageBlocks)->firstWhere('type', 'testimonials');
+        $testimonialIds = $testimonialsBlock['testimonial_ids'] ?? [];
+
+        if (! empty($testimonialIds)) {
+            return Cache::remember(Tenancy::cacheKey('testimonials.custom.'.md5(implode(',', $testimonialIds))), 3600, function () use ($testimonialIds) {
+                return Testimonial::whereIn('id', $testimonialIds)
                     ->where('is_active', true)
                     ->orderBy('order')
                     ->get();
@@ -224,36 +317,6 @@ class LandingPage extends Component
                 ->limit(6)
                 ->get();
         });
-    }
-
-    public function getFaqsProperty()
-    {
-        if ($this->landingPageConfig && isset($this->landingPageConfig->config['faq_section_ids']) && ! empty($this->landingPageConfig->config['faq_section_ids'])) {
-            return Cache::remember(Tenancy::cacheKey('landing.sections.faq.'.md5(implode(',', $this->landingPageConfig->config['faq_section_ids']))), 3600, function () {
-                return LandingPageSection::whereIn('id', $this->landingPageConfig->config['faq_section_ids'])
-                    ->where('is_active', true)
-                    ->orderBy('order')
-                    ->get();
-            });
-        }
-
-        return Cache::remember(Tenancy::cacheKey('landing.sections.faq'), 3600, function () {
-            return LandingPageSection::where('type', 'faq')
-                ->where('is_active', true)
-                ->orderBy('order')
-                ->get();
-        });
-    }
-
-    public function shouldShowSection(string $section): bool
-    {
-        if (! $this->landingPageConfig) {
-            return true; // Default: show all sections
-        }
-
-        $configKey = 'show_'.$section;
-
-        return $this->landingPageConfig->config[$configKey] ?? true;
     }
 
     #[Computed]
@@ -422,7 +485,7 @@ class LandingPage extends Component
 
         session()->put('cart', $cart);
         $this->cart = $cart;
-        $this->dispatch('cart-updated');
+        $this->dispatch('cart-updated', count: $this->cartQuantityTotal($cart));
 
         $this->dispatch('fbq:track', 'AddToCart', [
             'content_type' => 'product',
@@ -473,7 +536,7 @@ class LandingPage extends Component
             ?? ($this->product ? $this->product->name.' - '.$this->siteName : $this->siteName);
 
         $metaDescription = $this->landingPageConfig?->meta_description
-            ?? ($this->product ? \Illuminate\Support\Str::limit($this->product->description ?? '', 160) : null);
+            ?? ($this->product ? \Illuminate\Support\Str::limit(strip_tags($this->product->description ?? ''), 160) : null);
 
         return view('livewire.landing-page', [
             'metaDescription' => $metaDescription,

@@ -29,11 +29,10 @@
             }
         }
     }
-    $attributeNames = array_keys($attributeData);
 @endphp
 
 <div class="{{ $wrapClass }}">
-    @foreach(\App\Models\Attribute::whereIn('name', $attributeNames)->where('is_active', true)->orderBy('order')->get() as $attribute)
+    @foreach($this->pickerAttributes as $attribute)
         @php
             $usedValues = $attributeData[$attribute->name] ?? [];
             $availableValues = $attribute->activeValues->filter(function ($value) use ($usedValues) {
@@ -50,6 +49,7 @@
                     @endif
                     @if($loop->first)
                         <span class="text-red-500" aria-hidden="true">*</span>
+                        <span class="sr-only">{{ __('required') }}</span>
                     @endif
                 </label>
                 <div class="flex flex-wrap gap-2">

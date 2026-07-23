@@ -17,7 +17,7 @@
                 </span>
             </div>
             <div class="flex flex-col flex-1 p-5 sm:p-6">
-                <p class="text-[11px] font-semibold uppercase tracking-widest text-zinc-400 dark:text-zinc-500 mb-1.5 tabular-nums">
+                <p class="text-[11px] font-semibold uppercase tracking-widest text-zinc-500 dark:text-zinc-400 mb-1.5 tabular-nums">
                     {{ trans_choice(':count product|:count products', $productCount, ['count' => $productCount]) }}
                 </p>
                 <h2 class="font-display text-lg font-bold text-zinc-900 dark:text-white leading-snug group-hover:text-emerald-700 dark:group-hover:text-emerald-400 transition-colors duration-200 text-balance">
@@ -29,22 +29,14 @@
                         {{ $category->name }}
                     </a>
                 </h2>
+                @if($category->description)
+                    <p class="mt-1.5 text-sm text-zinc-500 dark:text-zinc-400 line-clamp-2">
+                        {{ \Illuminate\Support\Str::limit($category->description, 100) }}
+                    </p>
+                @endif
                 @if($subcategories->count() > 0)
                     <div class="flex flex-wrap items-center gap-1.5 mt-3 relative z-10">
-                        @foreach($subcategories->take(4) as $subcategory)
-                            <a
-                                href="{{ route('category.show', $subcategory->slug) }}"
-                                wire:navigate
-                                class="inline-flex items-center px-2.5 py-1 rounded-full bg-white dark:bg-zinc-900 text-[11px] font-semibold text-zinc-500 dark:text-zinc-400 ring-1 ring-zinc-900/[0.06] dark:ring-white/[0.08] hover:ring-emerald-600/30 dark:hover:ring-emerald-500/30 hover:text-emerald-700 dark:hover:text-emerald-400 transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500"
-                            >
-                                {{ $subcategory->name }}
-                            </a>
-                        @endforeach
-                        @if($subcategories->count() > 4)
-                            <span class="text-[11px] font-semibold text-zinc-400 dark:text-zinc-500 px-1">
-                                {{ __('+:count more', ['count' => $subcategories->count() - 4]) }}
-                            </span>
-                        @endif
+                        @include('components.public.category-grids._subcategory-chips', ['subcategories' => $subcategories])
                     </div>
                 @endif
             </div>

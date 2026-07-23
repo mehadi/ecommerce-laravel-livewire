@@ -5,9 +5,7 @@
         <div class="container mx-auto px-4 sm:px-6 frontend-container">
             <div class="bg-white dark:bg-zinc-900 rounded-[2rem] p-6 sm:p-10 lg:p-14 ring-1 ring-zinc-900/[0.04] dark:ring-white/[0.06] shadow-[0_1px_3px_rgb(16_24_40_/_0.03),0_12px_32px_-16px_rgb(16_24_40_/_0.08)]">
             <div class="text-center max-w-2xl mx-auto mb-12 sm:mb-16">
-                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 text-xs font-semibold uppercase tracking-widest ring-1 ring-emerald-600/10 dark:ring-emerald-500/20 mb-4">
-                    {{ __('Testimonials') }}
-                </span>
+                <x-public.eyebrow-badge :text="__('Testimonials')" class="mb-4" />
                 <h2 class="font-display text-3xl sm:text-4xl lg:text-[2.75rem] font-bold text-zinc-900 dark:text-white tracking-tight leading-tight text-balance">
                     {{ __('What Our Customers Say') }}
                 </h2>
@@ -15,6 +13,7 @@
             <div class="grid sm:grid-cols-2 md:grid-cols-3 gap-6 sm:gap-8 items-stretch">
                 @foreach($testimonials as $index => $testimonial)
                     <figure
+                        wire:key="testimonial-{{ $testimonial->id }}"
                         x-data="{ shown: false }"
                         x-intersect.once="shown = true"
                         style="transition-delay: {{ min($index, 5) * 75 }}ms"

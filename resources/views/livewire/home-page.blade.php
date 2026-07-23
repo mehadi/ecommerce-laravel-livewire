@@ -13,6 +13,7 @@
     <x-public.hero-section
         :heroSection="$this->heroSection"
         :product="$this->heroProduct"
+        :heroSpotlightProduct="$this->heroSpotlightProduct"
         :socialFacebook="$this->socialFacebook"
         :socialInstagram="$this->socialInstagram"
         :socialTwitter="$this->socialTwitter"
@@ -33,6 +34,9 @@
 
     <!-- Testimonials Section -->
     <x-public.testimonials-section :testimonials="$this->testimonials" />
+
+    <!-- FAQ Section -->
+    <x-public.faq-section :faqs="$this->faqs" />
 
     <!-- Shop CTA Section -->
     <x-public.shop-cta-section />

@@ -36,18 +36,20 @@
                 <h4 class="text-xs font-semibold uppercase tracking-[0.2em] text-emerald-400/90 mb-5">{{ __('Company') }}</h4>
                 <ul class="space-y-3.5 text-[15px]">
                     @foreach($footerCompanyLinks as $link)
-                        <li><a href="{{ $link['url'] }}" class="text-zinc-400 hover:text-white transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 rounded-md">{{ $link['label'] }}</a></li>
+                        <li><a href="{{ $link['url'] }}" wire:navigate class="text-zinc-400 hover:text-white transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 rounded-md">{{ $link['label'] }}</a></li>
                     @endforeach
                 </ul>
             </nav>
-            <nav aria-label="{{ __('Legal') }}">
-                <h4 class="text-xs font-semibold uppercase tracking-[0.2em] text-emerald-400/90 mb-5">{{ __('Legal') }}</h4>
-                <ul class="space-y-3.5 text-[15px]">
-                    @foreach($footerLegalLinks as $link)
-                        <li><a href="{{ $link['url'] }}" class="text-zinc-400 hover:text-white transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 rounded-md">{{ $link['label'] }}</a></li>
-                    @endforeach
-                </ul>
-            </nav>
+            @if(count($footerLegalLinks))
+                <nav aria-label="{{ __('Legal') }}">
+                    <h4 class="text-xs font-semibold uppercase tracking-[0.2em] text-emerald-400/90 mb-5">{{ __('Legal') }}</h4>
+                    <ul class="space-y-3.5 text-[15px]">
+                        @foreach($footerLegalLinks as $link)
+                            <li><a href="{{ $link['url'] }}" wire:navigate class="text-zinc-400 hover:text-white transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 rounded-md">{{ $link['label'] }}</a></li>
+                        @endforeach
+                    </ul>
+                </nav>
+            @endif
             <div>
                 <h4 class="text-xs font-semibold uppercase tracking-[0.2em] text-emerald-400/90 mb-5">{{ __('Contact Us') }}</h4>
                 <ul class="space-y-3.5 text-[15px] text-zinc-400">

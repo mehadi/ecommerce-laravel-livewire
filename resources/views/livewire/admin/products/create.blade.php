@@ -1,23 +1,50 @@
-<div class="w-full">
-    {{-- Sticky action bar --}}
-    <div class="sticky top-0 z-20 -mx-6 mb-8 border-b border-zinc-200 bg-white/90 px-6 py-4 backdrop-blur dark:border-zinc-700 dark:bg-zinc-900/90 lg:-mx-8 lg:px-8">
+<div
+    class="w-full"
+    x-data="{ dirty: false, saving: false }"
+    x-on:input="dirty = true"
+    x-on:change="dirty = true"
+    x-on:trix-change="dirty = true"
+    x-on:product-form-invalid.window="saving = false; $nextTick(() => document.getElementById('product-form-errors')?.scrollIntoView({ behavior: 'smooth', block: 'center' }))"
+    x-init="
+        const beforeUnload = (event) => {
+            if (dirty && ! saving) {
+                event.preventDefault();
+                event.returnValue = '';
+            }
+        };
+        const navigateGuard = (event) => {
+            if (! document.body.contains($el)) {
+                document.removeEventListener('livewire:navigate', navigateGuard);
+                window.removeEventListener('beforeunload', beforeUnload);
+                return;
+            }
+            if (dirty && ! saving && ! confirm('{{ __('You have unsaved changes. Leave this page and discard them?') }}')) {
+                event.preventDefault();
+            }
+        };
+        window.addEventListener('beforeunload', beforeUnload);
+        document.addEventListener('livewire:navigate', navigateGuard);
+    "
+>
+    {{-- Action bar: static on phones (viewport is too precious), sticky from sm up --}}
+    <div class="z-20 -mx-6 mb-8 border-b border-zinc-200 bg-white/90 px-6 py-4 backdrop-blur dark:border-zinc-700 dark:bg-zinc-900/90 sm:sticky sm:top-0 lg:-mx-8 lg:px-8">
         <div class="flex flex-wrap items-center justify-between gap-4">
             <div class="flex min-w-0 items-center gap-3">
                 <flux:button :href="route('admin.products.index')" wire:navigate variant="ghost" size="sm" square :aria-label="__('Back to Products')">
-                    <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
-                    </svg>
+                    <flux:icon.arrow-left class="size-4" aria-hidden="true" />
                 </flux:button>
 
                 <div class="min-w-0 space-y-0.5">
                     <div class="flex flex-wrap items-center gap-2">
                         <flux:heading size="lg" class="truncate">{{ $isEdit ? __('Edit Product') : __('Create Product') }}</flux:heading>
-                        <flux:badge size="sm" :color="$is_active ? 'emerald' : 'zinc'">
-                            {{ $is_active ? __('Active') : __('Draft') }}
-                        </flux:badge>
-                        @if($is_featured)
-                            <flux:badge size="sm" color="amber">{{ __('Featured') }}</flux:badge>
-                        @endif
+                        <div class="hidden items-center gap-2 sm:flex">
+                            <flux:badge size="sm" :color="$is_active ? 'emerald' : 'zinc'">
+                                {{ $is_active ? __('Active') : __('Draft') }}
+                            </flux:badge>
+                            @if($is_featured)
+                                <flux:badge size="sm" color="amber">{{ __('Featured') }}</flux:badge>
+                            @endif
+                        </div>
                     </div>
                     <flux:text size="sm" variant="subtle" class="hidden truncate sm:block">
                         {{ __('Craft a compelling product story with enriched descriptions, pricing clarity, and polished media.') }}
@@ -26,21 +53,31 @@
             </div>
 
             <div class="flex shrink-0 items-center gap-2">
-                <flux:button :href="route('admin.products.index')" wire:navigate variant="ghost" wire:loading.attr="disabled" wire:target="save">
+                @if($isEdit)
+                    <flux:button
+                        type="button"
+                        wire:click="duplicate"
+                        wire:confirm="{{ __('Duplicate this product as an inactive draft copy? Stock, SKUs and barcodes are not copied.') }}"
+                        variant="ghost"
+                        wire:loading.attr="disabled"
+                    >
+                        <span class="inline-flex items-center gap-1.5">
+                            <flux:icon.document-duplicate class="size-4" aria-hidden="true" />
+                            <span class="hidden md:inline">{{ __('Duplicate') }}</span>
+                            <span class="sr-only md:hidden">{{ __('Duplicate product') }}</span>
+                        </span>
+                    </flux:button>
+                @endif
+                <flux:button :href="route('admin.products.index')" wire:navigate variant="ghost" class="hidden sm:inline-flex" wire:loading.attr="disabled" wire:target="save">
                     {{ __('Cancel') }}
                 </flux:button>
-                <flux:button type="button" wire:click="save" variant="primary" wire:loading.attr="disabled" wire:target="save">
+                <flux:button type="button" wire:click="save" x-on:click="saving = true" variant="primary" wire:loading.attr="disabled" wire:target="save">
                     <span wire:loading.remove wire:target="save" class="inline-flex items-center gap-1.5">
-                        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                        </svg>
+                        <flux:icon.check class="size-4" aria-hidden="true" />
                         <span>{{ $isEdit ? __('Update Product') : __('Create Product') }}</span>
                     </span>
                     <span wire:loading wire:target="save" class="inline-flex items-center gap-1.5">
-                        <svg class="h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24">
-                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                        </svg>
+                        <flux:icon.arrow-path class="size-4 animate-spin" aria-hidden="true" />
                         <span>{{ $isEdit ? __('Updating...') : __('Creating...') }}</span>
                     </span>
                 </flux:button>
@@ -49,31 +86,43 @@
     </div>
 
     @if (session()->has('message'))
-        <flux:callout variant="success" class="mb-6">{{ session('message') }}</flux:callout>
+        <div role="status" aria-live="polite">
+            <flux:callout variant="success" class="mb-6">{{ session('message') }}</flux:callout>
+        </div>
     @endif
 
     @if (session()->has('error'))
-        <flux:callout variant="danger" class="mb-6">{{ session('error') }}</flux:callout>
+        <div role="alert" aria-live="assertive">
+            <flux:callout variant="danger" class="mb-6">{{ session('error') }}</flux:callout>
+        </div>
     @endif
 
-    <form wire:submit="save" class="grid gap-8 lg:grid-cols-3">
+    @if ($errors->any())
+        <div id="product-form-errors" role="alert" aria-live="assertive">
+            <flux:callout variant="danger" class="mb-6">
+                {{ trans_choice('One field needs attention — review the highlighted input below.|:count fields need attention — review the highlighted inputs below.', $errors->count(), ['count' => $errors->count()]) }}
+            </flux:callout>
+        </div>
+    @endif
+
+    <form wire:submit="save" x-on:submit="saving = true" class="grid gap-8 lg:grid-cols-3">
         {{-- Main column --}}
         <div class="space-y-8 lg:col-span-2">
             <x-products.form-section
                 :title="__('Product Overview')"
                 :description="__('Set the essentials that shoppers see first across listings and detail pages.')"
-                icon="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"
+                icon="cube"
             >
                 <div class="grid gap-6 md:grid-cols-2">
                     <flux:field>
                         <flux:label>{{ __('Name (English)') }} *</flux:label>
-                        <flux:input wire:model.live="name_en" :placeholder="__('Give your product a clear, benefit-led title')" />
+                        <flux:input wire:model.blur="name_en" :placeholder="__('Give your product a clear, benefit-led title')" />
                         <flux:error name="name_en" />
                     </flux:field>
 
                     <flux:field>
                         <flux:label>{{ __('Name (Bangla)') }}</flux:label>
-                        <flux:input wire:model.live="name_bn" :placeholder="__('Localized title shown to Bangla-speaking shoppers')" />
+                        <flux:input wire:model.blur="name_bn" :placeholder="__('Localized title shown to Bangla-speaking shoppers')" />
                         <flux:error name="name_bn" />
                     </flux:field>
                 </div>
@@ -82,44 +131,56 @@
             <x-products.form-section
                 :title="__('Description')"
                 :description="__('Use rich text to highlight value, routines, and social proof.')"
-                icon="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                icon="pencil-square"
             >
                 <div x-data="{ lang: 'en' }" class="space-y-6">
-                    <div class="inline-flex rounded-lg border border-zinc-200 bg-zinc-100 p-1 dark:border-zinc-700 dark:bg-zinc-800" role="tablist">
+                    <div class="inline-flex rounded-lg border border-zinc-200 bg-zinc-100 p-1 dark:border-zinc-700 dark:bg-zinc-800" role="tablist" aria-label="{{ __('Description language') }}">
                         <button
                             type="button"
                             role="tab"
+                            id="description-tab-en"
+                            aria-controls="description-panel-en"
                             @click="lang = 'en'"
-                            :aria-selected="lang === 'en'"
+                            @keydown.arrow-right.prevent="lang = 'bn'; $nextTick(() => document.getElementById('description-tab-bn')?.focus())"
+                            @keydown.arrow-left.prevent="lang = 'bn'; $nextTick(() => document.getElementById('description-tab-bn')?.focus())"
+                            :aria-selected="lang === 'en' ? 'true' : 'false'"
+                            :tabindex="lang === 'en' ? 0 : -1"
                             :class="lang === 'en' ? 'bg-white text-zinc-900 shadow-sm dark:bg-zinc-700 dark:text-white' : 'text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-200'"
-                            class="cursor-pointer rounded-md px-3.5 py-1.5 text-sm font-medium transition-colors"
+                            class="cursor-pointer rounded-md px-3.5 py-1.5 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
                         >
                             {{ __('English') }}
                         </button>
                         <button
                             type="button"
                             role="tab"
+                            id="description-tab-bn"
+                            aria-controls="description-panel-bn"
                             @click="lang = 'bn'"
-                            :aria-selected="lang === 'bn'"
+                            @keydown.arrow-right.prevent="lang = 'en'; $nextTick(() => document.getElementById('description-tab-en')?.focus())"
+                            @keydown.arrow-left.prevent="lang = 'en'; $nextTick(() => document.getElementById('description-tab-en')?.focus())"
+                            :aria-selected="lang === 'bn' ? 'true' : 'false'"
+                            :tabindex="lang === 'bn' ? 0 : -1"
                             :class="lang === 'bn' ? 'bg-white text-zinc-900 shadow-sm dark:bg-zinc-700 dark:text-white' : 'text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-200'"
-                            class="relative cursor-pointer rounded-md px-3.5 py-1.5 text-sm font-medium transition-colors"
+                            class="relative cursor-pointer rounded-md px-3.5 py-1.5 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
                         >
                             {{ __('Bangla') }}
                             @if($errors->hasAny(['description_bn']))
-                                <span class="absolute -right-0.5 -top-0.5 h-2 w-2 rounded-full bg-red-500"></span>
+                                <span class="absolute -right-0.5 -top-0.5 h-2 w-2 rounded-full bg-red-500" aria-hidden="true"></span>
+                                <span class="sr-only">{{ __('has validation errors') }}</span>
                             @endif
                         </button>
                     </div>
 
-                    <div x-show="lang === 'en'" class="space-y-6">
+                    <div x-show="lang === 'en'" role="tabpanel" id="description-panel-en" aria-labelledby="description-tab-en" tabindex="0" class="space-y-6">
                         <flux:field>
                             <flux:label>{{ __('Description (English)') }}</flux:label>
-                            <div class="space-y-2" x-data="richTextEditor({ value: @entangle('description_en').live })" x-init="init()" data-rich-text>
+                            <div class="space-y-2" x-data="richTextEditor({ value: @entangle('description_en') })" x-init="init()" data-rich-text>
                                 <div wire:ignore>
                                     <input id="description_en_editor" type="hidden" x-ref="input">
                                     <trix-editor
                                         x-ref="editor"
                                         input="description_en_editor"
+                                        aria-label="{{ __('Description (English)') }}"
                                         placeholder="{{ __('Introduce benefits, usage rituals, and social proof.') }}"
                                     ></trix-editor>
                                 </div>
@@ -129,15 +190,16 @@
                         </flux:field>
                     </div>
 
-                    <div x-show="lang === 'bn'" class="space-y-6">
+                    <div x-show="lang === 'bn'" role="tabpanel" id="description-panel-bn" aria-labelledby="description-tab-bn" tabindex="0" class="space-y-6">
                         <flux:field>
                             <flux:label>{{ __('Description (Bangla)') }}</flux:label>
-                            <div class="space-y-2" x-data="richTextEditor({ value: @entangle('description_bn').live })" x-init="init()" data-rich-text>
+                            <div class="space-y-2" x-data="richTextEditor({ value: @entangle('description_bn') })" x-init="init()" data-rich-text>
                                 <div wire:ignore>
                                     <input id="description_bn_editor" type="hidden" x-ref="input">
                                     <trix-editor
                                         x-ref="editor"
                                         input="description_bn_editor"
+                                        aria-label="{{ __('Description (Bangla)') }}"
                                         placeholder="{{ __('Localized storytelling to build stronger connections.') }}"
                                     ></trix-editor>
                                 </div>
@@ -153,7 +215,7 @@
             <x-products.form-section
                 :title="__('Product Attributes')"
                 :description="__('Use dynamic attributes like Color, Size, Weight to create product variations.')"
-                icon="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
+                icon="swatch"
             >
                 <div class="space-y-6">
                     <div>
@@ -163,13 +225,13 @@
                         </flux:text>
                     </div>
 
-                    @if($availableAttributes->isNotEmpty())
+                    @if($this->availableAttributes->isNotEmpty())
                         <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                            @foreach($availableAttributes as $attribute)
+                            @foreach($this->availableAttributes as $attribute)
                                 @php
                                     $isAttrSelected = isset($selectedAttributes[$attribute->id]) && !empty($selectedAttributes[$attribute->id]);
                                 @endphp
-                                <div @class([
+                                <div wire:key="attr-card-{{ $attribute->id }}" @class([
                                     'rounded-xl border p-4 transition-colors',
                                     'border-blue-300 bg-blue-50/60 dark:border-blue-500/40 dark:bg-blue-950/20' => $isAttrSelected,
                                     'border-zinc-200 bg-white dark:border-zinc-700 dark:bg-zinc-800/60' => ! $isAttrSelected,
@@ -183,7 +245,10 @@
                                         </div>
                                         <flux:checkbox
                                             wire:click="toggleAttribute({{ $attribute->id }})"
+                                            wire:loading.attr="disabled"
+                                            wire:target="toggleAttribute, toggleAttributeValue"
                                             :checked="$isAttrSelected"
+                                            :aria-label="__('Toggle :name attribute', ['name' => $attribute->name])"
                                         />
                                     </div>
 
@@ -193,12 +258,14 @@
                                                 @php
                                                     $isChecked = in_array($value->id, $selectedAttributes[$attribute->id] ?? []);
                                                 @endphp
-                                                <label class="flex cursor-pointer items-center gap-2 rounded-lg p-2 transition-colors hover:bg-white dark:hover:bg-zinc-700/60">
+                                                <label wire:key="attr-value-{{ $attribute->id }}-{{ $value->id }}" class="flex min-h-11 cursor-pointer items-center gap-2.5 rounded-lg p-2.5 transition-colors hover:bg-white dark:hover:bg-zinc-700/60">
                                                     <input
                                                         type="checkbox"
                                                         wire:click="toggleAttributeValue({{ $attribute->id }}, {{ $value->id }})"
+                                                        wire:loading.attr="disabled"
+                                                        wire:target="toggleAttribute, toggleAttributeValue"
                                                         @if($isChecked) checked @endif
-                                                        class="rounded border-zinc-300 text-blue-600 focus:ring-blue-500 dark:border-zinc-600 dark:bg-zinc-700"
+                                                        class="size-5 rounded border-zinc-300 text-blue-600 focus:ring-blue-500 dark:border-zinc-600 dark:bg-zinc-700"
                                                     >
                                                     <span class="text-sm text-zinc-700 dark:text-zinc-300">
                                                         {{ $value->display_value ?: $value->value }}
@@ -225,7 +292,7 @@
                                 <div>
                                     <flux:heading size="sm">{{ __('Attribute Combinations') }}</flux:heading>
                                     <flux:text size="sm" variant="subtle">
-                                        {{ __('Set pricing, stock, and weight for each combination.') }}
+                                        {{ __('Set pricing, stock, and weight for each combination. Values you have already entered are kept when you add or remove options.') }}
                                     </flux:text>
                                 </div>
                                 <flux:badge size="sm" color="blue">
@@ -233,19 +300,55 @@
                                 </flux:badge>
                             </div>
 
+                            {{-- Bulk tools --}}
+                            <div class="flex flex-wrap items-end gap-3 rounded-xl border border-zinc-200 bg-zinc-50 p-4 dark:border-zinc-700 dark:bg-zinc-800/60">
+                                <flux:field class="w-32">
+                                    <flux:label class="text-xs">{{ __('Price for all') }}</flux:label>
+                                    <flux:input type="number" step="0.01" min="0" wire:model="bulkVariantPrice" placeholder="0.00" size="sm" />
+                                </flux:field>
+                                <flux:button type="button" size="sm" variant="outline" wire:click="applyBulkVariantPrice" wire:loading.attr="disabled">
+                                    {{ __('Apply') }}
+                                </flux:button>
+
+                                <div class="h-9 w-px bg-zinc-200 dark:bg-zinc-700" aria-hidden="true"></div>
+
+                                <flux:field class="w-32">
+                                    <flux:label class="text-xs">{{ __('Stock for all') }}</flux:label>
+                                    <flux:input type="number" min="0" wire:model="bulkVariantStock" placeholder="0" size="sm" />
+                                </flux:field>
+                                <flux:button type="button" size="sm" variant="outline" wire:click="applyBulkVariantStock" wire:loading.attr="disabled">
+                                    {{ __('Apply') }}
+                                </flux:button>
+
+                                <div class="h-9 w-px bg-zinc-200 dark:bg-zinc-700" aria-hidden="true"></div>
+
+                                <flux:button type="button" size="sm" variant="outline" wire:click="generateVariantSkus" wire:loading.attr="disabled">
+                                    <span class="inline-flex items-center gap-1.5">
+                                        <flux:icon.sparkles class="size-3.5" aria-hidden="true" />
+                                        {{ __('Fill empty SKUs') }}
+                                    </span>
+                                </flux:button>
+                            </div>
+
                             <div class="space-y-4">
                                 @foreach($productAttributes as $combinationIndex => $combination)
-                                    <div class="rounded-xl border border-zinc-200 bg-white p-5 shadow-sm transition-shadow hover:shadow-md dark:border-zinc-700 dark:bg-zinc-800/60" wire:key="combo-{{ $combinationIndex }}">
-                                        <div class="mb-4 flex flex-wrap items-center gap-2">
-                                            <span class="text-xs font-semibold text-zinc-400 dark:text-zinc-500">{{ __('Variant') }} #{{ $combinationIndex + 1 }}</span>
-                                            @foreach($combination['attribute_data'] ?? [] as $key => $value)
-                                                <span class="inline-flex items-center gap-1 rounded-full bg-zinc-100 px-2.5 py-1 text-xs font-medium text-zinc-700 dark:bg-zinc-700/60 dark:text-zinc-200">
-                                                    <span class="text-zinc-400 dark:text-zinc-500">{{ $key }}:</span> {{ $value }}
-                                                </span>
-                                            @endforeach
+                                    <div class="rounded-xl border border-zinc-200 bg-white p-5 shadow-sm transition-shadow hover:shadow-md dark:border-zinc-700 dark:bg-zinc-800/60" wire:key="combo-{{ md5(json_encode($combination['attribute_data'] ?? [])) }}">
+                                        <div class="mb-4 flex flex-wrap items-center justify-between gap-2">
+                                            <div class="flex flex-wrap items-center gap-2">
+                                                <span class="text-xs font-semibold text-zinc-500 dark:text-zinc-400">{{ __('Variant') }} #{{ $combinationIndex + 1 }}</span>
+                                                @foreach($combination['attribute_data'] ?? [] as $key => $value)
+                                                    <span class="inline-flex items-center gap-1 rounded-full bg-zinc-100 px-2.5 py-1 text-xs font-medium text-zinc-700 dark:bg-zinc-700/60 dark:text-zinc-200">
+                                                        <span class="text-zinc-500 dark:text-zinc-400">{{ $key }}:</span> {{ $value }}
+                                                    </span>
+                                                @endforeach
+                                            </div>
+                                            <flux:switch
+                                                wire:model="productAttributes.{{ $combinationIndex }}.is_active"
+                                                :label="__('Active')"
+                                            />
                                         </div>
 
-                                        <p class="mb-3 text-[11px] font-semibold uppercase tracking-wide text-zinc-400 dark:text-zinc-500">{{ __('Pricing') }}</p>
+                                        <p class="mb-3 text-[11px] font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">{{ __('Pricing') }}</p>
                                         <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
                                             <flux:field>
                                                 <flux:label>{{ __('Price') }} *</flux:label>
@@ -295,8 +398,8 @@
                                             </flux:field>
                                         </div>
 
-                                        <p class="mb-3 mt-5 text-[11px] font-semibold uppercase tracking-wide text-zinc-400 dark:text-zinc-500">{{ __('Inventory Details') }}</p>
-                                        <div class="grid gap-4 md:grid-cols-2">
+                                        <p class="mb-3 mt-5 text-[11px] font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">{{ __('Inventory Details') }}</p>
+                                        <div class="grid gap-4 md:grid-cols-3">
                                             <flux:field>
                                                 <flux:label>{{ __('Weight (kg)') }}</flux:label>
                                                 <flux:input
@@ -318,6 +421,15 @@
                                                 />
                                                 <flux:error name="productAttributes.{{ $combinationIndex }}.sku" />
                                             </flux:field>
+
+                                            <flux:field>
+                                                <flux:label>{{ __('Barcode') }}</flux:label>
+                                                <flux:input
+                                                    wire:model="productAttributes.{{ $combinationIndex }}.barcode"
+                                                    :placeholder="__('Scanned at the POS terminal')"
+                                                />
+                                                <flux:error name="productAttributes.{{ $combinationIndex }}.barcode" />
+                                            </flux:field>
                                         </div>
                                     </div>
                                 @endforeach
@@ -330,7 +442,7 @@
             <x-products.form-section
                 :title="__('Pricing & Availability')"
                 :description="__('Define selling price, promotional anchors, and inventory visibility.')"
-                icon="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                icon="currency-dollar"
             >
                 <div class="grid gap-6 md:grid-cols-2">
                     <flux:field>
@@ -340,9 +452,7 @@
                                 @if($name_en && !$sku)
                                     <flux:button type="button" wire:click="generateSku" size="sm" variant="ghost" class="text-xs">
                                         <span class="inline-flex items-center gap-1">
-                                            <svg class="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
-                                            </svg>
+                                            <flux:icon.arrow-path class="size-3" aria-hidden="true" />
                                             <span>{{ __('Auto-generate') }}</span>
                                         </span>
                                     </flux:button>
@@ -352,6 +462,13 @@
                         <flux:input wire:model.blur="sku" :placeholder="__('e.g. SKU-00123')" />
                         <p class="text-xs text-zinc-500 dark:text-zinc-400">{{ __('Use a unique, searchable identifier for inventory syncing.') }}</p>
                         <flux:error name="sku" />
+                    </flux:field>
+
+                    <flux:field>
+                        <flux:label>{{ __('Barcode') }}</flux:label>
+                        <flux:input wire:model.blur="barcode" :placeholder="__('e.g. EAN/UPC from the packaging')" />
+                        <p class="text-xs text-zinc-500 dark:text-zinc-400">{{ __('Lets the POS terminal add this product with a scan.') }}</p>
+                        <flux:error name="barcode" />
                     </flux:field>
 
                     @if(empty($productAttributes))
@@ -364,15 +481,15 @@
                             <flux:error name="stock" />
                         </flux:field>
 
-                        <div class="flex items-center justify-between rounded-lg border border-zinc-200 p-3 dark:border-zinc-700">
+                        <div class="flex items-center justify-between gap-3 rounded-lg border border-zinc-200 p-3 dark:border-zinc-700">
                             <div>
                                 <p class="text-sm font-medium text-zinc-900 dark:text-white">{{ __('Track Batches / Lots') }}</p>
                                 <p class="text-xs text-zinc-500 dark:text-zinc-400">{{ __('Enable for products with expiry dates or lot numbers you need to trace.') }}</p>
                             </div>
-                            <flux:switch wire:model.live="tracks_batches" />
+                            <flux:switch wire:model.live="tracks_batches" :aria-label="__('Track batches / lots')" />
                         </div>
                     @else
-                        <div class="flex items-end pb-1">
+                        <div class="flex items-end pb-1 md:col-span-1">
                             <p class="text-xs text-zinc-500 dark:text-zinc-400">{{ __('Stock is tracked per variation above.') }}</p>
                         </div>
                     @endif
@@ -390,15 +507,11 @@
                         price="price"
                         compareAtPrice="compare_at_price"
                         buyingPrice="buying_price"
-                        :profit="$this->profit"
-                        :profitPercentage="$this->profitPercentage"
                         :currency="\App\Models\Setting::get('currency_symbol', '৳')"
                     />
                 @else
                     <div class="flex items-start gap-3 rounded-xl border border-zinc-200 bg-zinc-50 p-4 dark:border-zinc-700 dark:bg-zinc-800/60">
-                        <svg class="h-5 w-5 shrink-0 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                        </svg>
+                        <flux:icon.information-circle class="size-5 shrink-0 text-zinc-400" aria-hidden="true" />
                         <flux:text size="sm" variant="subtle">
                             {{ __('Pricing and stock are managed per variation combination above.') }}
                         </flux:text>
@@ -409,7 +522,7 @@
             <x-products.form-section
                 :title="__('Media Library')"
                 :description="__('Upload polished visuals to reinforce credibility and conversion.')"
-                icon="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                icon="photo"
             >
                 <div class="grid gap-6 lg:grid-cols-2">
                     <flux:field class="space-y-4">
@@ -426,6 +539,7 @@
                             wire-model="primary_image"
                             :value="$primary_image"
                             remove-method="removePrimaryImage"
+                            :label="__('Upload primary image')"
                             :placeholder-title="__('Drag & drop your hero image')"
                             :placeholder-description="__('We recommend crisp, high-resolution visuals to showcase the product.')"
                             :button-text="__('Browse files')"
@@ -444,19 +558,48 @@
                         <flux:label>{{ __('Gallery Images') }}</flux:label>
 
                         @if($isEdit && !empty($existing_gallery))
-                            <div class="mb-3 grid grid-cols-2 gap-3 sm:grid-cols-4">
+                            <div class="mb-3 grid grid-cols-2 gap-3 sm:grid-cols-3">
                                 @foreach($existing_gallery as $index => $image)
-                                    <div class="group relative overflow-hidden rounded-lg" wire:key="existing-gallery-{{ $index }}">
-                                        <img src="{{ asset('storage/'.$image) }}" class="h-28 w-full rounded-lg object-cover" alt="{{ __('Existing gallery image :number', ['number' => $loop->iteration]) }}">
+                                    <div class="group relative overflow-hidden rounded-lg border border-zinc-200 dark:border-zinc-700" wire:key="existing-gallery-{{ md5($image) }}">
+                                        <img src="{{ asset('storage/'.$image) }}" class="h-28 w-full object-cover" alt="{{ __('Existing gallery image :number', ['number' => $loop->iteration]) }}">
+
+                                        <div class="absolute inset-x-0 bottom-0 flex items-center justify-center gap-1 bg-gradient-to-t from-zinc-900/80 to-transparent p-1.5">
+                                            <button
+                                                type="button"
+                                                wire:click="moveExistingGalleryImage({{ $index }}, -1)"
+                                                @disabled($index === 0)
+                                                class="inline-flex min-h-9 min-w-9 items-center justify-center rounded-full text-white transition hover:bg-white/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white disabled:opacity-30"
+                                            >
+                                                <flux:icon.chevron-left class="size-4" aria-hidden="true" />
+                                                <span class="sr-only">{{ __('Move image :number earlier', ['number' => $loop->iteration]) }}</span>
+                                            </button>
+                                            <button
+                                                type="button"
+                                                wire:click="makeGalleryImagePrimary({{ $index }})"
+                                                class="inline-flex min-h-9 min-w-9 items-center justify-center rounded-full text-white transition hover:bg-white/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+                                            >
+                                                <flux:icon.star class="size-4" aria-hidden="true" />
+                                                <span class="sr-only">{{ __('Make image :number the primary image', ['number' => $loop->iteration]) }}</span>
+                                            </button>
+                                            <button
+                                                type="button"
+                                                wire:click="moveExistingGalleryImage({{ $index }}, 1)"
+                                                @disabled($loop->last)
+                                                class="inline-flex min-h-9 min-w-9 items-center justify-center rounded-full text-white transition hover:bg-white/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white disabled:opacity-30"
+                                            >
+                                                <flux:icon.chevron-right class="size-4" aria-hidden="true" />
+                                                <span class="sr-only">{{ __('Move image :number later', ['number' => $loop->iteration]) }}</span>
+                                            </button>
+                                        </div>
+
                                         <button
                                             type="button"
                                             wire:click="removeExistingGalleryImage({{ $index }})"
-                                            class="absolute right-2 top-2 inline-flex items-center justify-center rounded-full bg-zinc-900/75 p-1.5 text-white backdrop-blur transition hover:bg-red-600/90"
+                                            wire:confirm="{{ __('Remove this image? The file is deleted immediately.') }}"
+                                            class="absolute right-1.5 top-1.5 inline-flex min-h-9 min-w-9 items-center justify-center rounded-full bg-zinc-900/75 text-white backdrop-blur transition hover:bg-red-600/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
                                         >
-                                            <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                                            </svg>
-                                            <span class="sr-only">{{ __('Remove image') }}</span>
+                                            <flux:icon.x-mark class="size-4" aria-hidden="true" />
+                                            <span class="sr-only">{{ __('Remove image :number', ['number' => $loop->iteration]) }}</span>
                                         </button>
                                     </div>
                                 @endforeach
@@ -468,6 +611,7 @@
                             :value="$gallery_images"
                             :multiple="true"
                             remove-method="removeGalleryImage"
+                            :label="__('Upload gallery images')"
                             :placeholder-title="__('Drag in lifestyle or detail shots')"
                             :placeholder-description="__('Drop multiple files at once to build rich galleries in seconds.')"
                             :button-text="__('Add images')"
@@ -486,12 +630,13 @@
             </x-products.form-section>
         </div>
 
-        {{-- Sidebar --}}
-        <div class="space-y-8 lg:sticky lg:top-24 lg:col-span-1 lg:self-start">
+        {{-- Sidebar: ordered first on mobile so Status/Organization (high-frequency
+             fields when editing) don't require scrolling past the whole form --}}
+        <div class="space-y-8 max-lg:order-first lg:sticky lg:top-24 lg:col-span-1 lg:self-start">
             <x-products.form-section
                 :title="__('Status')"
                 :description="__('Control storefront visibility and merchandising.')"
-                icon="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                icon="check-circle"
             >
                 <div class="space-y-5">
                     <flux:switch wire:model.live="is_active" :label="__('Active')" :description="__('Visible to shoppers on your storefront.')" />
@@ -503,14 +648,14 @@
             <x-products.form-section
                 :title="__('Organization')"
                 :description="__('Control how this product is grouped and ordered.')"
-                icon="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"
+                icon="tag"
             >
                 <div class="space-y-5">
                     <flux:field>
                         <flux:label>{{ __('Category') }}</flux:label>
                         <flux:select wire:model="category_id">
                             <option value="">{{ __('No Category') }}</option>
-                            @foreach($categories as $category)
+                            @foreach($this->categories as $category)
                                 <option value="{{ $category->id }}">{{ $category->parent ? $category->parent->name_en . ' > ' : '' }}{{ $category->name_en }}</option>
                             @endforeach
                         </flux:select>
@@ -522,7 +667,7 @@
                         <flux:label>{{ __('Default Supplier') }}</flux:label>
                         <flux:select wire:model="default_supplier_id">
                             <option value="">{{ __('No Default Supplier') }}</option>
-                            @foreach($suppliers as $supplier)
+                            @foreach($this->suppliers as $supplier)
                                 <option value="{{ $supplier->id }}">{{ $supplier->name }}</option>
                             @endforeach
                         </flux:select>
@@ -537,22 +682,56 @@
                     </flux:field>
                 </div>
             </x-products.form-section>
+
+            @php
+                $completeness = [
+                    __('Product name') => filled($name_en),
+                    __('Description') => filled($description_en) || filled($description_bn),
+                    __('Primary image') => (bool) ($primary_image || $product?->primary_image),
+                    __('Category') => filled($category_id),
+                    __('Pricing') => ! empty($productAttributes) || (float) $price > 0,
+                    __('SKU') => filled($sku),
+                ];
+                $completedCount = count(array_filter($completeness));
+            @endphp
+            <x-products.form-section
+                :title="__('Completeness')"
+                :description="__('Products with complete details convert better and are easier to find.')"
+                icon="clipboard-document-check"
+            >
+                <x-slot:badge>
+                    <flux:badge size="sm" :color="$completedCount === count($completeness) ? 'emerald' : 'zinc'">
+                        {{ $completedCount }}/{{ count($completeness) }}
+                    </flux:badge>
+                </x-slot:badge>
+
+                <ul class="space-y-2.5">
+                    @foreach($completeness as $label => $done)
+                        <li class="flex items-center gap-2.5 text-sm">
+                            @if($done)
+                                <flux:icon.check-circle class="size-5 shrink-0 text-emerald-500" aria-hidden="true" />
+                                <span class="text-zinc-700 dark:text-zinc-300">{{ $label }}</span>
+                                <span class="sr-only">{{ __('complete') }}</span>
+                            @else
+                                <flux:icon.minus-circle class="size-5 shrink-0 text-zinc-300 dark:text-zinc-600" aria-hidden="true" />
+                                <span class="text-zinc-500 dark:text-zinc-400">{{ $label }}</span>
+                                <span class="sr-only">{{ __('missing') }}</span>
+                            @endif
+                        </li>
+                    @endforeach
+                </ul>
+            </x-products.form-section>
         </div>
 
         {{-- Bottom actions --}}
         <div class="flex flex-wrap items-center gap-3 border-t border-zinc-200 pt-6 dark:border-zinc-700 lg:col-span-3">
             <flux:button type="submit" variant="primary" wire:loading.attr="disabled" wire:target="save">
                 <span wire:loading.remove wire:target="save" class="inline-flex items-center gap-1.5">
-                    <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                    </svg>
+                    <flux:icon.check class="size-4" aria-hidden="true" />
                     <span>{{ $isEdit ? __('Update Product') : __('Create Product') }}</span>
                 </span>
                 <span wire:loading wire:target="save" class="inline-flex items-center gap-1.5">
-                    <svg class="h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24">
-                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                    </svg>
+                    <flux:icon.arrow-path class="size-4 animate-spin" aria-hidden="true" />
                     <span>{{ $isEdit ? __('Updating...') : __('Creating...') }}</span>
                 </span>
             </flux:button>

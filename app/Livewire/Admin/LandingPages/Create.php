@@ -24,20 +24,16 @@ class Create extends Component
 
     public $meta_description = '';
 
-    public $config = [
-        'hero_title' => '',
-        'hero_content' => '',
-        'hero_badge_text' => '',
-        'features_section_ids' => [],
-        'testimonial_ids' => [],
-        'faq_section_ids' => [],
-        'show_trust_badges' => true,
-        'show_product_details' => true,
-        'show_features' => true,
-        'show_testimonials' => true,
-        'show_faq' => true,
-        'show_cta' => true,
-    ];
+    public $heroTitle = '';
+
+    public $heroContent = '';
+
+    public $heroBadgeText = '';
+
+    /**
+     * Ordered, toggleable page blocks (everything after the pinned hero).
+     */
+    public array $blocks = [];
 
     public $is_active = true;
 
@@ -51,6 +47,10 @@ class Create extends Component
 
     public $faqSectionSearch = '';
 
+    public $aboutSectionSearch = '';
+
+    public $benefitsSectionSearch = '';
+
     protected $rules = [
         'name' => 'required|string|max:255',
         'slug' => 'required|string|max:255|unique:landing_pages,slug',
@@ -60,6 +60,11 @@ class Create extends Component
         'is_active' => 'boolean',
         'order' => 'integer|min:0',
     ];
+
+    public function mount(): void
+    {
+        $this->blocks = LandingPageConfig::defaultBlocks();
+    }
 
     public function updated($propertyName): void
     {
@@ -101,18 +106,21 @@ class Create extends Component
         $this->meta_description = $source->meta_description;
 
         $sourceConfig = $source->config ?? [];
-        // Convert integer IDs to strings for Livewire checkboxes
-        if (isset($sourceConfig['features_section_ids']) && is_array($sourceConfig['features_section_ids'])) {
-            $sourceConfig['features_section_ids'] = array_map('strval', $sourceConfig['features_section_ids']);
-        }
-        if (isset($sourceConfig['testimonial_ids']) && is_array($sourceConfig['testimonial_ids'])) {
-            $sourceConfig['testimonial_ids'] = array_map('strval', $sourceConfig['testimonial_ids']);
-        }
-        if (isset($sourceConfig['faq_section_ids']) && is_array($sourceConfig['faq_section_ids'])) {
-            $sourceConfig['faq_section_ids'] = array_map('strval', $sourceConfig['faq_section_ids']);
-        }
+        $this->heroTitle = $sourceConfig['hero_title'] ?? '';
+        $this->heroContent = $sourceConfig['hero_content'] ?? '';
+        $this->heroBadgeText = $sourceConfig['hero_badge_text'] ?? '';
 
-        $this->config = array_merge($this->config, $sourceConfig);
+        // Convert integer IDs to strings for Livewire checkboxes.
+        $this->blocks = array_map(function (array $block) {
+            foreach (['section_ids', 'testimonial_ids'] as $idsKey) {
+                if (isset($block[$idsKey]) && is_array($block[$idsKey])) {
+                    $block[$idsKey] = array_map('strval', $block[$idsKey]);
+                }
+            }
+
+            return $block;
+        }, $source->normalizedBlocks());
+
         $this->is_active = false;
         $this->order = $source->order;
     }
@@ -134,6 +142,21 @@ class Create extends Component
         return $slug;
     }
 
+    /**
+     * Called from the admin's drag-and-drop panel with the block types in
+     * their new order (each type appears exactly once in $this->blocks).
+     */
+    public function updateBlockOrder(array $types): void
+    {
+        $blocksByType = collect($this->blocks)->keyBy('type');
+
+        $this->blocks = collect($types)
+            ->map(fn ($type) => $blocksByType->get($type))
+            ->filter()
+            ->values()
+            ->all();
+    }
+
     public function save(): void
     {
         // Ensure slug is unique before validation
@@ -146,16 +169,15 @@ class Create extends Component
         $this->validate();
 
         // Convert string IDs back to integers for storage
-        $config = $this->config;
-        if (isset($config['features_section_ids']) && is_array($config['features_section_ids'])) {
-            $config['features_section_ids'] = array_map('intval', $config['features_section_ids']);
-        }
-        if (isset($config['testimonial_ids']) && is_array($config['testimonial_ids'])) {
-            $config['testimonial_ids'] = array_map('intval', $config['testimonial_ids']);
-        }
-        if (isset($config['faq_section_ids']) && is_array($config['faq_section_ids'])) {
-            $config['faq_section_ids'] = array_map('intval', $config['faq_section_ids']);
-        }
+        $blocks = array_map(function (array $block) {
+            foreach (['section_ids', 'testimonial_ids'] as $idsKey) {
+                if (isset($block[$idsKey]) && is_array($block[$idsKey])) {
+                    $block[$idsKey] = array_map('intval', $block[$idsKey]);
+                }
+            }
+
+            return $block;
+        }, $this->blocks);
 
         LandingPageConfig::create([
             'name' => $this->name,
@@ -163,7 +185,12 @@ class Create extends Component
             'product_id' => $this->product_id ?: null,
             'meta_title' => $this->meta_title ?: null,
             'meta_description' => $this->meta_description ?: null,
-            'config' => $config,
+            'config' => [
+                'hero_title' => $this->heroTitle,
+                'hero_content' => $this->heroContent,
+                'hero_badge_text' => $this->heroBadgeText,
+                'blocks' => $blocks,
+            ],
             'is_active' => $this->is_active,
             'order' => $this->order,
         ]);
@@ -177,37 +204,30 @@ class Create extends Component
 
     public function render()
     {
-        $featureSections = LandingPageSection::where('type', 'features')
-            ->where('is_active', true)
-            ->when($this->featureSectionSearch, function ($query) {
-                $query->where('title_en', 'like', '%'.$this->featureSectionSearch.'%')
-                    ->orWhere('title_bn', 'like', '%'.$this->featureSectionSearch.'%');
-            })
-            ->orderBy('order')
-            ->get();
-
-        $testimonials = Testimonial::where('is_active', true)
-            ->when($this->testimonialSearch, function ($query) {
-                $query->where('name', 'like', '%'.$this->testimonialSearch.'%')
-                    ->orWhere('content', 'like', '%'.$this->testimonialSearch.'%');
-            })
-            ->orderBy('order')
-            ->get();
-
-        $faqSections = LandingPageSection::where('type', 'faq')
-            ->where('is_active', true)
-            ->when($this->faqSectionSearch, function ($query) {
-                $query->where('title_en', 'like', '%'.$this->faqSectionSearch.'%')
-                    ->orWhere('title_bn', 'like', '%'.$this->faqSectionSearch.'%');
-            })
-            ->orderBy('order')
-            ->get();
+        $sectionsOfType = function (string $type, string $search) {
+            return LandingPageSection::where('type', $type)
+                ->where('is_active', true)
+                ->when($search, function ($query) use ($search) {
+                    $query->where('title_en', 'like', '%'.$search.'%')
+                        ->orWhere('title_bn', 'like', '%'.$search.'%');
+                })
+                ->orderBy('order')
+                ->get();
+        };
 
         return view('livewire.admin.landing-pages.create', [
             'products' => Product::where('is_active', true)->orderBy('name_en')->get(),
-            'featureSections' => $featureSections,
-            'faqSections' => $faqSections,
-            'testimonials' => $testimonials,
+            'featureSections' => $sectionsOfType('features', $this->featureSectionSearch),
+            'faqSections' => $sectionsOfType('faq', $this->faqSectionSearch),
+            'aboutSections' => $sectionsOfType('about', $this->aboutSectionSearch),
+            'benefitsSections' => $sectionsOfType('benefits', $this->benefitsSectionSearch),
+            'testimonials' => Testimonial::where('is_active', true)
+                ->when($this->testimonialSearch, function ($query) {
+                    $query->where('name', 'like', '%'.$this->testimonialSearch.'%')
+                        ->orWhere('content', 'like', '%'.$this->testimonialSearch.'%');
+                })
+                ->orderBy('order')
+                ->get(),
             'existingLandingPages' => LandingPageConfig::orderBy('name')->get(),
         ])->layout('components.layouts.app', [
             'title' => __('Create Landing Page'),

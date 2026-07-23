@@ -1,4 +1,4 @@
 {{-- Classic Grid: the original, unchanged product card. --}}
-@props(['product'])
+@props(['product', 'eager' => false])
 
-<x-public.product-card :product="$product" {{ $attributes }} />
+<x-public.product-card :product="$product" :eager="$eager" {{ $attributes }} />

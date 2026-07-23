@@ -1,4 +1,4 @@
-@props(['product'])
+@props(['product', 'eager' => false])
 
 @php
     $minPrice = $product->getSyncedPrice();
@@ -14,7 +14,8 @@
             <img
                 src="{{ asset('storage/'.$product->primary_image) }}"
                 alt="{{ $product->name }}"
-                loading="lazy"
+                loading="{{ $eager ? 'eager' : 'lazy' }}"
+                @if($eager) fetchpriority="high" @endif
                 class="w-full h-full object-cover group-hover:scale-[1.04] transition-transform duration-500 motion-reduce:transform-none"
             >
         @else

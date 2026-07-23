@@ -380,7 +380,7 @@ trait HasShoppingCart
 
         session()->put('cart', $cart);
         $this->cart = $cart;
-        $this->dispatch('cart-updated');
+        $this->dispatch('cart-updated', count: $this->cartQuantityTotal($cart));
 
         $this->dispatch('fbq:track', 'AddToCart', [
             'content_type' => 'product',
@@ -417,7 +417,7 @@ trait HasShoppingCart
 
         session()->put('cart', $cart);
         $this->cart = $cart;
-        $this->dispatch('cart-updated');
+        $this->dispatch('cart-updated', count: $this->cartQuantityTotal($cart));
 
         // Force recalculation of shipping cost
         $this->dispatch('$refresh');
@@ -429,10 +429,15 @@ trait HasShoppingCart
         unset($cart[$productId]);
         session()->put('cart', $cart);
         $this->cart = $cart;
-        $this->dispatch('cart-updated');
+        $this->dispatch('cart-updated', count: $this->cartQuantityTotal($cart));
 
         // Force recalculation of shipping cost
         $this->dispatch('$refresh');
+    }
+
+    private function cartQuantityTotal(array $cart): int
+    {
+        return array_sum(array_map(fn ($item) => $item['quantity'] ?? 0, $cart));
     }
 
     public function applyCoupon(): void
@@ -552,7 +557,7 @@ trait HasShoppingCart
 
             session()->put('cart', $prunedCart);
             $this->cart = $prunedCart;
-            $this->dispatch('cart-updated');
+            $this->dispatch('cart-updated', count: $this->cartQuantityTotal($prunedCart));
 
             session()->flash('error', __('Some items in your cart are no longer available and were removed: :items. Please review your cart and try again.', ['items' => implode(', ', $unavailable)]));
 

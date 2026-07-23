@@ -1,8 +1,3 @@
-@php
-    // Swatch palette cycling like the "Popular Colors" dots in the reference design
-    $sizeChipColors = ['bg-blue-500', 'bg-orange-400', 'bg-emerald-500', 'bg-red-500', 'bg-teal-400'];
-@endphp
-
 <section class="relative overflow-hidden pt-2 sm:pt-3 pb-4 sm:pb-5">
     {{-- Ambient glows on the grey-blue canvas --}}
     <div class="pointer-events-none absolute -top-24 -left-24 w-96 h-96 bg-white/40 dark:bg-white/[0.02] rounded-full blur-3xl"></div>
@@ -52,7 +47,7 @@
                                 </div>
                             @endif
 
-                            @if($product)
+                            <div class="flex flex-wrap items-center gap-3">
                                 <a href="{{ $heroPrimaryCtaUrl }}" @if($heroPrimaryCtaNavigate) wire:navigate @endif class="group inline-flex items-center gap-3 self-start bg-emerald-600 hover:bg-emerald-700 dark:bg-emerald-600 dark:hover:bg-emerald-500 text-white pl-6 pr-1.5 py-1.5 rounded-full font-bold text-sm sm:text-base transition-all duration-300 shadow-md shadow-emerald-600/20 hover:shadow-lg hover:shadow-emerald-600/25 hover:-translate-y-0.5 motion-reduce:transform-none cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600 focus-visible:ring-offset-2">
                                     {{ $heroPrimaryCtaLabel }}
                                     <span class="flex items-center justify-center w-10 h-10 rounded-full bg-zinc-900 dark:bg-black text-white transition-transform duration-300 group-hover:rotate-45 motion-reduce:transform-none">
@@ -61,7 +56,10 @@
                                         </svg>
                                     </span>
                                 </a>
-                            @endif
+                                <a href="{{ $heroSecondaryCtaUrl }}" @if($heroSecondaryCtaNavigate) wire:navigate @endif class="inline-flex items-center gap-2 self-start px-6 py-3 rounded-full font-bold text-sm sm:text-base text-zinc-800 dark:text-zinc-100 bg-white dark:bg-zinc-700/80 ring-1 ring-zinc-900/[0.08] dark:ring-white/[0.1] hover:bg-zinc-50 dark:hover:bg-zinc-600 transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-900 dark:focus-visible:ring-white">
+                                    {{ $heroSecondaryCtaLabel }}
+                                </a>
+                            </div>
 
                             <div class="mt-auto pt-4">
                                 @include('components.public.heroes._social')
@@ -188,13 +186,13 @@
 
             {{-- ============ RIGHT: stacked sidebar cards ============ --}}
             <div class="lg:col-span-3 flex flex-col gap-4 sm:gap-5 min-w-0">
-                {{-- Size dots ("Popular Colors" slot) --}}
+                {{-- Available sizes/weights --}}
                 @if($heroExtras['weightValues']->count() > 0)
                     <div class="bg-zinc-50 dark:bg-zinc-800/60 rounded-3xl p-5 sm:p-6 ring-1 ring-zinc-900/[0.04] dark:ring-white/[0.06]">
                         <p class="text-sm font-bold text-zinc-900 dark:text-white mb-3">{{ __('Available Sizes') }}</p>
                         <div class="flex flex-wrap gap-2.5">
                             @foreach($heroExtras['weightValues'] as $value)
-                                <span class="inline-flex items-center justify-center min-w-10 h-10 px-1.5 rounded-full {{ $sizeChipColors[$loop->index % count($sizeChipColors)] }} text-white text-[10px] font-bold ring-[3px] ring-zinc-50 dark:ring-zinc-800 shadow-md">
+                                <span class="inline-flex items-center justify-center min-w-10 h-10 px-3 rounded-full bg-white dark:bg-zinc-700 ring-1 ring-zinc-900/[0.08] dark:ring-white/[0.1] text-zinc-700 dark:text-zinc-200 text-xs font-bold shadow-sm">
                                     {{ $value->display_value }}
                                 </span>
                             @endforeach

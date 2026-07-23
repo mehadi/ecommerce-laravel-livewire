@@ -38,6 +38,21 @@
         <script type="application/ld+json">
         {!! json_encode($productData, JSON_UNESCAPED_SLASHES) !!}
         </script>
+
+        @php
+            $breadcrumbSchema = [
+                '@context' => 'https://schema.org',
+                '@type' => 'BreadcrumbList',
+                'itemListElement' => [
+                    ['@type' => 'ListItem', 'position' => 1, 'name' => __('Home'), 'item' => route('home')],
+                    ['@type' => 'ListItem', 'position' => 2, 'name' => $this->product->name, 'item' => url()->current()],
+                ],
+            ];
+        @endphp
+        {{-- JSON_HEX_TAG so an admin-authored product name containing "</script>" can't break out of this script context. --}}
+        <script type="application/ld+json">
+        {!! json_encode($breadcrumbSchema, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_HEX_TAG) !!}
+        </script>
     @endif
 @endpush
 
@@ -65,35 +80,57 @@
     />
 
     @if($this->product)
-        @if($this->shouldShowSection('trust_badges'))
-            <!-- Trust Badges Section -->
-            <x-public.trust-badges />
-        @endif
+        <nav aria-label="{{ __('Breadcrumb') }}" class="container mx-auto px-4 sm:px-6 frontend-container pt-4 sm:pt-5">
+            <ol class="flex flex-wrap items-center gap-2 text-sm">
+                <li>
+                    <a href="{{ route('home') }}" wire:navigate class="font-medium text-zinc-500 dark:text-zinc-400 hover:text-emerald-700 dark:hover:text-emerald-400 transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 rounded-lg">
+                        {{ __('Home') }}
+                    </a>
+                </li>
+                <li aria-hidden="true">
+                    <svg class="w-3.5 h-3.5 text-zinc-300 dark:text-zinc-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"></path></svg>
+                </li>
+                <li>
+                    <span class="font-semibold text-zinc-900 dark:text-white" aria-current="page">{{ $this->product->name }}</span>
+                </li>
+            </ol>
+        </nav>
 
-        @if($this->shouldShowSection('product_details'))
-            <!-- Product Details Section -->
-            <x-public.product-details-section :product="$this->product" />
-        @endif
+        @foreach($this->pageBlocks as $block)
+            @continue(! ($block['enabled'] ?? true))
+            @switch($block['type'])
+                @case('trust_badges')
+                    <x-public.trust-badges />
+                    @break
 
-        @if($this->shouldShowSection('features'))
-            <!-- Features Section -->
-            <x-public.features-section :features="$this->features" />
-        @endif
+                @case('product_details')
+                    <x-public.product-details-section :product="$this->product" />
+                    @break
 
-        @if($this->shouldShowSection('testimonials'))
-            <!-- Testimonials Section -->
-            <x-public.testimonials-section :testimonials="$this->testimonials" />
-        @endif
+                @case('features')
+                    <x-public.features-section :features="$this->sectionsForBlock($block)" />
+                    @break
 
-        @if($this->shouldShowSection('faq'))
-            <!-- FAQ Section -->
-            <x-public.faq-section :faqs="$this->faqs" />
-        @endif
+                @case('testimonials')
+                    <x-public.testimonials-section :testimonials="$this->testimonials" />
+                    @break
 
-        @if($this->shouldShowSection('cta'))
-            <!-- CTA Section -->
-            <x-public.cta-section :product="$this->product" />
-        @endif
+                @case('faq')
+                    <x-public.faq-section :faqs="$this->sectionsForBlock($block)" />
+                    @break
+
+                @case('cta')
+                    <x-public.cta-section :product="$this->product" />
+                    @break
+
+                @case('about')
+                @case('benefits')
+                @case('contact')
+                @case('products')
+                    <x-public.content-section :sections="$this->sectionsForBlock($block)" :heading="$block['type']" />
+                    @break
+            @endswitch
+        @endforeach
     @endif
 
     <!-- Sticky Cart Button -->

@@ -1,3 +1,68 @@
+@push('head')
+    {{-- Pagination SEO hints --}}
+    @if($this->products->currentPage() < $this->products->lastPage())
+        <link rel="next" href="{{ $this->products->nextPageUrl() }}" />
+    @endif
+    @if($this->products->currentPage() > 1)
+        <link rel="prev" href="{{ $this->products->previousPageUrl() }}" />
+    @endif
+
+    @php
+        $activeCategory = $category !== null ? $this->categories->firstWhere('id', $category) : null;
+
+        $breadcrumbItems = [
+            ['name' => __('Home'), 'url' => route('home')],
+            ['name' => __('Shop'), 'url' => route('shop')],
+        ];
+
+        if ($activeCategory) {
+            $breadcrumbItems[] = ['name' => $activeCategory->name, 'url' => url()->current()];
+        }
+
+        $breadcrumbSchema = [
+            '@context' => 'https://schema.org',
+            '@type' => 'BreadcrumbList',
+            'itemListElement' => collect($breadcrumbItems)->map(function ($item, $index) {
+                return [
+                    '@type' => 'ListItem',
+                    'position' => $index + 1,
+                    'name' => $item['name'],
+                    'item' => $item['url'],
+                ];
+            })->values()->all(),
+        ];
+
+        if ($this->products->count() > 0) {
+            $itemListSchema = [
+                '@context' => 'https://schema.org',
+                '@type' => 'ItemList',
+                'itemListElement' => $this->products->values()->map(function ($product, $index) {
+                    return [
+                        '@type' => 'ListItem',
+                        'position' => $this->products->firstItem() + $index,
+                        'url' => route('product.show', $product),
+                    ];
+                })->values()->all(),
+            ];
+        }
+    @endphp
+    {{--
+        Category names are admin-controlled but rendered here for every storefront
+        visitor, unescaped, inside a <script> tag. JSON_HEX_TAG escapes < and > (e.g. in a
+        name like </script><script>...) so a stored value can never break out of the JSON-LD
+        script context and execute as HTML/JS.
+    --}}
+    <!-- JSON-LD Structured Data -->
+    <script type="application/ld+json">
+    {!! json_encode($breadcrumbSchema, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_HEX_TAG) !!}
+    </script>
+    @if(isset($itemListSchema))
+        <script type="application/ld+json">
+        {!! json_encode($itemListSchema, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_HEX_TAG) !!}
+        </script>
+    @endif
+@endpush
+
 <div
     class="min-h-screen bg-zinc-100 dark:bg-zinc-950"
     x-data
@@ -182,7 +247,7 @@
                             @php $attribute = $this->filterableAttributes->firstWhere('id', (int) $attributeId); @endphp
                             @if($attribute)
                                 @foreach($values as $value)
-                                    <button type="button" wire:key="active-filter-{{ $attributeId }}-{{ $value }}" wire:click="toggleAttributeValue({{ $attributeId }}, '{{ $value }}')" class="inline-flex items-center gap-1.5 pl-3.5 pr-2 py-1.5 rounded-full bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 text-xs font-semibold ring-1 ring-emerald-600/10 dark:ring-emerald-500/20 hover:bg-emerald-100 dark:hover:bg-emerald-900/50 transition-colors duration-200 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500">
+                                    <button type="button" wire:key="active-filter-{{ $attributeId }}-{{ $value }}" wire:click="toggleAttributeValue({{ $attributeId }}, @js($value))" class="inline-flex items-center gap-1.5 pl-3.5 pr-2 py-1.5 rounded-full bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 text-xs font-semibold ring-1 ring-emerald-600/10 dark:ring-emerald-500/20 hover:bg-emerald-100 dark:hover:bg-emerald-900/50 transition-colors duration-200 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500">
                                         {{ $attribute->name }}: {{ $value }}
                                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"></path></svg>
                                     </button>
@@ -221,12 +286,12 @@
                     <aside class="hidden lg:block">
                         <div class="lg:sticky lg:top-28 bg-zinc-50 dark:bg-zinc-800/60 rounded-3xl ring-1 ring-zinc-900/[0.04] dark:ring-white/[0.06] p-6">
                             <h2 class="font-display text-lg font-bold text-zinc-900 dark:text-white mb-6">{{ __('Filters') }}</h2>
-                            @include('components.public.shop-filters')
+                            @include('components.public.shop-filters', ['idPrefix' => 'desktop-'])
                         </div>
                     </aside>
 
                     {{-- Product grid --}}
-                    <div wire:loading.class="opacity-50 pointer-events-none" wire:target="search, sort, selectCategory, minPrice, maxPrice, inStockOnly, toggleAttributeValue, perPage, gotoPage, nextPage, previousPage" class="transition-opacity duration-200 min-w-0">
+                    <div wire:loading.class="opacity-50 pointer-events-none" wire:target="search, sort, selectCategory, minPrice, maxPrice, inStockOnly, toggleAttributeValue, perPage, gotoPage, nextPage, previousPage, clearFilters" class="transition-opacity duration-200 min-w-0">
                         @if($this->products->count() > 0)
                             <x-public.product-grid :products="$this->products" :columns="$columns" setting-key="storefront_shop_grid_variant" />
 
@@ -266,8 +331,8 @@
 
     {{-- Mobile filter drawer --}}
     @if($showFilters)
-        <div class="lg:hidden fixed inset-0 bg-zinc-950/60 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center animate-fade-in motion-reduce:animate-none" role="dialog" aria-modal="true" aria-label="{{ __('Filters') }}" wire:click.self="toggleFilters">
-            <div class="bg-white dark:bg-zinc-900 rounded-t-[2rem] sm:rounded-3xl max-w-lg w-full max-h-[85vh] overflow-y-auto shadow-[0_24px_64px_-16px_rgb(16_24_40_/_0.25)] ring-1 ring-zinc-900/[0.04] dark:ring-white/[0.06] animate-zoom-in motion-reduce:animate-none">
+        <div class="lg:hidden fixed inset-0 bg-zinc-950/60 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center animate-fade-in motion-reduce:animate-none" role="dialog" aria-modal="true" aria-label="{{ __('Filters') }}" wire:click.self="toggleFilters" @keydown.escape.window="$wire.set('showFilters', false)">
+            <div x-data x-trap.noscroll="true" class="bg-white dark:bg-zinc-900 rounded-t-[2rem] sm:rounded-3xl max-w-lg w-full max-h-[85vh] overflow-y-auto shadow-[0_24px_64px_-16px_rgb(16_24_40_/_0.25)] ring-1 ring-zinc-900/[0.04] dark:ring-white/[0.06] animate-zoom-in motion-reduce:animate-none">
                 <div class="sticky top-0 bg-white/95 dark:bg-zinc-900/95 backdrop-blur-xl border-b border-zinc-900/[0.06] dark:border-white/[0.08] px-6 py-4 flex justify-between items-center z-10">
                     <h2 class="font-display text-lg font-bold text-zinc-900 dark:text-white">{{ __('Filters') }}</h2>
                     <button wire:click="toggleFilters" class="w-10 h-10 rounded-full bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 flex items-center justify-center text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition-colors duration-200 cursor-pointer touch-manipulation focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500" aria-label="{{ __('Close') }}">
@@ -277,7 +342,7 @@
                     </button>
                 </div>
                 <div class="p-6">
-                    @include('components.public.shop-filters')
+                    @include('components.public.shop-filters', ['idPrefix' => 'mobile-'])
                 </div>
                 <div class="sticky bottom-0 bg-white/95 dark:bg-zinc-900/95 backdrop-blur-xl border-t border-zinc-900/[0.06] dark:border-white/[0.08] p-4 flex gap-3">
                     <button type="button" wire:click="clearFilters" class="flex-1 min-h-11 rounded-full text-sm font-semibold bg-zinc-50 dark:bg-zinc-800/60 text-zinc-700 dark:text-zinc-300 ring-1 ring-zinc-900/[0.06] dark:ring-white/[0.08] hover:ring-zinc-900/[0.15] dark:hover:ring-white/[0.2] transition-all duration-200 cursor-pointer touch-manipulation focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500">

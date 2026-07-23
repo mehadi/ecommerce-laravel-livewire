@@ -20,7 +20,7 @@
             <nav aria-label="{{ __('Footer') }}">
                 <ul class="flex flex-wrap items-center justify-center gap-x-7 gap-y-3 text-[15px]">
                     @foreach(array_merge($footerCompanyLinks, $footerLegalLinks) as $link)
-                        <li><a href="{{ $link['url'] }}" class="text-zinc-500 dark:text-zinc-400 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 rounded-md">{{ $link['label'] }}</a></li>
+                        <li><a href="{{ $link['url'] }}" wire:navigate class="text-zinc-500 dark:text-zinc-400 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 rounded-md">{{ $link['label'] }}</a></li>
                     @endforeach
                 </ul>
             </nav>

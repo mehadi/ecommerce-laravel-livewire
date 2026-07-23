@@ -1,9 +1,4 @@
 @push('head')
-    @if($category->image)
-        {{-- Category-specific image supplements the layout's default og:image --}}
-        <meta property="og:image" content="{{ asset('storage/'.$category->image) }}" />
-    @endif
-
     {{-- Pagination SEO hints --}}
     @if($this->products->currentPage() < $this->products->lastPage())
         <link rel="next" href="{{ $this->products->nextPageUrl() }}" />
@@ -13,13 +8,21 @@
     @endif
 
     @php
+        $categoryAncestors = [];
+        $ancestor = $category->parent;
+        while ($ancestor) {
+            $categoryAncestors[] = $ancestor;
+            $ancestor = $ancestor->parent;
+        }
+        $categoryAncestors = array_reverse($categoryAncestors);
+
         $breadcrumbItems = [
             ['name' => __('Home'), 'url' => route('home')],
             ['name' => __('Shop'), 'url' => route('shop')],
         ];
 
-        if ($category->parent) {
-            $breadcrumbItems[] = ['name' => $category->parent->name, 'url' => route('category.show', $category->parent->slug)];
+        foreach ($categoryAncestors as $categoryAncestor) {
+            $breadcrumbItems[] = ['name' => $categoryAncestor->name, 'url' => route('category.show', $categoryAncestor->slug)];
         }
 
         $breadcrumbItems[] = ['name' => $category->name, 'url' => url()->current()];
@@ -38,13 +41,15 @@
         ];
 
         if ($this->products->count() > 0) {
+            $productListOffset = $this->products->firstItem();
+
             $itemListSchema = [
                 '@context' => 'https://schema.org',
                 '@type' => 'ItemList',
-                'itemListElement' => $this->products->values()->map(function ($product, $index) {
+                'itemListElement' => $this->products->values()->map(function ($product, $index) use ($productListOffset) {
                     return [
                         '@type' => 'ListItem',
-                        'position' => $index + 1,
+                        'position' => $index + $productListOffset,
                         'url' => route('product.show', $product),
                     ];
                 })->values()->all(),
@@ -79,14 +84,14 @@
 
                 {{-- Breadcrumb --}}
                 <nav aria-label="{{ __('Breadcrumb') }}" class="mb-6">
-                    <ol class="flex flex-wrap items-center gap-1.5 text-xs font-semibold text-zinc-400 dark:text-zinc-500">
+                    <ol class="flex flex-wrap items-center gap-1.5 text-xs font-semibold text-zinc-500 dark:text-zinc-400">
                         <li><a href="{{ route('home') }}" wire:navigate class="hover:text-zinc-900 dark:hover:text-white transition-colors duration-200">{{ __('Home') }}</a></li>
                         <li aria-hidden="true">/</li>
                         <li><a href="{{ route('shop') }}" wire:navigate class="hover:text-zinc-900 dark:hover:text-white transition-colors duration-200">{{ __('Shop') }}</a></li>
-                        @if($category->parent)
+                        @foreach($categoryAncestors as $categoryAncestor)
                             <li aria-hidden="true">/</li>
-                            <li><a href="{{ route('category.show', $category->parent->slug) }}" wire:navigate class="hover:text-zinc-900 dark:hover:text-white transition-colors duration-200">{{ $category->parent->name }}</a></li>
-                        @endif
+                            <li><a href="{{ route('category.show', $categoryAncestor->slug) }}" wire:navigate class="hover:text-zinc-900 dark:hover:text-white transition-colors duration-200">{{ $categoryAncestor->name }}</a></li>
+                        @endforeach
                         <li aria-hidden="true">/</li>
                         <li aria-current="page" class="text-zinc-600 dark:text-zinc-300">{{ $category->name }}</li>
                     </ol>
@@ -130,7 +135,7 @@
                             <a
                                 href="{{ route('category.show', $subcategory->slug) }}"
                                 wire:navigate
-                                class="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-zinc-50 dark:bg-zinc-800/60 text-zinc-700 dark:text-zinc-300 text-sm font-semibold ring-1 ring-zinc-900/[0.06] dark:ring-white/[0.08] hover:ring-emerald-600/20 dark:hover:ring-emerald-500/30 hover:text-emerald-700 dark:hover:text-emerald-400 transition-all duration-200"
+                                class="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-zinc-50 dark:bg-zinc-800/60 text-zinc-700 dark:text-zinc-300 text-sm font-semibold ring-1 ring-zinc-900/[0.06] dark:ring-white/[0.08] hover:ring-emerald-600/20 dark:hover:ring-emerald-500/30 hover:text-emerald-700 dark:hover:text-emerald-400 transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500"
                             >
                                 {{ $subcategory->name }}
                                 <span class="text-xs text-zinc-400 dark:text-zinc-500 tabular-nums">{{ $subcategory->products_count }}</span>
@@ -146,7 +151,7 @@
                                 <a
                                     href="{{ route('category.show', $sibling->slug) }}"
                                     wire:navigate
-                                    class="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-zinc-50 dark:bg-zinc-800/60 text-zinc-700 dark:text-zinc-300 text-sm font-semibold ring-1 ring-zinc-900/[0.06] dark:ring-white/[0.08] hover:ring-emerald-600/20 dark:hover:ring-emerald-500/30 hover:text-emerald-700 dark:hover:text-emerald-400 transition-all duration-200"
+                                    class="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-zinc-50 dark:bg-zinc-800/60 text-zinc-700 dark:text-zinc-300 text-sm font-semibold ring-1 ring-zinc-900/[0.06] dark:ring-white/[0.08] hover:ring-emerald-600/20 dark:hover:ring-emerald-500/30 hover:text-emerald-700 dark:hover:text-emerald-400 transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500"
                                 >
                                     {{ $sibling->name }}
                                     <span class="text-xs text-zinc-400 dark:text-zinc-500 tabular-nums">{{ $sibling->products_count }}</span>
@@ -223,7 +228,7 @@
 
                 {{-- Results count + display controls --}}
                 <div id="product-results" class="flex flex-wrap items-center justify-between gap-3 mb-4">
-                    <p class="text-sm text-zinc-500 dark:text-zinc-400">
+                    <p class="text-sm text-zinc-500 dark:text-zinc-400" aria-live="polite" aria-atomic="true">
                         @if($this->products->total() > 0)
                             {{ __('Showing :first–:last of :total products', ['first' => $this->products->firstItem(), 'last' => $this->products->lastItem(), 'total' => $this->products->total()]) }}
                         @else
@@ -325,7 +330,7 @@
                     </aside>
 
                     {{-- Product grid --}}
-                    <div wire:loading.class="opacity-50 pointer-events-none" wire:target="search, sort, minPrice, maxPrice, inStockOnly, perPage, gotoPage, nextPage, previousPage" class="transition-opacity duration-200 min-w-0">
+                    <div wire:loading.class="opacity-50 pointer-events-none" wire:target="search, sort, minPrice, maxPrice, inStockOnly, perPage, gotoPage, nextPage, previousPage" class="transition-opacity duration-200 min-w-0" aria-live="polite" aria-atomic="true">
                         @if($this->products->count() > 0)
                             <x-public.product-grid :products="$this->products" :columns="$columns" setting-key="storefront_shop_grid_variant" />
 
@@ -343,6 +348,8 @@
                                 <p class="font-display text-lg font-semibold text-zinc-900 dark:text-white mb-1.5">
                                     @if($search !== '')
                                         {{ __('No products match ":search"', ['search' => $search]) }}
+                                    @elseif($this->activeFilterCount > 0)
+                                        {{ __('No products match your filters') }}
                                     @else
                                         {{ __('No products found in :category', ['category' => $category->name]) }}
                                     @endif
@@ -365,8 +372,16 @@
 
     {{-- Mobile filter drawer --}}
     @if($showFilters)
-        <div class="lg:hidden fixed inset-0 bg-zinc-950/60 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center animate-fade-in motion-reduce:animate-none" role="dialog" aria-modal="true" aria-label="{{ __('Filters') }}" wire:click.self="toggleFilters">
-            <div class="bg-white dark:bg-zinc-900 rounded-t-[2rem] sm:rounded-3xl max-w-lg w-full max-h-[85vh] overflow-y-auto shadow-[0_24px_64px_-16px_rgb(16_24_40_/_0.25)] ring-1 ring-zinc-900/[0.04] dark:ring-white/[0.06] animate-zoom-in motion-reduce:animate-none">
+        <div
+            class="lg:hidden fixed inset-0 bg-zinc-950/60 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center animate-fade-in motion-reduce:animate-none"
+            role="dialog"
+            aria-modal="true"
+            aria-label="{{ __('Filters') }}"
+            wire:click.self="toggleFilters"
+            x-data="{ show: @entangle('showFilters') }"
+            @keydown.escape.window="$wire.set('showFilters', false)"
+        >
+            <div x-trap.noscroll="show" class="bg-white dark:bg-zinc-900 rounded-t-[2rem] sm:rounded-3xl max-w-lg w-full max-h-[85vh] overflow-y-auto shadow-[0_24px_64px_-16px_rgb(16_24_40_/_0.25)] ring-1 ring-zinc-900/[0.04] dark:ring-white/[0.06] animate-zoom-in motion-reduce:animate-none">
                 <div class="sticky top-0 bg-white/95 dark:bg-zinc-900/95 backdrop-blur-xl border-b border-zinc-900/[0.06] dark:border-white/[0.08] px-6 py-4 flex justify-between items-center z-10">
                     <h2 class="font-display text-lg font-bold text-zinc-900 dark:text-white">{{ __('Filters') }}</h2>
                     <button wire:click="toggleFilters" class="w-10 h-10 rounded-full bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 flex items-center justify-center text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition-colors duration-200 cursor-pointer touch-manipulation focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500" aria-label="{{ __('Close') }}">

@@ -5,8 +5,15 @@
             '@type' => 'Product',
             'name' => $this->product->name,
             'description' => $this->product->description ?? '',
-            'image' => $this->product->primary_image ? asset('storage/'.$this->product->primary_image) : [],
         ];
+
+        if ($this->product->primary_image) {
+            $productData['image'] = asset('storage/'.$this->product->primary_image);
+        }
+
+        if ($this->product->sku) {
+            $productData['sku'] = $this->product->sku;
+        }
 
         if ($this->product->hasAttributes() && $this->product->productAttributes->isNotEmpty()) {
             $prices = $this->product->productAttributes->pluck('price')->filter()->toArray();
@@ -31,10 +38,38 @@
                 'priceValidUntil' => now()->addYear()->format('Y-m-d'),
             ];
         }
+
+        $breadcrumbItems = [
+            ['name' => __('Shop'), 'url' => route('shop')],
+        ];
+
+        if ($this->product->category) {
+            $breadcrumbItems[] = ['name' => $this->product->category->name, 'url' => route('category.show', $this->product->category)];
+        }
+
+        $breadcrumbItems[] = ['name' => $this->product->name, 'url' => route('product.show', $this->product)];
+
+        $breadcrumbSchema = [
+            '@context' => 'https://schema.org',
+            '@type' => 'BreadcrumbList',
+            'itemListElement' => collect($breadcrumbItems)->map(function ($item, $index) {
+                return [
+                    '@type' => 'ListItem',
+                    'position' => $index + 1,
+                    'name' => $item['name'],
+                    'item' => $item['url'],
+                ];
+            })->values()->all(),
+        ];
     @endphp
     <!-- JSON-LD Structured Data -->
+    {{-- JSON_HEX_TAG (and no JSON_UNESCAPED_SLASHES) so a description containing
+         "</script>" can never terminate this block early — see stored-XSS review. --}}
     <script type="application/ld+json">
-    {!! json_encode($productData, JSON_UNESCAPED_SLASHES) !!}
+    {!! json_encode($productData, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) !!}
+    </script>
+    <script type="application/ld+json">
+    {!! json_encode($breadcrumbSchema, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) !!}
     </script>
 @endpush
 
@@ -65,7 +100,7 @@
                                 <svg class="w-3.5 h-3.5 text-zinc-300 dark:text-zinc-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"></path></svg>
                             </li>
                             <li>
-                                <a href="{{ route('shop', ['category' => $this->product->category_id]) }}" wire:navigate class="font-medium text-zinc-500 dark:text-zinc-400 hover:text-emerald-700 dark:hover:text-emerald-400 transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 rounded-lg">
+                                <a href="{{ route('category.show', $this->product->category) }}" wire:navigate class="font-medium text-zinc-500 dark:text-zinc-400 hover:text-emerald-700 dark:hover:text-emerald-400 transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 rounded-lg">
                                     {{ $this->product->category->name }}
                                 </a>
                             </li>

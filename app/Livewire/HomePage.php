@@ -24,6 +24,7 @@ class HomePage extends Component
 {
     use HasShoppingCart;
 
+    #[Computed]
     public function getHeroSectionProperty(): ?LandingPageSection
     {
         return Cache::remember(Tenancy::cacheKey('landing.sections.hero'), 3600, function () {
@@ -38,6 +39,7 @@ class HomePage extends Component
      * The product spotlighted inside the hero visual. Purely presentational —
      * the homepage has no single-product buy flow.
      */
+    #[Computed]
     public function getHeroProductProperty(): ?Product
     {
         return Cache::remember(Tenancy::cacheKey('home.hero_product'), 3600, function () {
@@ -48,6 +50,24 @@ class HomePage extends Component
         });
     }
 
+    /**
+     * A second, distinct product for the hero's "spotlight" card -- shares the
+     * heroProduct's ordering but excludes it so the two cards never repeat.
+     */
+    #[Computed]
+    public function getHeroSpotlightProductProperty(): ?Product
+    {
+        return Cache::remember(Tenancy::cacheKey('home.hero_spotlight_product'), 3600, function () {
+            return Product::where('is_active', true)
+                ->when($this->heroProduct, fn ($query) => $query->where('id', '!=', $this->heroProduct->id))
+                ->whereNotNull('primary_image')
+                ->orderByDesc('is_featured')
+                ->orderBy('order')
+                ->first();
+        });
+    }
+
+    #[Computed]
     public function getFeaturedProductsProperty()
     {
         return Cache::remember(Tenancy::cacheKey('landing.featured_products'), 3600, function () {
@@ -60,6 +80,7 @@ class HomePage extends Component
         });
     }
 
+    #[Computed]
     public function getFeaturedCategoriesProperty()
     {
         return Cache::remember(Tenancy::cacheKey('landing.featured_categories'), 3600, function () {
@@ -72,12 +93,24 @@ class HomePage extends Component
         });
     }
 
+    #[Computed]
     public function getTestimonialsProperty()
     {
         return Cache::remember(Tenancy::cacheKey('testimonials.active'), 3600, function () {
             return Testimonial::where('is_active', true)
                 ->orderBy('order')
                 ->limit(6)
+                ->get();
+        });
+    }
+
+    #[Computed]
+    public function getFaqsProperty()
+    {
+        return Cache::remember(Tenancy::cacheKey('landing.sections.faq'), 3600, function () {
+            return LandingPageSection::where('type', 'faq')
+                ->where('is_active', true)
+                ->orderBy('order')
                 ->get();
         });
     }

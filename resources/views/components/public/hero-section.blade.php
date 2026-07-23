@@ -1,6 +1,9 @@
 @props([
     'heroSection',
     'product',
+    // A second, distinct product for the hero's "spotlight" card. Optional --
+    // when omitted (e.g. the landing-page funnel), falls back to its own query below.
+    'heroSpotlightProduct' => null,
     'customTitle' => null,
     'customContent' => null,
     'customBadgeText' => null,
@@ -41,10 +44,10 @@
 
     $heroImage = ($heroSection && $heroSection->image) ? $heroSection->image : $product?->primary_image;
 
-    $heroExtras = Cache::remember(Tenancy::cacheKey('landing.hero.extras.'.($product?->id ?? 'none')), 1800, function () use ($product) {
+    $heroExtras = Cache::remember(Tenancy::cacheKey('landing.hero.extras.'.($product?->id ?? 'none')), 1800, function () use ($product, $heroSpotlightProduct) {
         $weightValues = Attribute::where('slug', 'weight')->with('activeValues')->first()?->activeValues ?? collect();
 
-        $spotlightProduct = Product::where('is_active', true)
+        $spotlightProduct = $heroSpotlightProduct ?? Product::where('is_active', true)
             ->when($product, fn ($query) => $query->where('id', '!=', $product->id))
             ->whereNotNull('primary_image')
             ->orderByDesc('is_featured')
@@ -75,7 +78,9 @@
         ];
     });
 
-    $heroTitle = $customTitle ?: ($heroSection?->title ?? '');
+    // Admins can leave both the landing-page section title and the custom title
+    // blank; without this chain the page's only h1 would ship empty.
+    $heroTitle = $customTitle ?: ($heroSection?->title ?: ($product?->name ?: Setting::get('site_name', config('app.name'))));
     $heroContent = $customContent ?: ($heroSection?->content ?? '');
     // Landing-page config override wins, then the tenant's hero settings,
     // then the stock badge (only when a hero section exists at all).
@@ -92,6 +97,28 @@
     $heroShowStats = ($heroSettings['hero_show_stats'] ?? '1') !== '0';
     $heroOrderCountLabel = $heroExtras['orderCount'] > 999 ? number_format($heroExtras['orderCount'] / 1000, 1).'K+' : $heroExtras['orderCount'].'+';
 @endphp
+
+@if($heroExtras['testimonialCount'] > 0)
+    @push('head')
+        @php
+            // A standalone AggregateRating node (rather than a second Organization
+            // object) so this doesn't collide with the sitewide Organization JSON-LD
+            // the shared layout already emits in <head>.
+            $aggregateRatingSchema = [
+                '@context' => 'https://schema.org',
+                '@type' => 'AggregateRating',
+                'itemReviewed' => [
+                    '@type' => 'Organization',
+                    'name' => Setting::get('site_name', config('app.name')),
+                    'url' => url('/'),
+                ],
+                'ratingValue' => $heroExtras['avgRating'],
+                'reviewCount' => $heroExtras['testimonialCount'],
+            ];
+        @endphp
+        <script type="application/ld+json">{!! json_encode($aggregateRatingSchema, JSON_HEX_TAG | JSON_UNESCAPED_SLASHES) !!}</script>
+    @endpush
+@endif
 
 @if($heroSection || $customTitle || $product)
     @include('components.public.heroes.'.$heroVariant)

@@ -129,8 +129,8 @@
                     </svg>
                 </div>
                 <div class="space-y-1">
-                    <flux:heading size="sm">{{ __('Page Configuration') }}</flux:heading>
-                    <p class="text-sm text-zinc-500 dark:text-zinc-400">{{ __('Choose sections, testimonials, and FAQs to display') }}</p>
+                    <flux:heading size="sm">{{ __('Hero Section') }}</flux:heading>
+                    <p class="text-sm text-zinc-500 dark:text-zinc-400">{{ __('The pinned first section — always visible, tied to the selected product') }}</p>
                 </div>
             </div>
 
@@ -151,86 +151,20 @@
 
                 <flux:field>
                     <flux:label>{{ __('Hero Badge Text') }}</flux:label>
-                    <flux:input wire:model="config.hero_badge_text" placeholder="{{ __('e.g. 100% Natural & Premium Quality') }}" />
+                    <flux:input wire:model="heroBadgeText" placeholder="{{ __('e.g. 100% Natural & Premium Quality') }}" />
                     <p class="text-xs text-zinc-500 dark:text-zinc-400">{{ __('Optional: Custom text for the badge above the hero title. Leave empty to use default.') }}</p>
                 </flux:field>
 
                 <flux:field>
                     <flux:label>{{ __('Hero Title') }}</flux:label>
-                    <flux:input wire:model="config.hero_title" placeholder="{{ __('e.g. Premium Date Molasses') }}" />
+                    <flux:input wire:model="heroTitle" placeholder="{{ __('e.g. Premium Date Molasses') }}" />
                     <p class="text-xs text-zinc-500 dark:text-zinc-400">{{ __('Optional: Custom title for the hero section. Leave empty to use default hero section title.') }}</p>
                 </flux:field>
 
                 <flux:field>
                     <flux:label>{{ __('Hero Content') }}</flux:label>
-                    <flux:textarea wire:model="config.hero_content" rows="3" placeholder="{{ __('e.g. 100% Pure, Natural Sweetener. Rich in minerals and nutrients.') }}" />
+                    <flux:textarea wire:model="heroContent" rows="3" placeholder="{{ __('e.g. 100% Pure, Natural Sweetener. Rich in minerals and nutrients.') }}" />
                     <p class="text-xs text-zinc-500 dark:text-zinc-400">{{ __('Optional: Custom description text for the hero section. Leave empty to use default hero section content.') }}</p>
-                </flux:field>
-
-                <flux:field>
-                    <flux:label>{{ __('Features Sections') }}</flux:label>
-                    <flux:input wire:model.live.debounce.300ms="featureSectionSearch" placeholder="{{ __('Search feature sections...') }}" class="mb-3" />
-                    <div class="space-y-2 max-h-56 overflow-y-auto rounded-lg border border-zinc-200 bg-zinc-50/50 p-4 dark:border-zinc-700 dark:bg-zinc-800/50">
-                        @forelse($featureSections as $section)
-                            <div class="flex items-center gap-2 rounded-md p-2 hover:bg-white dark:hover:bg-zinc-700/50 transition-colors">
-                                <flux:checkbox 
-                                    wire:model="config.features_section_ids" 
-                                    value="{{ (string) $section->id }}"
-                                    label="{{ $section->title_en ?? $section->title }}"
-                                />
-                            </div>
-                        @empty
-                            <div class="py-8 text-center">
-                                <p class="text-sm text-zinc-500 dark:text-zinc-400">{{ __('No feature sections available') }}</p>
-                                <p class="mt-1 text-xs text-zinc-400 dark:text-zinc-500">{{ __('Create feature sections in the Sections management page') }}</p>
-                            </div>
-                        @endforelse
-                    </div>
-                    <flux:description>{{ __('Select multiple feature sections to display on your landing page') }}</flux:description>
-                </flux:field>
-
-                <flux:field>
-                    <flux:label>{{ __('Testimonials') }}</flux:label>
-                    <flux:input wire:model.live.debounce.300ms="testimonialSearch" placeholder="{{ __('Search testimonials...') }}" class="mb-3" />
-                    <div class="space-y-2 max-h-56 overflow-y-auto rounded-lg border border-zinc-200 bg-zinc-50/50 p-4 dark:border-zinc-700 dark:bg-zinc-800/50">
-                        @forelse($testimonials as $testimonial)
-                            <div class="flex items-center gap-2 rounded-md p-2 hover:bg-white dark:hover:bg-zinc-700/50 transition-colors">
-                                <flux:checkbox 
-                                    wire:model="config.testimonial_ids" 
-                                    value="{{ (string) $testimonial->id }}"
-                                    label="{{ $testimonial->name }} - {{ \Illuminate\Support\Str::limit($testimonial->content, 50) }}"
-                                />
-                            </div>
-                        @empty
-                            <div class="py-8 text-center">
-                                <p class="text-sm text-zinc-500 dark:text-zinc-400">{{ __('No testimonials available') }}</p>
-                                <p class="mt-1 text-xs text-zinc-400 dark:text-zinc-500">{{ __('Create testimonials in the Testimonials management page') }}</p>
-                            </div>
-                        @endforelse
-                    </div>
-                    <flux:description>{{ __('Select testimonials to build trust and credibility') }}</flux:description>
-                </flux:field>
-
-                <flux:field>
-                    <flux:label>{{ __('FAQ Sections') }}</flux:label>
-                    <flux:input wire:model.live.debounce.300ms="faqSectionSearch" placeholder="{{ __('Search FAQ sections...') }}" class="mb-3" />
-                    <div class="space-y-2 max-h-56 overflow-y-auto rounded-lg border border-zinc-200 bg-zinc-50/50 p-4 dark:border-zinc-700 dark:bg-zinc-800/50">
-                        @forelse($faqSections as $section)
-                            <div class="flex items-center gap-2 rounded-md p-2 hover:bg-white dark:hover:bg-zinc-700/50 transition-colors">
-                                <flux:checkbox 
-                                    wire:model="config.faq_section_ids" 
-                                    value="{{ (string) $section->id }}"
-                                    label="{{ $section->title_en ?? $section->title }}"
-                                />
-                            </div>
-                        @empty
-                            <div class="py-8 text-center">
-                                <p class="text-sm text-zinc-500 dark:text-zinc-400">{{ __('No FAQ sections available') }}</p>
-                                <p class="mt-1 text-xs text-zinc-400 dark:text-zinc-500">{{ __('Create FAQ sections in the Sections management page') }}</p>
-                            </div>
-                        @endforelse
-                    </div>
-                    <flux:description>{{ __('Select FAQ sections to answer common questions') }}</flux:description>
                 </flux:field>
             </div>
         </section>
@@ -244,35 +178,123 @@
                     </svg>
                 </div>
                 <div class="space-y-1">
-                    <flux:heading size="sm">{{ __('Section Visibility') }}</flux:heading>
-                    <p class="text-sm text-zinc-500 dark:text-zinc-400">{{ __('Toggle which sections appear on your landing page') }}</p>
+                    <flux:heading size="sm">{{ __('Page Layout') }}</flux:heading>
+                    <p class="text-sm text-zinc-500 dark:text-zinc-400">{{ __('Drag to reorder, toggle to show or hide, and pick the content each section pulls from') }}</p>
                 </div>
             </div>
 
-            <div class="grid gap-3 md:grid-cols-2">
-                <div class="flex items-center gap-3 rounded-lg border border-zinc-200 bg-zinc-50/50 p-3 dark:border-zinc-700 dark:bg-zinc-800/50">
-                    <flux:switch wire:model="config.show_trust_badges" label="{{ __('Trust Badges') }}" />
-                </div>
+            @php
+                $blockLabels = [
+                    'trust_badges' => __('Trust Badges'),
+                    'product_details' => __('Product Details'),
+                    'features' => __('Features'),
+                    'testimonials' => __('Testimonials'),
+                    'about' => __('About'),
+                    'benefits' => __('Benefits'),
+                    'faq' => __('FAQ'),
+                    'cta' => __('Call to Action'),
+                ];
 
-                <div class="flex items-center gap-3 rounded-lg border border-zinc-200 bg-zinc-50/50 p-3 dark:border-zinc-700 dark:bg-zinc-800/50">
-                    <flux:switch wire:model="config.show_product_details" label="{{ __('Product Details') }}" />
-                </div>
+                $blockPickers = [
+                    'features' => ['items' => $featureSections, 'idsKey' => 'section_ids', 'search' => 'featureSectionSearch', 'labelKey' => 'title'],
+                    'testimonials' => ['items' => $testimonials, 'idsKey' => 'testimonial_ids', 'search' => 'testimonialSearch', 'labelKey' => 'name'],
+                    'about' => ['items' => $aboutSections, 'idsKey' => 'section_ids', 'search' => 'aboutSectionSearch', 'labelKey' => 'title'],
+                    'benefits' => ['items' => $benefitsSections, 'idsKey' => 'section_ids', 'search' => 'benefitsSectionSearch', 'labelKey' => 'title'],
+                    'faq' => ['items' => $faqSections, 'idsKey' => 'section_ids', 'search' => 'faqSectionSearch', 'labelKey' => 'title'],
+                ];
+            @endphp
 
-                <div class="flex items-center gap-3 rounded-lg border border-zinc-200 bg-zinc-50/50 p-3 dark:border-zinc-700 dark:bg-zinc-800/50">
-                    <flux:switch wire:model="config.show_features" label="{{ __('Features') }}" />
-                </div>
+            <div class="flex items-center gap-3 rounded-lg border border-zinc-200 bg-zinc-50/50 px-4 py-3 text-sm text-zinc-600 dark:border-zinc-700 dark:bg-zinc-800/50 dark:text-zinc-400">
+                <svg class="h-4 w-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
+                <span><strong>{{ __('Hero') }}</strong> — {{ __('always shown first, configured above') }}</span>
+            </div>
 
-                <div class="flex items-center gap-3 rounded-lg border border-zinc-200 bg-zinc-50/50 p-3 dark:border-zinc-700 dark:bg-zinc-800/50">
-                    <flux:switch wire:model="config.show_testimonials" label="{{ __('Testimonials') }}" />
-                </div>
+            <div
+                class="space-y-3"
+                x-data="{
+                    draggedType: null,
 
-                <div class="flex items-center gap-3 rounded-lg border border-zinc-200 bg-zinc-50/50 p-3 dark:border-zinc-700 dark:bg-zinc-800/50">
-                    <flux:switch wire:model="config.show_faq" label="{{ __('FAQ') }}" />
-                </div>
+                    getBlockTypes() {
+                        return Array.from(this.$el.querySelectorAll(':scope > [data-block-type]')).map(row => row.getAttribute('data-block-type'));
+                    },
 
-                <div class="flex items-center gap-3 rounded-lg border border-zinc-200 bg-zinc-50/50 p-3 dark:border-zinc-700 dark:bg-zinc-800/50">
-                    <flux:switch wire:model="config.show_cta" label="{{ __('Call to Action') }}" />
-                </div>
+                    handleDragStart(event, type) {
+                        this.draggedType = type;
+                        event.dataTransfer.effectAllowed = 'move';
+                        event.target.style.opacity = '0.5';
+                    },
+
+                    handleDragEnd(event) {
+                        event.target.style.opacity = '1';
+                        this.draggedType = null;
+                    },
+
+                    handleDragOver(event) {
+                        event.preventDefault();
+                        event.dataTransfer.dropEffect = 'move';
+                    },
+
+                    handleDrop(event, type) {
+                        event.preventDefault();
+
+                        if (this.draggedType === null || this.draggedType === type) {
+                            return;
+                        }
+
+                        const types = this.getBlockTypes();
+                        const oldIndex = types.indexOf(this.draggedType);
+                        const newIndex = types.indexOf(type);
+
+                        types.splice(oldIndex, 1);
+                        types.splice(newIndex, 0, this.draggedType);
+
+                        @this.call('updateBlockOrder', types);
+
+                        this.draggedType = null;
+                    }
+                }"
+            >
+                @foreach($blocks as $index => $block)
+                    <div
+                        data-block-type="{{ $block['type'] }}"
+                        draggable="true"
+                        x-on:dragstart="handleDragStart($event, '{{ $block['type'] }}')"
+                        x-on:dragend="handleDragEnd($event)"
+                        x-on:dragover="handleDragOver($event)"
+                        x-on:drop="handleDrop($event, '{{ $block['type'] }}')"
+                        class="rounded-lg border border-zinc-200 bg-zinc-50/50 dark:border-zinc-700 dark:bg-zinc-800/50"
+                        wire:key="block-{{ $block['type'] }}"
+                    >
+                        <div class="flex items-center gap-3 p-3">
+                            <span class="cursor-move text-zinc-400 dark:text-zinc-500" aria-hidden="true">
+                                <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 20 20"><path d="M7 4a1 1 0 11-2 0 1 1 0 012 0zM7 10a1 1 0 11-2 0 1 1 0 012 0zM7 16a1 1 0 11-2 0 1 1 0 012 0zM15 4a1 1 0 11-2 0 1 1 0 012 0zM15 10a1 1 0 11-2 0 1 1 0 012 0zM15 16a1 1 0 11-2 0 1 1 0 012 0z"></path></svg>
+                            </span>
+                            <span class="flex-1 text-sm font-medium text-zinc-700 dark:text-zinc-200">{{ $blockLabels[$block['type']] ?? $block['type'] }}</span>
+                            <flux:switch wire:model="blocks.{{ $index }}.enabled" />
+                        </div>
+
+                        @if(isset($blockPickers[$block['type']]))
+                            @php $picker = $blockPickers[$block['type']]; @endphp
+                            <div class="border-t border-zinc-200 p-3 dark:border-zinc-700">
+                                <flux:input wire:model.live.debounce.300ms="{{ $picker['search'] }}" placeholder="{{ __('Search...') }}" size="sm" class="mb-2" />
+                                <div class="max-h-40 space-y-1 overflow-y-auto rounded-md border border-zinc-200 bg-white p-2 dark:border-zinc-700 dark:bg-zinc-900">
+                                    @forelse($picker['items'] as $item)
+                                        <div class="flex items-center gap-2 rounded-md p-1.5 hover:bg-zinc-50 dark:hover:bg-zinc-800">
+                                            <flux:checkbox
+                                                wire:model="blocks.{{ $index }}.{{ $picker['idsKey'] }}"
+                                                value="{{ (string) $item->id }}"
+                                                label="{{ $picker['labelKey'] === 'name' ? $item->name.' - '.\Illuminate\Support\Str::limit($item->content, 40) : ($item->title_en ?? $item->title) }}"
+                                            />
+                                        </div>
+                                    @empty
+                                        <p class="p-2 text-xs text-zinc-500 dark:text-zinc-400">{{ __('None available — leave unchecked to show all active items of this type.') }}</p>
+                                    @endforelse
+                                </div>
+                                <p class="mt-1.5 text-xs text-zinc-500 dark:text-zinc-400">{{ __('Leave all unchecked to automatically show every active item of this type.') }}</p>
+                            </div>
+                        @endif
+                    </div>
+                @endforeach
             </div>
         </section>
 

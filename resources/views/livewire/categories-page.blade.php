@@ -9,13 +9,16 @@
             ],
         ];
 
+        $categoryListStart = $this->categories->firstItem() ?? 1;
+
         $categoryItemListSchema = [
             '@context' => 'https://schema.org',
             '@type' => 'ItemList',
-            'itemListElement' => $this->categories->values()->map(function ($card, $index) {
+            'itemListElement' => $this->categories->values()->map(function ($card, $index) use ($categoryListStart) {
                 return [
                     '@type' => 'ListItem',
-                    'position' => $index + 1,
+                    'position' => $categoryListStart + $index,
+                    'name' => $card['category']->name,
                     'url' => route('category.show', $card['category']->slug),
                 ];
             })->all(),
@@ -142,7 +145,7 @@
                 </div>
 
                 {{-- Category grid --}}
-                <div wire:loading.class="opacity-50 pointer-events-none" wire:target="search, perPage, gotoPage, nextPage, previousPage" class="transition-opacity duration-200">
+                <div wire:loading.class="opacity-50 pointer-events-none" wire:target="search, columns, perPage, gotoPage, nextPage, previousPage" class="transition-opacity duration-200">
                 @if($this->categories->count() > 0)
                     <x-public.category-grid :cards="$this->categories" :grid-cols-class="$this->gridColsClass" />
 

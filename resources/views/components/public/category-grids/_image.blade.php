@@ -1,11 +1,14 @@
 {{-- Category image or a gradient box-icon placeholder. Expects $category;
      optional $imgClass (applied to the <img>), $iconClass (placeholder icon
-     size/color) and $placeholderClass (placeholder wrapper background). --}}
+     size/color), $placeholderClass (placeholder wrapper background), $loading
+     (img loading attribute, default "lazy") and $fetchpriority (img
+     fetchpriority attribute, e.g. "high" for a likely-LCP hero image). --}}
 @if($category->image)
     <img
         src="{{ asset('storage/'.$category->image) }}"
         alt="{{ $category->name }}"
-        loading="lazy"
+        loading="{{ $loading ?? 'lazy' }}"
+        @if($fetchpriority ?? null) fetchpriority="{{ $fetchpriority }}" @endif
         class="{{ $imgClass ?? 'w-full h-full object-cover' }}"
     >
 @else

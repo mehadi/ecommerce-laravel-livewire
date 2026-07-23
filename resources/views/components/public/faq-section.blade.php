@@ -6,14 +6,18 @@
             $faqSchema = [
                 '@context' => 'https://schema.org',
                 '@type' => 'FAQPage',
-                'mainEntity' => $faqs->map(fn ($faq) => [
-                    '@type' => 'Question',
-                    'name' => $faq->title,
-                    'acceptedAnswer' => [
-                        '@type' => 'Answer',
-                        'text' => $faq->content ?? '',
-                    ],
-                ])->values()->all(),
+                // FAQPage requires a non-empty Question name and Answer text — an admin-entered
+                // row missing either would otherwise ship an invalid empty fact.
+                'mainEntity' => $faqs
+                    ->filter(fn ($faq) => filled($faq->title) && filled($faq->content))
+                    ->map(fn ($faq) => [
+                        '@type' => 'Question',
+                        'name' => $faq->title,
+                        'acceptedAnswer' => [
+                            '@type' => 'Answer',
+                            'text' => $faq->content,
+                        ],
+                    ])->values()->all(),
             ];
         @endphp
         <script type="application/ld+json">{!! json_encode($faqSchema, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) !!}</script>
@@ -25,9 +29,7 @@
             <div class="grid lg:grid-cols-12 gap-10 lg:gap-16">
                 <div class="lg:col-span-4">
                     <div class="lg:sticky lg:top-28">
-                        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 text-xs font-semibold uppercase tracking-widest ring-1 ring-emerald-600/10 dark:ring-emerald-500/20 mb-5">
-                            {{ __('FAQ') }}
-                        </span>
+                        <x-public.eyebrow-badge :text="__('FAQ')" class="mb-5" />
                         <h2 id="faq-heading" class="font-display text-3xl sm:text-4xl lg:text-[2.75rem] font-bold leading-tight text-zinc-900 dark:text-white tracking-tight text-balance">
                             {{ __('Frequently Asked Questions') }}
                         </h2>

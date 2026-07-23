@@ -52,7 +52,7 @@
                     :class="shown ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'"
                 >
                     <div class="w-12 h-12 rounded-full flex items-center justify-center ring-1 {{ $badgeColors[$badge['color']] }}">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8" aria-hidden="true">
                             <path stroke-linecap="round" stroke-linejoin="round" d="{{ $badge['icon'] }}"></path>
                         </svg>
                     </div>

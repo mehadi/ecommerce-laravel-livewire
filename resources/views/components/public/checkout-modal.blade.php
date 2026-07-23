@@ -26,6 +26,7 @@
         aria-label="{{ __('Checkout') }}"
     >
         <div
+            x-trap.noscroll="show"
             x-transition:enter="transition ease-out duration-300"
             x-transition:enter-start="{{ $checkoutIsPanel ? 'translate-x-full' : 'opacity-0 scale-95 translate-y-4' }}"
             x-transition:enter-end="{{ $checkoutIsPanel ? 'translate-x-0' : 'opacity-100 scale-100 translate-y-0' }}"
@@ -34,44 +35,6 @@
             x-transition:leave-end="{{ $checkoutIsPanel ? 'translate-x-full' : 'opacity-0 scale-95 translate-y-4' }}"
             class="bg-white dark:bg-zinc-900 flex flex-col shadow-[0_24px_64px_-16px_rgb(16_24_40_/_0.25)] ring-1 ring-zinc-900/[0.04] dark:ring-white/[0.06] overflow-hidden {{ $checkoutIsPanel ? 'h-full w-full sm:max-w-lg' : ($checkoutIsWide ? 'rounded-3xl max-w-4xl w-full max-h-[92vh]' : 'rounded-3xl max-w-2xl w-full max-h-[92vh]') }}"
         >
-            <!-- Custom Scrollbar Container -->
-            <style>
-                .checkout-scroll::-webkit-scrollbar {
-                    width: 8px;
-                }
-                .checkout-scroll::-webkit-scrollbar-track {
-                    background: rgba(0, 0, 0, 0.04);
-                    border-radius: 10px;
-                }
-                .checkout-scroll::-webkit-scrollbar-thumb {
-                    background: #10b981;
-                    border-radius: 10px;
-                }
-                .checkout-scroll::-webkit-scrollbar-thumb:hover {
-                    background: #059669;
-                }
-                .dark .checkout-scroll::-webkit-scrollbar-track {
-                    background: rgba(255, 255, 255, 0.05);
-                }
-                .custom-scrollbar::-webkit-scrollbar {
-                    width: 6px;
-                }
-                .custom-scrollbar::-webkit-scrollbar-track {
-                    background: rgba(0, 0, 0, 0.04);
-                    border-radius: 10px;
-                }
-                .custom-scrollbar::-webkit-scrollbar-thumb {
-                    background: #a1a1aa;
-                    border-radius: 10px;
-                }
-                .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-                    background: #71717a;
-                }
-                .dark .custom-scrollbar::-webkit-scrollbar-track {
-                    background: rgba(255, 255, 255, 0.05);
-                }
-            </style>
-
             <!-- Header -->
             <div class="sticky top-0 bg-white/95 dark:bg-zinc-900/95 backdrop-blur-xl border-b border-zinc-900/[0.04] dark:border-white/[0.06] px-6 sm:px-8 py-4 sm:py-5 flex justify-between items-center z-20">
                 <h2 class="font-display text-xl sm:text-2xl font-bold tracking-tight text-zinc-900 dark:text-white flex items-center gap-3">

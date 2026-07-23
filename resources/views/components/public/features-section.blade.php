@@ -15,6 +15,7 @@
             <div class="grid sm:grid-cols-2 md:grid-cols-3 gap-6 sm:gap-8 items-stretch">
                 @foreach($features as $index => $feature)
                     <div
+                        wire:key="feature-{{ $feature->id }}"
                         x-data="{ shown: false }"
                         x-intersect.once="shown = true"
                         style="transition-delay: {{ min($index, 5) * 75 }}ms"
@@ -28,7 +29,7 @@
                                 </div>
                             @else
                                 <div class="w-12 h-12 bg-emerald-50 dark:bg-emerald-900/30 ring-1 ring-emerald-600/10 dark:ring-emerald-500/20 rounded-full flex items-center justify-center group-hover:scale-105 transition-transform duration-300 motion-reduce:transform-none">
-                                    <svg class="w-6 h-6 text-emerald-600 dark:text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8">
+                                    <svg class="w-6 h-6 text-emerald-600 dark:text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8" aria-hidden="true">
                                         <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"></path>
                                     </svg>
                                 </div>

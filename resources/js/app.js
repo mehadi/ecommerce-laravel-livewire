@@ -1,4 +1,12 @@
 import './dashboard.js';
+import focus from '@alpinejs/focus';
+
+// Registered before Livewire's bundled Alpine calls start() — used by the cart,
+// checkout, order-success, and mobile-filter dialogs to trap Tab inside the open
+// panel and return focus to the trigger on close (see x-trap="show" on each).
+document.addEventListener('alpine:init', () => {
+    window.Alpine.plugin(focus);
+});
 
 window.richTextEditor = ({ value }) => ({
     value,

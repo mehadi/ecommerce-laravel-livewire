@@ -14,7 +14,7 @@
     if ($product->hasAttributes()) {
         $isDisabled = ! $this->selectedProductAttributeId || empty($this->selectedAttributeValues);
         if ($this->selectedProductAttributeId) {
-            $attr = \App\Models\ProductAttribute::find($this->selectedProductAttributeId);
+            $attr = $this->selectedCombination;
             $isDisabled = ! $attr || $attr->stock <= 0 || ! $attr->is_active;
         }
     } else {

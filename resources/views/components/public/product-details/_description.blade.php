@@ -12,9 +12,20 @@
         'compact' => 'bg-zinc-50 dark:bg-zinc-800/60 rounded-2xl ring-1 ring-zinc-900/[0.04] dark:ring-white/[0.06] p-5',
         default => 'bg-zinc-50 dark:bg-zinc-800/60 rounded-3xl ring-1 ring-zinc-900/[0.04] dark:ring-white/[0.06] p-6 sm:p-8',
     };
+
+    $fallbackAttributeNames = [];
+    if (! $product->description && $product->hasAttributes()) {
+        foreach ($product->productAttributes as $productAttribute) {
+            foreach (array_keys($productAttribute->attribute_data ?? []) as $attributeName) {
+                if (! in_array($attributeName, $fallbackAttributeNames)) {
+                    $fallbackAttributeNames[] = $attributeName;
+                }
+            }
+        }
+    }
 @endphp
 
-@if($product->description)
+@if($product->description || $product->category || ! empty($fallbackAttributeNames))
     <div class="{{ $wrapClass }}">
         @if($style !== 'plain')
             <h3 class="text-base sm:text-lg font-display font-semibold text-zinc-900 dark:text-white mb-3 flex items-center gap-2.5">
@@ -28,6 +39,20 @@
         @else
             <h3 class="text-sm font-semibold text-zinc-900 dark:text-white mb-2">{{ __('About This Product') }}</h3>
         @endif
-        <p class="text-sm sm:text-[15px] text-zinc-600 dark:text-zinc-300 leading-relaxed">{{ $product->description }}</p>
+        @if($product->description)
+            <p class="text-sm sm:text-[15px] text-zinc-600 dark:text-zinc-300 leading-relaxed">{{ $product->description }}</p>
+        @else
+            {{-- No admin-authored description: fall back to category + attribute names so the page still has some descriptive text for visitors and search engines. --}}
+            <p class="text-sm sm:text-[15px] text-zinc-600 dark:text-zinc-300 leading-relaxed">
+                @if($product->category)
+                    {{ __(':name is available in our :category category.', ['name' => $product->name, 'category' => $product->category->name]) }}
+                @else
+                    {{ __(':name is available now.', ['name' => $product->name]) }}
+                @endif
+                @if(! empty($fallbackAttributeNames))
+                    {{ __('Available options: :attributes.', ['attributes' => implode(', ', $fallbackAttributeNames)]) }}
+                @endif
+            </p>
+        @endif
     </div>
 @endif

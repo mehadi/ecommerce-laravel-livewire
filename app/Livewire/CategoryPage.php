@@ -90,23 +90,27 @@ class CategoryPage extends Component
     #[Computed]
     public function totalProductCount(): int
     {
-        return Product::where('is_active', true)
-            ->whereIn('category_id', $this->categoryIds)
-            ->count();
+        return Cache::remember(Tenancy::cacheKey('category.'.$this->category->id.'.total_product_count'), 1800, function () {
+            return Product::where('is_active', true)
+                ->whereIn('category_id', $this->categoryIds)
+                ->count();
+        });
     }
 
     #[Computed]
     public function priceBounds(): array
     {
-        $range = Product::where('is_active', true)
-            ->whereIn('category_id', $this->categoryIds)
-            ->selectRaw('MIN(price) as min_price, MAX(price) as max_price')
-            ->first();
+        return Cache::remember(Tenancy::cacheKey('category.'.$this->category->id.'.price_bounds'), 1800, function () {
+            $range = Product::where('is_active', true)
+                ->whereIn('category_id', $this->categoryIds)
+                ->selectRaw('MIN(price) as min_price, MAX(price) as max_price')
+                ->first();
 
-        return [
-            'min' => $range && $range->min_price !== null ? (int) floor((float) $range->min_price) : 0,
-            'max' => $range && $range->max_price !== null ? (int) ceil((float) $range->max_price) : 0,
-        ];
+            return [
+                'min' => $range && $range->min_price !== null ? (int) floor((float) $range->min_price) : 0,
+                'max' => $range && $range->max_price !== null ? (int) ceil((float) $range->max_price) : 0,
+            ];
+        });
     }
 
     #[Computed]
@@ -141,6 +145,7 @@ class CategoryPage extends Component
             ->layout('components.layouts.public', [
                 'title' => $this->category->name.' - '.$siteName,
                 'metaDescription' => Str::limit($this->category->description ?: __('Shop :category at :site.', ['category' => $this->category->name, 'site' => $siteName]), 160),
+                'ogImage' => $this->category->image,
                 'showNavigation' => true,
                 'showFooter' => true,
                 'showCookieConsent' => true,

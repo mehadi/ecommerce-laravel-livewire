@@ -13,6 +13,8 @@
                 'category' => $category,
                 'imgClass' => 'absolute inset-0 w-full h-full object-cover group-hover:scale-[1.04] transition-transform duration-500 motion-reduce:transform-none',
                 'iconClass' => 'w-16 h-16 text-emerald-300/70 dark:text-emerald-700/50',
+                'loading' => 'eager',
+                'fetchpriority' => 'high',
             ])
             <div aria-hidden="true" class="absolute inset-0 bg-gradient-to-t from-zinc-950/85 via-zinc-950/30 to-transparent"></div>
             <div class="absolute inset-x-0 bottom-0 p-6 sm:p-8">
@@ -28,17 +30,18 @@
                         {{ $category->name }}
                     </a>
                 </h2>
+                @if($category->description)
+                    <p class="mt-1.5 text-sm text-zinc-200 line-clamp-2 max-w-2xl">
+                        {{ \Illuminate\Support\Str::limit($category->description, 140) }}
+                    </p>
+                @endif
                 @if($subcategories->count() > 0)
                     <div class="flex flex-wrap items-center gap-1.5 mt-3 relative z-10">
-                        @foreach($subcategories->take(4) as $subcategory)
-                            <a
-                                href="{{ route('category.show', $subcategory->slug) }}"
-                                wire:navigate
-                                class="inline-flex items-center px-2.5 py-1 rounded-full bg-white/15 backdrop-blur-sm text-[11px] font-semibold text-white ring-1 ring-white/20 hover:bg-emerald-600 hover:ring-emerald-600 transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400"
-                            >
-                                {{ $subcategory->name }}
-                            </a>
-                        @endforeach
+                        @include('components.public.category-grids._subcategory-chips', [
+                            'subcategories' => $subcategories,
+                            'chipClass' => 'inline-flex items-center px-2.5 py-1 rounded-full bg-white/15 backdrop-blur-sm text-[11px] font-semibold text-white ring-1 ring-white/20 hover:bg-emerald-600 hover:ring-emerald-600 transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400',
+                            'showMore' => false,
+                        ])
                     </div>
                 @endif
             </div>
@@ -67,7 +70,7 @@
                                 {{ $category->name }}
                             </a>
                         </h2>
-                        <p class="mt-0.5 text-[11px] font-semibold text-zinc-400 dark:text-zinc-500 tabular-nums">
+                        <p class="mt-0.5 text-[11px] font-semibold text-zinc-500 dark:text-zinc-400 tabular-nums">
                             {{ trans_choice(':count product|:count products', $productCount, ['count' => $productCount]) }}
                         </p>
                     </div>
