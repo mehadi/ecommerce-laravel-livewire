@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Concerns;
 
+use App\Models\Setting;
 use Livewire\Attributes\Url;
 
 /**
@@ -13,10 +14,10 @@ use Livewire\Attributes\Url;
  */
 trait FiltersProductGrid
 {
-    /** Allowed values for the "products per page" control. */
+    /** Fallback "products per page" choices, used only when no admin setting is configured. */
     public const PER_PAGE_OPTIONS = [6, 12, 24, 48];
 
-    /** Allowed values for the "grid columns" control. */
+    /** Fallback "grid columns" choices, used only when no admin setting is configured. */
     public const COLUMN_OPTIONS = [2, 3, 4];
 
     #[Url(except: '')]
@@ -34,13 +35,39 @@ trait FiltersProductGrid
     #[Url(except: false)]
     public bool $inStockOnly = false;
 
-    #[Url(except: 6)]
-    public int $perPage = 6;
+    // Nullable + `except: null` rather than a hardcoded literal default: a
+    // PHP property default must be a compile-time constant, so it can't read
+    // the admin-configured Setting default directly. null is the "nothing in
+    // the URL" sentinel that mountFiltersProductGrid() below resolves to the
+    // real configured default — a fixed literal here would permanently win
+    // over the admin's chosen default on every fresh visit as long as it
+    // happened to still be a member of the configured options list.
+    #[Url(except: null)]
+    public ?int $perPage = null;
 
-    #[Url(except: 3)]
-    public int $columns = 3;
+    #[Url(except: null)]
+    public ?int $columns = null;
 
     public bool $showFilters = false;
+
+    /**
+     * Livewire auto-invokes mount{TraitName}() for every trait a component
+     * uses (see WithPagination's own bootWithPagination()) — this resolves
+     * columns/perPage (still null when absent from the URL) to the admin-
+     * configured default, or clamps an out-of-range URL-seeded value back to
+     * it, for every page that uses this trait (ShopPage, CategoryPage)
+     * without requiring each host component to remember to call it.
+     */
+    public function mountFiltersProductGrid(): void
+    {
+        if ($this->columns === null || ! in_array($this->columns, self::columnOptions(), true)) {
+            $this->columns = self::defaultColumns();
+        }
+
+        if ($this->perPage === null || ! in_array($this->perPage, self::perPageOptions(), true)) {
+            $this->perPage = self::defaultPerPage();
+        }
+    }
 
     public function updatedSearch(): void
     {
@@ -69,8 +96,8 @@ trait FiltersProductGrid
 
     public function updatedPerPage(int $value): void
     {
-        if (! in_array($value, self::PER_PAGE_OPTIONS, true)) {
-            $this->perPage = 6;
+        if (! in_array($value, self::perPageOptions(), true)) {
+            $this->perPage = self::defaultPerPage();
         }
 
         $this->resetPage();
@@ -78,8 +105,8 @@ trait FiltersProductGrid
 
     public function updatedColumns(int $value): void
     {
-        if (! in_array($value, self::COLUMN_OPTIONS, true)) {
-            $this->columns = 3;
+        if (! in_array($value, self::columnOptions(), true)) {
+            $this->columns = self::defaultColumns();
         }
     }
 
@@ -96,7 +123,53 @@ trait FiltersProductGrid
 
     protected function normalizedPerPage(): int
     {
-        return in_array($this->perPage, self::PER_PAGE_OPTIONS, true) ? $this->perPage : 6;
+        return $this->perPage !== null && in_array($this->perPage, self::perPageOptions(), true)
+            ? $this->perPage
+            : self::defaultPerPage();
+    }
+
+    /** Admin-configurable "grid columns" choices (Setting::shop_columns_options), falling back to COLUMN_OPTIONS. */
+    public static function columnOptions(): array
+    {
+        return self::parseOptionsSetting('shop_columns_options') ?: self::COLUMN_OPTIONS;
+    }
+
+    public static function defaultColumns(): int
+    {
+        $options = self::columnOptions();
+        $default = (int) Setting::get('shop_columns_default', (string) $options[0]);
+
+        return in_array($default, $options, true) ? $default : $options[0];
+    }
+
+    /** Admin-configurable "products per page" choices (Setting::shop_per_page_options), falling back to PER_PAGE_OPTIONS. */
+    public static function perPageOptions(): array
+    {
+        return self::parseOptionsSetting('shop_per_page_options') ?: self::PER_PAGE_OPTIONS;
+    }
+
+    public static function defaultPerPage(): int
+    {
+        $options = self::perPageOptions();
+        $default = (int) Setting::get('shop_per_page_default', (string) $options[0]);
+
+        return in_array($default, $options, true) ? $default : $options[0];
+    }
+
+    /** Decode a JSON-encoded list of positive integers stored in Settings, e.g. "[2,3,4]". */
+    private static function parseOptionsSetting(string $key): array
+    {
+        $decoded = json_decode((string) Setting::get($key, ''), true);
+
+        if (! is_array($decoded) || empty($decoded)) {
+            return [];
+        }
+
+        $values = array_values(array_unique(array_map('intval', $decoded)));
+        $values = array_values(array_filter($values, fn ($v) => $v > 0));
+        sort($values);
+
+        return $values;
     }
 
     /**

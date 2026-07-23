@@ -245,7 +245,7 @@
                                 wire:model.live="perPage"
                                 class="min-h-9 appearance-none bg-zinc-50 dark:bg-zinc-800/60 border border-zinc-200 dark:border-zinc-700 rounded-full pl-3.5 pr-8 py-1.5 text-xs font-semibold text-zinc-600 dark:text-zinc-300 focus:border-emerald-500 dark:focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/25 cursor-pointer"
                             >
-                                @foreach(\App\Livewire\CategoryPage::PER_PAGE_OPTIONS as $option)
+                                @foreach(\App\Livewire\CategoryPage::perPageOptions() as $option)
                                     <option value="{{ $option }}">{{ __('Show :count', ['count' => $option]) }}</option>
                                 @endforeach
                             </select>
@@ -256,7 +256,7 @@
 
                         {{-- Grid columns (desktop only — mobile/tablet keep their fixed responsive layout) --}}
                         <div class="hidden sm:flex items-center gap-1 bg-zinc-50 dark:bg-zinc-800/60 rounded-full ring-1 ring-zinc-900/[0.06] dark:ring-white/[0.08] p-1" role="group" aria-label="{{ __('Grid columns') }}">
-                            @foreach(\App\Livewire\CategoryPage::COLUMN_OPTIONS as $option)
+                            @foreach(\App\Livewire\CategoryPage::columnOptions() as $option)
                                 <button
                                     type="button"
                                     wire:click="$set('columns', {{ $option }})"

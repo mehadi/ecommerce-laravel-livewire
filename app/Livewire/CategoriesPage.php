@@ -27,16 +27,28 @@ class CategoriesPage extends Component
     #[Url(except: '')]
     public string $search = '';
 
-    #[Url(except: 4)]
-    public int $columns = 4;
+    // Nullable + `except: null` rather than a hardcoded literal default: a
+    // PHP property default must be a compile-time constant, so it can't read
+    // the admin-configured Setting default directly. null is the "nothing in
+    // the URL" sentinel that mount() below resolves to the real configured
+    // default — a fixed literal here would permanently win over the admin's
+    // chosen default on every fresh visit as long as it happened to still be
+    // a member of the configured options list.
+    #[Url(except: null)]
+    public ?int $columns = null;
 
-    #[Url(except: 24)]
-    public int $perPage = 24;
+    #[Url(except: null)]
+    public ?int $perPage = null;
 
     public function mount(): void
     {
-        $this->columns = self::defaultColumns();
-        $this->perPage = self::defaultPerPage();
+        if ($this->columns === null || ! in_array($this->columns, self::columnOptions(), true)) {
+            $this->columns = self::defaultColumns();
+        }
+
+        if ($this->perPage === null || ! in_array($this->perPage, self::perPageOptions(), true)) {
+            $this->perPage = self::defaultPerPage();
+        }
     }
 
     public function updatedSearch(): void
@@ -115,7 +127,7 @@ class CategoriesPage extends Component
         $cards = Cache::remember(Tenancy::cacheKey('categories.index.cards'), 1800, function () {
             $all = Category::where('is_active', true)
                 ->orderBy('order')
-                ->get(['id', 'parent_id', 'name_en', 'name_bn', 'slug', 'image', 'order']);
+                ->get(['id', 'parent_id', 'name_en', 'name_bn', 'slug', 'description_en', 'description_bn', 'image', 'order']);
 
             $productCounts = Product::where('is_active', true)
                 ->whereIn('category_id', $all->pluck('id'))
@@ -150,7 +162,9 @@ class CategoriesPage extends Component
 
         $cards = $cards->values();
 
-        $perPage = in_array($this->perPage, self::perPageOptions(), true) ? $this->perPage : self::defaultPerPage();
+        $perPage = $this->perPage !== null && in_array($this->perPage, self::perPageOptions(), true)
+            ? $this->perPage
+            : self::defaultPerPage();
         $page = $this->getPage();
 
         return new LengthAwarePaginator(
