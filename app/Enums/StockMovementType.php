@@ -12,6 +12,7 @@ enum StockMovementType: string
     case Receiving = 'receiving';
     case CycleCount = 'cycle_count';
     case Reservation = 'reservation';
+    case Wastage = 'wastage';
 
     public function label(): string
     {
@@ -24,6 +25,7 @@ enum StockMovementType: string
             self::Receiving => 'Receiving',
             self::CycleCount => 'Cycle Count',
             self::Reservation => 'Reservation',
+            self::Wastage => 'Wastage',
         };
     }
 
@@ -38,6 +40,7 @@ enum StockMovementType: string
             self::Receiving => 'success',
             self::CycleCount => 'primary',
             self::Reservation => 'subtle',
+            self::Wastage => 'danger',
         };
     }
 }

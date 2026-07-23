@@ -185,6 +185,19 @@ class AppServiceProvider extends ServiceProvider
             return $user->hasRole('super admin') || $user->hasRole('admin') || $user->hasRole('manager') || $user->checkPermissionTo('complete cycle counts') === true;
         });
 
+        // Wastage gates (same shape as the cycle count gates above).
+        Gate::define('view wastage', function ($user) {
+            return $user->hasRole('super admin') || $user->hasRole('admin') || $user->hasRole('manager') || $user->checkPermissionTo('view wastage') === true;
+        });
+
+        Gate::define('create wastage', function ($user) {
+            return $user->hasRole('super admin') || $user->hasRole('admin') || $user->hasRole('manager') || $user->checkPermissionTo('create wastage') === true;
+        });
+
+        Gate::define('approve wastage', function ($user) {
+            return $user->hasRole('super admin') || $user->hasRole('admin') || $user->hasRole('manager') || $user->checkPermissionTo('approve wastage') === true;
+        });
+
         // POS gates. 'access pos' (and the cashier-tier actions below it) include
         // the 'cashier' role explicitly, since a cashier account intentionally
         // cannot reach 'access admin' — POS routes are gated separately from the

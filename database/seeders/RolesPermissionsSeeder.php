@@ -93,6 +93,11 @@ class RolesPermissionsSeeder extends Seeder
             'create cycle counts',
             'complete cycle counts',
 
+            // Wastage permissions
+            'view wastage',
+            'create wastage',
+            'approve wastage',
+
             // User permissions
             'view users',
             'create users',
