@@ -30,6 +30,7 @@
                     <flux:sidebar.item icon="cube" :href="route('admin.products.index')" :current="request()->routeIs('admin.products.*')" wire:navigate>{{ __('Products') }}</flux:sidebar.item>
                     <flux:sidebar.item icon="tag" :href="route('admin.categories.index')" :current="request()->routeIs('admin.categories.*')" wire:navigate>{{ __('Categories') }}</flux:sidebar.item>
                     <flux:sidebar.item icon="view-columns" :href="route('admin.categories-display.index')" :current="request()->routeIs('admin.categories-display.*')" wire:navigate>{{ __('Categories Display') }}</flux:sidebar.item>
+                    <flux:sidebar.item icon="adjustments-horizontal" :href="route('admin.shop-display.index')" :current="request()->routeIs('admin.shop-display.*')" wire:navigate>{{ __('Shop Display') }}</flux:sidebar.item>
                     <flux:sidebar.item icon="squares-2x2" :href="route('admin.attributes.index')" :current="request()->routeIs('admin.attributes.*')" wire:navigate>{{ __('Attributes') }}</flux:sidebar.item>
                 </flux:sidebar.group>
 
@@ -40,6 +41,7 @@
                     <flux:sidebar.item icon="briefcase" :href="route('admin.suppliers.index')" :current="request()->routeIs('admin.suppliers.*')" wire:navigate>{{ __('Suppliers') }}</flux:sidebar.item>
                     <flux:sidebar.item icon="clipboard-document-list" :href="route('admin.purchase-orders.index')" :current="request()->routeIs('admin.purchase-orders.*')" wire:navigate>{{ __('Purchase Orders') }}</flux:sidebar.item>
                     <flux:sidebar.item icon="clipboard-document-check" :href="route('admin.cycle-counts.index')" :current="request()->routeIs('admin.cycle-counts.*')" wire:navigate>{{ __('Cycle Counts') }}</flux:sidebar.item>
+                    <flux:sidebar.item icon="trash" :href="route('admin.wastage.index')" :current="request()->routeIs('admin.wastage.*')" wire:navigate>{{ __('Wastage') }}</flux:sidebar.item>
                 </flux:sidebar.group>
 
                 <flux:sidebar.group expandable heading="{{ __('Sales') }}" icon="shopping-bag">

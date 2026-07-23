@@ -241,11 +241,17 @@ Route::middleware(['tenant'])->group(function () {
             Route::get('cycle-counts', App\Livewire\Admin\CycleCounts\Index::class)->name('cycle-counts.index');
             Route::get('cycle-counts/{cycleCount}/count', Count::class)->name('cycle-counts.count');
 
+            // Wastage
+            Route::get('wastage', App\Livewire\Admin\Wastage\Index::class)->name('wastage.index');
+
             // Categories
             Route::get('categories', App\Livewire\Admin\Categories\Index::class)->name('categories.index');
 
             // Categories Page Display (grid columns + pagination options for the public /categories page)
             Route::get('categories-display', App\Livewire\Admin\CategoriesDisplay\Index::class)->name('categories-display.index');
+
+            // Shop Page Display (grid columns + pagination options for the public /shop and category product listing pages)
+            Route::get('shop-display', App\Livewire\Admin\ShopDisplay\Index::class)->name('shop-display.index');
 
             // Orders
             Route::get('orders', App\Livewire\Admin\Orders\Index::class)->name('orders.index');
